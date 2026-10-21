@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Walkie – ניווט רגלי ותחבורה ציבורית, מהיר ונקי מפרסומות">
+  <title>Walkie</title>
+
+  <!-- "הוספה למסך הבית" (אייפון / אנדרואיד): אייקון, שם, ופתיחה במסך מלא בלי שורת כתובת -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-512.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Walkie">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
+  <!-- Leaflet והפונט ארוזים עם האפליקציה: המפה עולה גם כשהרשת איטית, ובלי בקשות ל-CDN -->
+  <link rel="stylesheet" href="vendor/heebo/heebo.css">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/transit.css">
+  <link rel="stylesheet" href="css/tabs.css">
+  <link rel="stylesheet" href="css/premium.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <!-- אנימציית פתיחה (~1.5 שנ'): הלוגו מצטייר, ואז עיגול נפתח מהלוגו אל האפליקציה.
+       בתוך ה-HTML כדי שתופיע מהפריים הראשון, בהמשך ישיר למסך הפתיחה של אנדרואיד (אותו צבע).
+       כל האנימציות כאן הן transform/opacity בלבד – רצות על ה-GPU (compositor), ולכן נשארות חלקות
+       ב-120FPS גם כשהאפליקציה עדיין נטענת מתחת (פענוח התחנות, המפה) -->
+  <style>
+    .intro {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      pointer-events: none;
+      contain: strict;
+    }
+    /* "טבעת": צבע המותג עם חור שקוף במרכז. מוגדלת (scale) כדי שהחור ייפתח עד פינות המסך */
+    .intro-ring {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 150vmax;
+      height: 150vmax;
+      margin: -75vmax 0 0 -75vmax;
+      background: radial-gradient(circle, transparent 54px, #0d9488 55.5px);
+      will-change: transform;
+      animation: intro-open 0.62s cubic-bezier(0.5, 0, 0.3, 1) 0.86s forwards;
+    }
+    /* סוגר את החור עד שהעיגול מתחיל להיפתח */
+    .intro-plug {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 112px;
+      height: 112px;
+      margin: -56px 0 0 -56px;
+      border-radius: 50%;
+      background: #0d9488;
+      animation: intro-hide 0.01s steps(1) 0.86s forwards;
+    }
+    .intro-logo {
+      position: relative;
+      width: 132px;
+      height: 132px;
+      will-change: transform, opacity;
+      animation:
+        intro-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+        intro-away 0.4s cubic-bezier(0.55, 0, 1, 0.45) 0.86s forwards;
+    }
+    .intro-tile { position: absolute; inset: 0; filter: drop-shadow(0 14px 28px rgba(6, 46, 43, 0.35)); }
+    /* ה-W "מצטייר" משמאל לימין: חלון עם overflow שזז, והתוכן זז הפוך כדי להישאר במקום */
+    .intro-wipe {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      transform: translateX(-100%);
+      will-change: transform;
+      animation: intro-wipe 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.18s forwards;
+    }
+    .intro-wipe > svg {
+      position: absolute;
+      inset: 0;
+      transform: translateX(100%);
+      will-change: transform;
+      animation: intro-wipe 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.18s forwards;
+    }
+    .intro-dot {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      will-change: transform;
+    }
+    /* מיקומים לפי הלוגו (viewBox 512 -> 132px) */
+    .intro-start { left: 24.5px; top: 38.9px; width: 8.8px; height: 8.8px; background: #0f766e; animation: intro-dot 0.22s ease-out 0.14s forwards; }
+    .intro-dest {
+      left: 89.95px; top: 30.15px; width: 26.3px; height: 26.3px;
+      box-sizing: border-box; border: 3.6px solid #fff; background: #f97316;
+      animation: intro-dot 0.34s cubic-bezier(0.34, 1.8, 0.64, 1) 0.62s forwards;
+    }
+    @keyframes intro-pop { from { transform: scale(0.55); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes intro-wipe { to { transform: translateX(0); } }
+    @keyframes intro-dot { to { transform: scale(1); } }
+    @keyframes intro-away { to { transform: scale(0.35); opacity: 0; } }
+    @keyframes intro-hide { to { opacity: 0; } }
+    /* --intro-k: כמה להגדיל כדי שהחור יגיע לפינות המסך (מחושב בסקריפט לפי גודל המסך) */
+    @keyframes intro-open { to { transform: scale(var(--intro-k, 12)); } }
+    @media (prefers-reduced-motion: reduce) {
+      .intro-ring, .intro-plug, .intro-logo, .intro-wipe, .intro-wipe > svg, .intro-dot { animation: none; transform: none; }
+      .intro { background: #0d9488; animation: intro-hide 0.3s ease 0.4s forwards; }
+    }
+  </style>
+</head>
+<body>
+  <div id="intro" class="intro" aria-hidden="true">
+    <div class="intro-ring"></div>
+    <div class="intro-plug"></div>
+    <div class="intro-logo">
+      <svg class="intro-tile" viewBox="0 0 512 512">
+        <defs>
+          <linearGradient id="intro-bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#14b8a6"/>
+            <stop offset="1" stop-color="#0f766e"/>
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" rx="116" fill="url(#intro-bg)"/>
+        <rect width="512" height="512" rx="116" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="6"/>
+      </svg>
+      <div class="intro-wipe">
+        <svg viewBox="0 0 512 512">
+          <path d="M112 168 L182 352 L256 224 L330 352 L400 168" fill="none" stroke="#062e2b" stroke-opacity="0.18" stroke-width="54" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 10)"/>
+          <path d="M112 168 L182 352 L256 224 L330 352 L400 168" fill="none" stroke="#ffffff" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="intro-dot intro-start"></span>
+      <span class="intro-dot intro-dest"></span>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var el = document.getElementById('intro');
+      var ring = el.querySelector('.intro-ring');
+      // החור (54px) צריך לגדול עד חצי האלכסון של המסך
+      var halfDiag = Math.hypot(window.innerWidth, window.innerHeight) / 2;
+      ring.style.setProperty('--intro-k', String(Math.ceil((halfDiag + 8) / 54 * 10) / 10));
+      // הטבעת בגודל שמכסה בדיוק את המסך (ולא 150vmax) – שכבה קטנה בהרבה לכרטיס המסך, בלי גמגום בתחילת הפתיחה
+      var half = Math.ceil(halfDiag) + 4;
+      ring.style.width = ring.style.height = (half * 2) + 'px';
+      ring.style.margin = (-half) + 'px 0 0 ' + (-half) + 'px';
+      var finished = false;
+      var done = function () {
+        if (finished) return;
+        finished = true;
+        if (el.parentNode) el.parentNode.removeChild(el);
+        window.dispatchEvent(new Event('walkie:intro-done'));
+      };
+      window.walkieIntroDone = new Promise(function (resolve) { window.addEventListener('walkie:intro-done', resolve, { once: true }); });
+      // מסירים בסוף פתיחת העיגול (ובכל מקרה אחרי 2.5 שנ', שלא תיתקע מעל האפליקציה)
+      ring.addEventListener('animationend', done);
+      el.addEventListener('animationend', function (e) { if (e.target === el) done(); });
+      setTimeout(done, 2500);
+    })();
+  </script>
+
+  <!-- המפה תופסת את כל המסך ונטענת מיד; מעליה אנימציית הפתיחה -->
+  <div id="map" dir="ltr" aria-label="מפה"></div>
+
+  <header class="topbar">
+    <button id="btn-search" class="search-pill" type="button">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="60 110 400 290" width="26" height="19"><path d="M112 168 L182 352 L256 224 L330 352 L400 168" fill="none" stroke="currentColor" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/><circle cx="400" cy="168" r="46" fill="#f97316" stroke="#fff" stroke-width="16"/></svg>
+      </span>
+      <span class="search-text">לאן הולכים?</span>
+      <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5Zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z"/></svg>
+    </button>
+  </header>
+
+  <!-- גישה מהירה: בית · עבודה/בית ספר · מקומות שמורים -->
+  <div id="quick-places" class="quick-places" aria-label="מקומות מועדפים"></div>
+
+  <!-- כותרת מסלול: מוצא -> יעד, אמצעי, זמן -->
+  <section id="directions" class="directions" aria-label="תכנון מסלול" hidden>
+    <div class="dir-row">
+      <button class="dir-icon-btn" type="button" data-dir="close" aria-label="סגירת המסלול">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M4 11h12.2l-5.6-5.6L12 4l8 8-8 8-1.4-1.4 5.6-5.6H4v-2Z"/></svg>
+      </button>
+      <div class="dir-places">
+        <button class="dir-place" type="button" data-dir="origin">
+          <span class="dir-dot is-origin" aria-hidden="true"></span>
+          <span class="dir-prefix">מ:</span>
+          <span id="dir-origin" class="dir-label"></span>
+        </button>
+        <button class="dir-place" type="button" data-dir="destination">
+          <span class="dir-dot is-dest" aria-hidden="true"></span>
+          <span class="dir-prefix">אל:</span>
+          <span id="dir-dest" class="dir-label"></span>
+        </button>
+      </div>
+      <button class="dir-icon-btn dir-fav" type="button" data-dir="fav" aria-label="שמירת היעד במועדפים" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="m22 9.2-7.2-.6L12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3l6.2 3.7-1.6-7.1L22 9.2ZM12 15.4l-3.8 2.3 1-4.3-3.3-2.9 4.4-.4L12 6.1l1.7 4 4.4.4-3.3 2.9 1 4.3-3.8-2.3Z"/></svg>
+      </button>
+      <button class="dir-icon-btn" type="button" data-dir="swap" aria-label="החלפת מוצא ויעד">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M16 17V10h-2v7h-3l4 4 4-4h-3ZM9 3 5 7h3v7h2V7h3L9 3Z"/></svg>
+      </button>
+    </div>
+    <div class="dir-row dir-options">
+      <div class="dir-tabs" role="tablist">
+        <button class="dir-tab" type="button" role="tab" data-tab="transit">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .9.4 1.7 1 2.2V20c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h8v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6v10Zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM18 11H6V6h12v5Z"/></svg>
+          <span id="dir-transit-time">תחבורה ציבורית</span>
+        </button>
+        <button class="dir-tab" type="button" role="tab" data-tab="walk">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M13.5 5.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM9.8 8.9 7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3A7.3 7.3 0 0 0 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5 0-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>
+          <span id="dir-walk-time">הליכה</span>
+        </button>
+      </div>
+      <button id="dir-time" class="dir-time" type="button" data-dir="time">יציאה עכשיו</button>
+    </div>
+    <div id="dir-time-panel" class="dir-time-panel" hidden>
+      <div class="seg" role="group" aria-label="סוג זמן">
+        <button type="button" data-when="depart" class="is-active">יציאה ב-</button>
+        <button type="button" data-when="arrive">הגעה עד</button>
+      </div>
+      <input id="dir-time-input" class="dir-time-input" type="datetime-local" aria-label="תאריך ושעה">
+      <div class="dir-time-actions">
+        <button class="btn-secondary" type="button" data-dir="time-now">עכשיו</button>
+        <button class="btn" type="button" data-dir="time-apply">אישור</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- באנר הוראת ניווט (מצב ניווט בלבד) -->
+  <div id="nav-banner" class="nav-banner" aria-live="polite" hidden></div>
+
+  <div class="fab-stack">
+    <button id="btn-share" class="fab fab-share" type="button" aria-label="שיתוף המיקום שלי בוואטסאפ">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3.9 2.5c.1.2 1.7 2.6 4.1 3.6 1.5.7 2.1.7 2.9.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.4-.2Z"/></svg>
+    </button>
+    <button id="btn-compass" class="fab fab-compass" type="button" aria-label="מצב מצפן" aria-pressed="true" hidden>
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+        <path fill="#e11d48" d="M12 2 8.5 12h7L12 2Z"/>
+        <path fill="#94a3b8" d="M12 22l3.5-10h-7L12 22Z"/>
+      </svg>
+    </button>
+    <button id="btn-locate" class="fab" type="button" aria-label="חזרה למיקום שלי">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M21 3 3 10.5v1l7.1 2.4L12.5 21h1L21 3Z"/></svg>
+    </button>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <section id="sheet" class="sheet" aria-label="תחנות קרובות" data-snap="half">
+    <div class="sheet-grab">
+      <button class="sheet-handle" type="button" aria-label="הרחבה או כיווץ של הלוח" aria-expanded="false">
+        <span></span>
+      </button>
+    </div>
+    <div id="sheet-content" class="sheet-content">
+      <div class="skeleton">
+        <div class="sk-line sk-short"></div>
+        <div class="sk-line sk-title"></div>
+        <div class="sk-card"></div>
+        <div class="sk-card"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- מסך הגדרות -->
+  <section id="settings-page" class="page" aria-label="הגדרות" hidden>
+    <header class="page-head">
+      <h1 class="page-title">הגדרות</h1>
+    </header>
+    <div id="settings-body" class="page-body"></div>
+  </section>
+
+  <!-- סרגל ניווט תחתון -->
+  <nav id="tabbar" class="tabbar" aria-label="ניווט ראשי" role="tablist">
+    <button class="tab is-active" type="button" role="tab" aria-selected="true" data-tab="home">
+      <span class="tab-pill"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 3 3 10v11h6v-6h6v6h6V10l-9-7Z"/></svg></span>
+      <span class="tab-label">בית</span>
+    </button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-tab="lines">
+      <span class="tab-pill"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .9.4 1.7 1 2.2V20c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h8v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6v10Zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM18 11H6V6h12v5Z"/></svg></span>
+      <span class="tab-label">קווים</span>
+    </button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-tab="stations">
+      <span class="tab-pill"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 2C8 2 4 2.5 4 6v9.5A3.5 3.5 0 0 0 7.5 19L6 20.5v.5h2.2l2-2h3.6l2 2H18v-.5L16.5 19a3.5 3.5 0 0 0 3.5-3.5V6c0-3.5-3.6-4-8-4ZM7.5 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3.5-7H6V6h5v4Zm2 0V6h5v4h-5Zm3.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg></span>
+      <span class="tab-label">תחנות</span>
+    </button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-tab="settings">
+      <span class="tab-pill"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M19.1 12.9a7 7 0 0 0 0-1.8l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.6-.9L14.8 3h-4l-.4 2.6c-.6.2-1.1.5-1.6.9l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 1.8l-2 1.6 2 3.4 2.4-1c.5.4 1 .7 1.6.9l.4 2.6h4l.4-2.6c.6-.2 1.1-.5 1.6-.9l2.4 1 2-3.4-2.1-1.6ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg></span>
+      <span class="tab-label">הגדרות</span>
+    </button>
+  </nav>
+
+  <!-- מסך חיפוש יעד -->
+  <div id="search" class="search-overlay" role="dialog" aria-modal="true" aria-label="חיפוש יעד" hidden>
+    <div class="search-bar">
+      <button class="icon-btn" type="button" data-action="close" aria-label="חזרה">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M4 11h12.2l-5.6-5.6L12 4l8 8-8 8-1.4-1.4 5.6-5.6H4v-2Z"/></svg>
+      </button>
+      <input id="search-input" class="search-input" type="search" placeholder="כתובת, מקום או תחנה"
+             autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+      <button class="icon-btn" type="button" data-action="clear" aria-label="ניקוי" hidden>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z"/></svg>
+      </button>
+    </div>
+    <div id="search-results" class="search-results"></div>
+  </div>
+
+  <script src="js/runtime-config.js"></script>
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

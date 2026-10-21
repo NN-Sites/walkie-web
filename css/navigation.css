@@ -1,0 +1,506 @@
+/* =========================================================
+   Walkie – חיפוש, תצוגת מסלול וניווט (שלב 3)
+   ========================================================= */
+
+[hidden] { display: none !important; }
+
+/* ---------- Top bar במצב מסלול ---------- */
+
+.topbar {
+  display: flex;
+  gap: 8px;
+}
+
+.topbar .search-pill { flex: 1; min-width: 0; }
+
+.search-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.has-route .search-text {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.topbar-close {
+  pointer-events: auto;
+  flex: none;
+  width: 54px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: var(--shadow-md);
+  color: var(--text-2);
+}
+
+body.navigating .topbar { display: none; }
+
+/* ---------- Search overlay ---------- */
+
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  padding-top: var(--safe-top);
+  animation: panel-in 0.28s var(--ease-out);
+}
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 12px 6px;
+  padding: 4px;
+  border-radius: 18px;
+  background: var(--surface-2);
+}
+
+.icon-btn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.icon-btn:active { background: var(--surface-3); }
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+}
+
+.search-input::-webkit-search-cancel-button { display: none; }
+
+.search-results {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 8px calc(var(--safe-bottom) + 16px);
+}
+
+.search-heading {
+  margin: 14px 12px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.result {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 10px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  text-align: start;
+  transition: background 0.15s ease;
+}
+
+.result:active,
+.result:focus-visible { background: var(--surface-2); }
+
+.result-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.result-icon.kind-stop { background: var(--brand-50); color: var(--brand-600); }
+.result-icon.kind-poi { background: #fff4ec; color: var(--accent); }
+.result-icon.kind-recent { color: var(--text-muted); }
+
+.result-text { flex: 1; min-width: 0; }
+
+.result-name {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-dist {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.search-hint {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.result-emoji { font-size: 20px; line-height: 1; }
+
+/* ---------- חיפושים אחרונים: מחיקה ---------- */
+
+.search-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 12px 6px;
+}
+
+.search-heading-row .search-heading { margin: 0; }
+
+.link-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--user);
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+}
+
+.result-row .result { flex: 1; min-width: 0; }
+
+.result-remove {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.result-remove:active { background: var(--surface-2); }
+
+/* ---------- Route preview ---------- */
+
+.route-time {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 12px 0 2px;
+}
+
+.route-time-big {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: var(--user);
+  line-height: 1;
+}
+
+.route-time-eta {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.route-explain {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.btn-go {
+  width: 100%;
+  min-height: 54px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+  transition: transform 0.15s var(--ease-spring);
+}
+
+.btn-go:active { transform: scale(0.97); }
+
+.btn-secondary {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.btn-walk {
+  margin-top: 12px;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: var(--user);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 2px;
+}
+
+.step + .step { border-top: 1px solid var(--border); }
+
+.step-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.step-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.step-dist {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ---------- Navigation ---------- */
+
+.nav-banner {
+  position: fixed;
+  top: calc(var(--safe-top) + 10px);
+  inset-inline: 10px;
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #0f766e 0%, #115e59 100%);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(15, 118, 110, 0.35);
+  animation: panel-in 0.3s var(--ease-out);
+}
+
+.nav-icon {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.nav-text { flex: 1; min-width: 0; }
+
+.nav-dist {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+}
+
+.nav-instr {
+  margin-top: 2px;
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  opacity: 0.95;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nav-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.nav-summary { flex: 1; min-width: 0; }
+
+.nav-remaining {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: var(--live);
+  line-height: 1.1;
+}
+
+.nav-sub {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.btn-end {
+  flex: none;
+  min-height: 48px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 14px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.arrived {
+  padding: 8px 0 4px;
+  text-align: center;
+}
+
+.arrived-emoji { font-size: 42px; line-height: 1; }
+
+.arrived-title {
+  margin: 8px 0 2px;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.arrived-sub {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.fab-compass.is-active { box-shadow: 0 0 0 2px var(--user), var(--shadow-md); }
+
+.fab-compass svg { transition: transform 0.35s linear; }
+
+body.navigating .leaflet-control-attribution { display: none; }
+body.has-route .stop-label { display: none; }
+
+/* מפה מסתובבת (מצב מצפן): המכולה גדולה מהמסך כדי שהפינות לא יתגלו */
+body.map-rotating #map {
+  inset: auto;
+  transition: transform 0.35s linear;
+  will-change: transform;
+}
+
+/* ---------- Route on map ---------- */
+
+.route-dest { background: none; border: none; }
+
+.route-dest-pin {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50% 50% 50% 0;
+  background: var(--danger);
+  color: #fff;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 0 3px #fff, 0 6px 14px rgba(225, 29, 72, 0.4);
+}
+
+.route-dest-pin svg { transform: rotate(45deg); }
+
+.crossing-marker { background: none; border: none; }
+
+.crossing-dot {
+  width: 12px;
+  height: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  border-radius: 5px;
+  background: #1f2937;
+  box-shadow: 0 0 0 2px #fff, 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.crossing-dot i {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.crossing-dot i:nth-child(2) { background: #fbbf24; }
+.crossing-dot i:nth-child(3) { background: #22c55e; }
+
+.is-zoomed-out .crossing-marker { display: none; }
+
+@media (min-width: 768px) {
+  .nav-banner {
+    inset-inline-end: auto;
+    inset-inline-start: 16px;
+    width: 400px;
+  }
+
+  .topbar { width: 400px; }
+}

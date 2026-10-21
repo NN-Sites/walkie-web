@@ -1,0 +1,564 @@
+/* =========================================================
+   Walkie – תחבורה ציבורית: כותרת מסלול, רשימת מסלולים, ציר זמן, ליווי נסיעה
+   ========================================================= */
+
+/* ---------- כותרת מסלול ---------- */
+
+body.has-route .topbar { display: none; }
+
+/* בזמן מסלול – מסתירים את סמני התחנות הכלליים כדי שהמסלול יבלוט */
+body.has-route .stop-marker { display: none; }
+body.navigating .directions { display: none !important; }
+
+.directions {
+  position: fixed;
+  top: calc(var(--safe-top) + 8px);
+  inset-inline: 8px;
+  z-index: 550;
+  padding: 8px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-md);
+  animation: panel-in 0.28s var(--ease-out);
+}
+
+.dir-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dir-icon-btn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.dir-icon-btn:active { background: var(--surface-2); }
+
+.dir-places {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.dir-place {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 12px;
+  background: var(--surface-2);
+  text-align: start;
+}
+
+.dir-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dir-dot.is-origin { background: var(--user); box-shadow: 0 0 0 3px #dbeafe; }
+.dir-dot.is-dest { background: var(--danger); border-radius: 3px; }
+
+.dir-prefix {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dir-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dir-options {
+  margin-top: 8px;
+  justify-content: space-between;
+}
+
+.dir-tabs {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dir-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.dir-tab.is-active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.dir-time {
+  flex: none;
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 99px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dir-time.is-set { color: var(--user); background: #eff6ff; }
+
+.dir-time-panel {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+
+.seg {
+  display: flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface-3);
+}
+
+.seg button {
+  flex: 1;
+  min-height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.seg button.is-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.dir-time-input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.dir-time-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------- רשימת מסלולים ---------- */
+
+.itin-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.itin-card {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: start;
+  transition: transform 0.15s var(--ease-spring), border-color 0.2s ease;
+}
+
+.itin-card:active { transform: scale(0.985); }
+
+.itin-card.is-recommended { border-color: #99f6e4; box-shadow: 0 0 0 1px #99f6e4, var(--shadow-sm); }
+
+.itin-card.is-walk { background: var(--surface-2); border-style: dashed; }
+
+.itin-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.itin-duration {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.itin-times {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.chip-rec {
+  margin-inline-start: auto;
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+
+.itin-legs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.leg-sep { display: inline-flex; color: #b8c0cc; }
+
+.leg-walk {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.leg-walk.is-active,
+.leg-ride.is-active { outline: 2px solid var(--user); outline-offset: 2px; border-radius: 9px; }
+
+.line-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 9px;
+  background: var(--c);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.line-pill b { font-weight: 800; direction: ltr; unicode-bidi: isolate; }
+.line-pill.is-small { padding: 3px 7px; font-size: 13px; }
+
+.itin-depart {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.itin-stop {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.itin-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.live-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--live);
+  font-weight: 700;
+}
+
+.sched-text { color: var(--text-2); font-weight: 600; }
+
+.btn-later { justify-self: center; margin-top: 2px; }
+
+.state-box-col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.state-box-col strong { color: var(--text); }
+.state-box-col .btn-secondary { margin-top: 4px; }
+
+.attribution {
+  margin: 8px 2px 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.attribution a { color: inherit; }
+
+/* ---------- פירוט מסלול (ציר זמן) ---------- */
+
+.btn-back { margin-bottom: 4px; }
+
+.timeline {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.tl-point {
+  display: grid;
+  grid-template-columns: 48px 22px 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+}
+
+.tl-time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-2);
+  text-align: end;
+  direction: ltr;
+}
+
+.tl-dot {
+  justify-self: center;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  border: 3.5px solid var(--c, var(--text-muted));
+}
+
+.tl-point.is-origin .tl-dot { border-color: var(--user); background: var(--user); box-shadow: 0 0 0 3px #dbeafe; }
+
+.tl-point.is-dest .tl-dot {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--danger);
+  color: #fff;
+}
+
+.tl-text { display: flex; flex-direction: column; min-width: 0; }
+
+.tl-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.tl-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.tl-leg {
+  position: relative;
+  margin-inline-start: 56px;
+  padding: 10px 0 10px 0;
+  padding-inline-start: 26px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+/* קו אנכי שמחבר בין נקודות */
+.tl-leg::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  inset-inline-start: 4px;
+  width: 6px;
+  border-radius: 3px;
+  background: var(--c, #cbd5e1);
+}
+
+.tl-leg.is-walk::before {
+  width: 0;
+  inset-inline-start: 5px;
+  border-inline-start: 4px dotted #94a3b8;
+  background: none;
+}
+
+.tl-leg.is-walk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tl-icon { display: inline-flex; color: var(--text-muted); }
+
+.tl-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tl-head { font-weight: 700; color: var(--text); }
+
+.tl-stops { margin-top: 6px; }
+
+.tl-stops summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-2);
+  list-style: none;
+}
+
+.tl-stops summary::-webkit-details-marker { display: none; }
+.tl-stops summary::after { content: " ▾"; color: var(--text-muted); }
+.tl-stops[open] summary::after { content: " ▴"; }
+
+.tl-stops ol {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.tl-stops li {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.tl-stop-time {
+  flex: none;
+  min-width: 40px;
+  font-weight: 600;
+  direction: ltr;
+  text-align: end;
+}
+
+/* ---------- ליווי נסיעה – גווני באנר ---------- */
+
+.nav-banner[data-tone="walk"] { background: linear-gradient(145deg, #0f766e 0%, #115e59 100%); }
+.nav-banner[data-tone="wait"] { background: linear-gradient(145deg, #334155 0%, #1e293b 100%); }
+.nav-banner[data-tone="live"] { background: linear-gradient(145deg, #15803d 0%, #166534 100%); }
+.nav-banner[data-tone="ride"] { background: linear-gradient(145deg, #1d4ed8 0%, #1e3a8a 100%); }
+.nav-banner[data-tone="alert"] {
+  background: linear-gradient(145deg, #ea580c 0%, #c2410c 100%);
+  box-shadow: 0 10px 30px rgba(234, 88, 12, 0.35);
+}
+
+/* הזוהר של ההתראה פועם ב-opacity של שכבה נפרדת (GPU), במקום לצייר מחדש box-shadow בכל פריים */
+.nav-banner[data-tone="alert"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: 0 10px 40px rgba(234, 88, 12, 0.7);
+  opacity: 0;
+  pointer-events: none;
+  animation: alert-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes alert-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.nav-panel + .itin-legs { margin-top: 10px; }
+
+/* בזמן ניווט/נסיעה ההודעות יורדות מתחת לבאנר כדי לא להסתיר אותו */
+body.navigating .toast { top: calc(var(--safe-top) + 120px); }
+body.has-route:not(.navigating) .toast { top: calc(var(--safe-top) + 150px); }
+
+@media (min-width: 768px) {
+  .directions {
+    inset-inline-end: auto;
+    inset-inline-start: 16px;
+    width: 400px;
+  }
+
+  /* הפאנל יורד מתחת לכותרת המסלול */
+  body.has-route:not(.navigating) .sheet { top: calc(var(--safe-top) + 150px); }
+}
+
+/* ---------- מחיר ברב-קו ---------- */
+
+.itin-price {
+  margin-inline-start: auto;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text);
+  direction: ltr;
+}
+
+.chip-rec + .itin-price { margin-inline-start: 6px; }
+
+.fare-box {
+  margin-top: 16px;
+  padding: 4px 14px 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.fare-total { font-size: 18px; font-weight: 800; direction: ltr; }
+
+.fare-rows { list-style: none; margin: 0; padding: 0; }
+
+.fare-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.fare-row + .fare-row { border-top: 1px solid var(--border); }
+
+.fare-ride { font-weight: 600; font-size: 14px; }
+.fare-ride small, .fare-price small { display: block; font-size: 11.5px; font-weight: 500; color: var(--text-muted); }
+
+.fare-price { text-align: end; font-weight: 800; font-size: 15px; }
+.fare-price.is-free { color: var(--live); }
+
+.fare-note { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.fare-note a { color: inherit; }
