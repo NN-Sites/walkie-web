@@ -489,5 +489,18 @@ export const EN = {
     'Most lines stop in the afternoon, and trains even earlier. It begins at {time}. Check the last departure.',
   'השירות חוזר בהדרגה': 'Service is resuming',
   'אחרי צאת {name} הקווים חוזרים לפעול בהדרגה. ייתכן שחלק מהיציאות עוד לא יופיעו.':
-    'Lines gradually resume after {name} ends. Some departures may not show up yet.'
+    'Lines gradually resume after {name} ends. Some departures may not show up yet.',
+  'ברוכים הבאים ל-Walkie': 'Welcome to Walkie',
+  'התחברו עם Google כדי לתכנן מסלולים, לשמור מקומות ותחנות, ולקבל אותם בכל מכשיר.':
+    'Sign in with Google to plan routes, save places and stops, and get them on every device.',
+  'צריך להתחבר': 'Sign in required',
+  'כדי {action} צריך להתחבר עם Google. זה לוקח רגע.': 'To {action}, sign in with Google. It only takes a moment.',
+  'דלג בינתיים': 'Skip for now',
+  'לא עכשיו': 'Not now',
+  'בלי התחברות אפשר רק להסתכל על המפה, התחנות והקווים.': 'Without signing in you can only browse the map, stops and lines.',
+  'מחובר כ-{name}': 'Signed in as {name}',
+  'לתכנן מסלול': 'plan a route',
+  'לשמור מועדפים': 'save favorites',
+  'לשתף': 'share',
+  'ההתחברות עוד לא הופעלה באתר הזה': 'Sign-in is not enabled on this site yet'
 };

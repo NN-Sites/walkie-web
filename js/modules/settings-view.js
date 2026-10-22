@@ -1,22 +1,22 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.4.1-mvjqgjx7';
-import { t, LANG, setLanguage } from './i18n.js?v=1.4.1-mvjqgjx7';
-import { showToast } from './ui.js?v=1.4.1-mvjqgjx7';
-import { modeIcon, icon } from './transit-ui.js?v=1.4.1-mvjqgjx7';
-import { escapeHtml } from './ui.js?v=1.4.1-mvjqgjx7';
-import { APP_VERSION } from '../config.js?v=1.4.1-mvjqgjx7';
-import { premiumCardHtml } from './premium-ui.js?v=1.4.1-mvjqgjx7';
-import { onPremiumChange, getDonations } from './premium.js?v=1.4.1-mvjqgjx7';
-import { TIPS } from './pricing.js?v=1.4.1-mvjqgjx7';
-import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.4.1-mvjqgjx7';
-import { celebrate, stagger } from './fx.js?v=1.4.1-mvjqgjx7';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.4.1-mvjqgjx7';
-import { isSupporter } from './premium.js?v=1.4.1-mvjqgjx7';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.5.0-mvjqsjqk';
+import { t, LANG, setLanguage } from './i18n.js?v=1.5.0-mvjqsjqk';
+import { showToast } from './ui.js?v=1.5.0-mvjqsjqk';
+import { modeIcon, icon } from './transit-ui.js?v=1.5.0-mvjqsjqk';
+import { escapeHtml } from './ui.js?v=1.5.0-mvjqsjqk';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvjqsjqk';
+import { premiumCardHtml } from './premium-ui.js?v=1.5.0-mvjqsjqk';
+import { onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvjqsjqk';
+import { TIPS } from './pricing.js?v=1.5.0-mvjqsjqk';
+import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.5.0-mvjqsjqk';
+import { celebrate, stagger } from './fx.js?v=1.5.0-mvjqsjqk';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvjqsjqk';
+import { isSupporter } from './premium.js?v=1.5.0-mvjqsjqk';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.4.1-mvjqgjx7';
+} from './favorites.js?v=1.5.0-mvjqsjqk';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -128,7 +128,7 @@ export class SettingsView {
     }
     return `
       <section class="set-group">
-        <h2 class="set-title">${t('החשבון שלי')} <small class="set-hint">· ${t('לא חובה')}</small>${badge}</h2>
+        <h2 class="set-title">${t('החשבון שלי')}${badge}</h2>
         <p class="set-note" style="margin-top:8px">${t('התחברות עם Gmail שומרת את המועדפים, ההגדרות וה-Premium בחשבון – ומחזירה אותם בטלפון חדש או אחרי התקנה מחדש.')}</p>
         <button class="btn-google" type="button" data-action="google-signin" ${a ? '' : 'disabled'}>${G} ${a ? t('התחברות עם Google') : t('מתחבר לשרת…')}</button>
       </section>`;

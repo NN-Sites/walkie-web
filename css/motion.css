@@ -203,3 +203,64 @@
 @media (prefers-reduced-motion: reduce) {
   .pm-card::after, .pm-badge, .fx-in { animation: none !important; }
 }
+
+/* ---------- חובת התחברות (auth-gate.js) ---------- */
+
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--safe-top, 0px) + 24px) 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  background: rgba(11, 19, 36, 0.5);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+.auth-gate.is-open { opacity: 1; }
+
+/* מסך פתיחה: מלא, בצבעי המותג (כמו אנימציית הפתיחה) */
+.auth-gate.is-welcome {
+  background: linear-gradient(160deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.auth-card {
+  width: min(100%, 380px);
+  padding: 28px 22px 18px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  color: var(--text);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  transform: translateY(16px) scale(0.98);
+  transition: transform 0.42s var(--ease-out);
+}
+.auth-gate.is-open .auth-card { transform: none; }
+
+.auth-logo { display: block; margin: 0 auto 14px; border-radius: 18px; box-shadow: var(--shadow-sm); }
+.auth-icon { font-size: 38px; line-height: 1; margin-bottom: 10px; }
+.auth-title { margin: 0 0 8px; font-size: 21px; font-weight: 800; }
+.auth-text { margin: 0 0 18px; font-size: 14.5px; line-height: 1.55; color: var(--text-2); }
+
+.auth-card .btn-google { width: 100%; margin: 0; font-size: 15.5px; min-height: 50px; color: var(--text); }
+
+.auth-skip {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+.auth-skip:active { background: var(--surface-2); }
+
+.auth-fine { margin: 4px 0 0; font-size: 12px; color: var(--text-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-gate, .auth-card { transition: none; }
+}

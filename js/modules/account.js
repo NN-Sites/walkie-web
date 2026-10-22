@@ -1,14 +1,14 @@
-// חשבון Google – לא חובה.
+// חשבון Google – נדרש לפעולות (מסלול, שמירה, שיתוף); ראו auth-gate.js.
 // המשתמש מתחיל כאנונימי. התחברות עם Google "משדרגת" את אותו משתמש (linkWithCredential),
 // כך שה-Premium, הסטטיסטיקה ומזהה התמיכה נשמרים, והמועדפים וההגדרות מסתנכרנים לכל מכשיר.
 //
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured } from '../firebase-config.js?v=1.4.1-mvjqgjx7';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.4.1-mvjqgjx7';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.4.1-mvjqgjx7';
-import { t } from './i18n.js?v=1.4.1-mvjqgjx7';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvjqsjqk';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvjqsjqk';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvjqsjqk';
+import { t } from './i18n.js?v=1.5.0-mvjqsjqk';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -110,13 +110,27 @@ async function googleCredential(authMod) {
 export async function signInWithGoogle() {
   const { auth, modules } = await getFirebase();
   const a = modules.auth;
-  const user = auth.currentUser;
+  const user = await ensureSignedIn().catch(() => null);
   if (!user) throw new Error(t('אין חיבור לשרת כרגע, נסו שוב בעוד רגע'));
+  if (describe(user)?.linked) {
+    current = describe(user);
+    emit();
+    return current;
+  }
 
   const cred = await googleCredential(a);
   try {
     if (cred) await a.linkWithCredential(user, cred);
-    else await a.linkWithPopup(user, new a.GoogleAuthProvider());
+    else {
+      try {
+        await a.linkWithPopup(user, new a.GoogleAuthProvider());
+      } catch (err) {
+        // אייפון ("הוספה למסך הבית") ודפדפנים שחוסמים חלונות קופצים: מעבר לדף ההתחברות וחזרה
+        if (err?.code !== 'auth/popup-blocked' && err?.code !== 'auth/operation-not-supported-in-this-environment') throw err;
+        await a.linkWithRedirect(user, new a.GoogleAuthProvider());
+        return new Promise(() => {}); // הדף עובר לגוגל
+      }
+    }
   } catch (err) {
     if (err?.code !== 'auth/credential-already-in-use' && err?.code !== 'auth/email-already-in-use') throw err;
     // החשבון כבר מחובר למשתמש קיים (למשל מטלפון קודם): נכנסים אליו.
@@ -152,5 +166,6 @@ export function accountErrorMessage(err) {
   if (code.includes('popup-closed') || code.includes('cancelled') || /cancel|בוטלה|cancelled/i.test(err?.message ?? '')) return null;
   if (code === 'auth/operation-not-allowed' || code === 'auth/configuration-not-found') return t('התחברות עם Google עוד לא הופעלה בשרת');
   if (code === 'auth/network-request-failed') return t('אין חיבור לאינטרנט');
+  if (code === 'auth/unauthorized-domain') return t('ההתחברות עוד לא הופעלה באתר הזה');
   return err?.message || t('ההתחברות נכשלה');
 }

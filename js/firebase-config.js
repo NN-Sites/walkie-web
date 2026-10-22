@@ -60,9 +60,21 @@ export function getFirebase() {
 }
 
 // התחברות אנונימית – אפס חיכוך: המשתמש לא צריך להירשם כדי להשתתף בצ'אט/מעקב.
-export async function ensureSignedIn() {
-  const { auth, modules } = await getFirebase();
-  if (auth.currentUser) return auth.currentUser;
-  const cred = await modules.auth.signInAnonymously(auth);
-  return cred.user;
+// מחכים קודם שהחיבור השמור ייטען (אחרת משתמש Google מחובר נראה "ריק" בפתיחה),
+// ומשתפים את אותה בקשה – כדי שלא ייווצרו שני משתמשים אנונימיים במקביל.
+let signInPromise = null;
+export function ensureSignedIn() {
+  if (!signInPromise) {
+    signInPromise = (async () => {
+      const { auth, modules } = await getFirebase();
+      await auth.authStateReady?.();
+      if (auth.currentUser) return auth.currentUser;
+      const cred = await modules.auth.signInAnonymously(auth);
+      return cred.user;
+    })().catch((err) => {
+      signInPromise = null;
+      throw err;
+    });
+  }
+  return signInPromise;
 }

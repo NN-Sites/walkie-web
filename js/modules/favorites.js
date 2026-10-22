@@ -1,7 +1,14 @@
 // מועדפים: בית, מקום שני (עבודה / בית ספר), מקומות שמורים, תחנות וקווים מועדפים.
 // נשמר במכשיר (localStorage). בחשבון חינמי יש מגבלה – ראו premium.js.
 
-import { allowAdd } from './premium.js?v=1.4.1-mvjqgjx7';
+import { allowAdd } from './premium.js?v=1.5.0-mvjqsjqk';
+
+// שמירה דורשת חשבון Google (auth-gate.js מגדיר את הבדיקה). מחזיר false = הפעולה בוטלה.
+let saveGuard = () => true;
+export function setFavoritesGuard(fn) {
+  saveGuard = fn;
+}
+const canAdd = (kind, count) => saveGuard() && allowAdd(kind, count);
 
 const KEY = 'walkie:favorites';
 
@@ -63,11 +70,13 @@ export function onFavoritesChange(fn) {
 // ---------- בית ומקום שני ----------
 
 export function setHome(place) {
+  if (place && !saveGuard()) return;
   data = { ...data, home: place ? slimPlace(place) : null };
   save();
 }
 
 export function setSecond(place) {
+  if (place && !saveGuard()) return;
   data = { ...data, second: place ? slimPlace(place) : null };
   save();
 }
@@ -101,7 +110,7 @@ export function togglePlace(place) {
     save();
     return false;
   }
-  if (!allowAdd('places', data.places.length)) return null;
+  if (!canAdd('places', data.places.length)) return null;
   data = { ...data, places: [slimPlace(place), ...data.places].slice(0, 30) };
   save();
   return true;
@@ -125,7 +134,7 @@ export function toggleStop(stop) {
     save();
     return false;
   }
-  if (!allowAdd('stops', data.stops.length)) return null;
+  if (!canAdd('stops', data.stops.length)) return null;
   const slim = { id: stop.id, code: stop.code, name: stop.name, lat: stop.lat, lng: stop.lng, mode: stop.mode ?? stop.primaryMode ?? 'bus' };
   data = { ...data, stops: [slim, ...data.stops].slice(0, 20) };
   save();
@@ -144,7 +153,7 @@ export function toggleLine(line) {
     save();
     return false;
   }
-  if (!allowAdd('lines', data.lines.length)) return null;
+  if (!canAdd('lines', data.lines.length)) return null;
   const slim = {
     lineRef: String(line.lineRef),
     line: line.line,

@@ -12,8 +12,8 @@ import {
   NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
-} from './config.js?v=1.4.1-mvjqgjx7';
-import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.4.1-mvjqgjx7';
+} from './config.js?v=1.5.0-mvjqsjqk';
+import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.5.0-mvjqsjqk';
 import {
   createMap,
   focusPoint,
@@ -24,32 +24,33 @@ import {
   TransitLayer,
   VehiclesLayer,
   MapRotator
-} from './modules/map.js?v=1.4.1-mvjqgjx7';
-import { fetchNearbyStops } from './modules/stops.js?v=1.4.1-mvjqgjx7';
-import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.4.1-mvjqgjx7';
-import { Sheet, showToast } from './modules/ui.js?v=1.4.1-mvjqgjx7';
-import { SearchOverlay } from './modules/search.js?v=1.4.1-mvjqgjx7';
-import { RouteController } from './modules/route-controller.js?v=1.4.1-mvjqgjx7';
-import { TransitController } from './modules/transit-controller.js?v=1.4.1-mvjqgjx7';
-import { DirectionsController } from './modules/directions.js?v=1.4.1-mvjqgjx7';
-import { initSessionWhenIdle } from './modules/session.js?v=1.4.1-mvjqgjx7';
-import { TabBar } from './modules/tabs.js?v=1.4.1-mvjqgjx7';
-import { LinesView } from './modules/lines-view.js?v=1.4.1-mvjqgjx7';
-import { StationsView } from './modules/stations-view.js?v=1.4.1-mvjqgjx7';
-import { SettingsView } from './modules/settings-view.js?v=1.4.1-mvjqgjx7';
-import { getSettings, onSettingsChange } from './modules/settings.js?v=1.4.1-mvjqgjx7';
-import { shareMyLocation, shareTrip } from './modules/share.js?v=1.4.1-mvjqgjx7';
-import { QuickBar } from './modules/favorites-ui.js?v=1.4.1-mvjqgjx7';
-import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.4.1-mvjqgjx7';
-import { loadDepartures } from './modules/arrivals.js?v=1.4.1-mvjqgjx7';
-import { PremiumScreen } from './modules/premium-ui.js?v=1.4.1-mvjqgjx7';
-import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange } from './modules/premium.js?v=1.4.1-mvjqgjx7';
-import { initBilling } from './modules/billing.js?v=1.4.1-mvjqgjx7';
-import { supportId } from './modules/session.js?v=1.4.1-mvjqgjx7';
-import { escapeHtml } from './modules/ui.js?v=1.4.1-mvjqgjx7';
-import { t, translateDom } from './modules/i18n.js?v=1.4.1-mvjqgjx7';
-import { initTheme } from './modules/theme.js?v=1.4.1-mvjqgjx7';
-import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.4.1-mvjqgjx7';
+} from './modules/map.js?v=1.5.0-mvjqsjqk';
+import { fetchNearbyStops } from './modules/stops.js?v=1.5.0-mvjqsjqk';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.5.0-mvjqsjqk';
+import { Sheet, showToast } from './modules/ui.js?v=1.5.0-mvjqsjqk';
+import { SearchOverlay } from './modules/search.js?v=1.5.0-mvjqsjqk';
+import { RouteController } from './modules/route-controller.js?v=1.5.0-mvjqsjqk';
+import { TransitController } from './modules/transit-controller.js?v=1.5.0-mvjqsjqk';
+import { DirectionsController } from './modules/directions.js?v=1.5.0-mvjqsjqk';
+import { initSessionWhenIdle } from './modules/session.js?v=1.5.0-mvjqsjqk';
+import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.5.0-mvjqsjqk';
+import { TabBar } from './modules/tabs.js?v=1.5.0-mvjqsjqk';
+import { LinesView } from './modules/lines-view.js?v=1.5.0-mvjqsjqk';
+import { StationsView } from './modules/stations-view.js?v=1.5.0-mvjqsjqk';
+import { SettingsView } from './modules/settings-view.js?v=1.5.0-mvjqsjqk';
+import { getSettings, onSettingsChange } from './modules/settings.js?v=1.5.0-mvjqsjqk';
+import { shareMyLocation, shareTrip } from './modules/share.js?v=1.5.0-mvjqsjqk';
+import { QuickBar } from './modules/favorites-ui.js?v=1.5.0-mvjqsjqk';
+import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.5.0-mvjqsjqk';
+import { loadDepartures } from './modules/arrivals.js?v=1.5.0-mvjqsjqk';
+import { PremiumScreen } from './modules/premium-ui.js?v=1.5.0-mvjqsjqk';
+import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange } from './modules/premium.js?v=1.5.0-mvjqsjqk';
+import { initBilling } from './modules/billing.js?v=1.5.0-mvjqsjqk';
+import { supportId } from './modules/session.js?v=1.5.0-mvjqsjqk';
+import { escapeHtml } from './modules/ui.js?v=1.5.0-mvjqsjqk';
+import { t, translateDom } from './modules/i18n.js?v=1.5.0-mvjqsjqk';
+import { initTheme } from './modules/theme.js?v=1.5.0-mvjqsjqk';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.5.0-mvjqsjqk';
 
 // טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
 translateDom();
@@ -224,6 +225,12 @@ const directions = new DirectionsController({
   }
 });
 
+// תכנון מסלול (מכל מקום באפליקציה) דורש חשבון Google – אחרי ההתחברות המסלול נפתח לבד
+const openDirections = directions.open.bind(directions);
+directions.open = (...args) => {
+  if (requireSignIn(t('לתכנן מסלול'), () => openDirections(...args))) openDirections(...args);
+};
+
 const getNear = () => state.user ?? visibleCenter();
 
 const linesView = new LinesView({
@@ -279,6 +286,7 @@ const settingsView = new SettingsView(document.getElementById('settings-page'), 
 new QuickBar(document.getElementById('quick-places'), {
   onGo: (place) => openDirectionsTo(place),
   onSet: (which) => {
+    if (!requireSignIn(t('לשמור מועדפים'))) return;
     const label = which === 'home' ? t('בית') : t(secondLabel().label);
     pickPlace(which === 'home' ? t('כתובת הבית') : t('כתובת ה{place}', { place: label }), (place) => {
       if (which === 'home') setHome(place);
@@ -502,7 +510,7 @@ function handleSheetAction(action, data) {
   }
 
   if (action === 'share-trip') {
-    shareCurrentTrip();
+    if (requireSignIn(t('לשתף'), shareCurrentTrip)) shareCurrentTrip();
     return;
   }
 
@@ -634,7 +642,7 @@ document.getElementById('btn-share').addEventListener('click', () => {
     showToast(state.locationDenied ? t('יש לאפשר גישה למיקום כדי לשתף') : t('מחפש את המיקום שלך…'));
     return;
   }
-  shareMyLocation(state.user);
+  if (requireSignIn(t('לשתף'), () => state.user && shareMyLocation(state.user))) shareMyLocation(state.user);
 });
 
 /** בזמן ניווט/נסיעה: "אני בדרך – אגיע בערך ב-…" */
@@ -773,6 +781,7 @@ document.addEventListener('visibilitychange', () => {
 const NativeApp = globalThis.Capacitor?.Plugins?.App;
 
 function handleBack() {
+  if (closeAuthDialog()) return;
   if (search.isOpen) return search.close();
   if (premiumScreen.isOpen) return premiumScreen.close();
   if (settingsView.isPrivacyOpen) return settingsView.closePrivacy();
@@ -839,6 +848,9 @@ function showAnnouncement(a) {
   });
   document.body.appendChild(el);
 }
+
+// מסך "ברוכים הבאים" (התחברות עם Google או דילוג) – אחרי אנימציית הפתיחה
+(window.walkieIntroDone ?? Promise.resolve()).then(showWelcomeIfNeeded);
 
 // Firebase נטען רק אחרי שהמפה כבר על המסך
 initSessionWhenIdle((session) => {
