@@ -3,8 +3,8 @@
 //
 // פרטיות: נכללים רק בתי ספר וגני ילדים. מעונות יום ומשפחתונים לא נכללים – רבים מהם בבתים פרטיים.
 
-import { distanceMeters, israelDate, fetchWithTimeout } from './geo.js';
-import { itmToWgs84 } from './itm.js';
+import { distanceMeters, israelDate, fetchWithTimeout } from './geo.js?v=1.4.1-mvjqgjx7';
+import { itmToWgs84 } from './itm.js?v=1.4.1-mvjqgjx7';
 
 const DATASTORE = 'https://data.gov.il/api/3/action/datastore_search';
 const RESOURCE_ID = '2055063b-93e8-4d6a-b2c5-c253d18c0cf6';

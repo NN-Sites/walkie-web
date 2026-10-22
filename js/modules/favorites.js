@@ -1,7 +1,7 @@
 // מועדפים: בית, מקום שני (עבודה / בית ספר), מקומות שמורים, תחנות וקווים מועדפים.
 // נשמר במכשיר (localStorage). בחשבון חינמי יש מגבלה – ראו premium.js.
 
-import { allowAdd } from './premium.js';
+import { allowAdd } from './premium.js?v=1.4.1-mvjqgjx7';
 
 const KEY = 'walkie:favorites';
 

@@ -3,8 +3,8 @@
 // מקור: Transitous (MOTIS) מעל ה-GTFS הרשמי של משרד התחבורה – מחזיר תחנות עם סוג התחבורה,
 // ויציאות לפי לוח זמנים לכל אמצעי. לאוטובוסים מוסיפים זמן אמת מ-SIRI.
 
-import { fetchWithTimeout, distanceMeters } from './geo.js';
-import { MODE_FAMILY, formatHeadsign, stripFeed, matchLiveArrival, tripStartOf } from './transit-planner.js';
+import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.4.1-mvjqgjx7';
+import { MODE_FAMILY, formatHeadsign, stripFeed, matchLiveArrival, tripStartOf } from './transit-planner.js?v=1.4.1-mvjqgjx7';
 
 const MOTIS = 'https://api.transitous.org/api/v1';
 const USER_AGENT = 'Walkie/0.6 (pedestrian & public transport navigation)';

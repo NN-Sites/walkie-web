@@ -5,10 +5,10 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js';
-import { APP_VERSION } from '../config.js';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js';
-import { initAccount, markAccountUnavailable } from './account.js';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.4.1-mvjqgjx7';
+import { APP_VERSION } from '../config.js?v=1.4.1-mvjqgjx7';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.4.1-mvjqgjx7';
+import { initAccount, markAccountUnavailable } from './account.js?v=1.4.1-mvjqgjx7';
 
 let session = null;
 

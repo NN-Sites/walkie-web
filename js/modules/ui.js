@@ -1,11 +1,11 @@
 // רכיבי ממשק: לוח תחתון נגרר (Bottom Sheet) עם נקודות עצירה, ו-Toast.
 
-import { SHEET_PEEK_PX, SHEET_HALF_RATIO, SHEET_FULL_RATIO } from '../config.js';
-import { formatDistance, walkMinutes } from './geo.js';
-import { lineColor } from './stops.js';
-import { groupArrivals } from './arrivals.js';
-import { starButton } from './favorites-ui.js';
-import { t } from './i18n.js';
+import { SHEET_PEEK_PX, SHEET_HALF_RATIO, SHEET_FULL_RATIO } from '../config.js?v=1.4.1-mvjqgjx7';
+import { formatDistance, walkMinutes } from './geo.js?v=1.4.1-mvjqgjx7';
+import { lineColor } from './stops.js?v=1.4.1-mvjqgjx7';
+import { groupArrivals } from './arrivals.js?v=1.4.1-mvjqgjx7';
+import { starButton } from './favorites-ui.js?v=1.4.1-mvjqgjx7';
+import { t } from './i18n.js?v=1.4.1-mvjqgjx7';
 
 const ICONS = {
   bus: (s = 18) =>

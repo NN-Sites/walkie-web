@@ -1,22 +1,22 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js';
-import { t, LANG, setLanguage } from './i18n.js';
-import { showToast } from './ui.js';
-import { modeIcon, icon } from './transit-ui.js';
-import { escapeHtml } from './ui.js';
-import { APP_VERSION } from '../config.js';
-import { premiumCardHtml } from './premium-ui.js';
-import { onPremiumChange, getDonations } from './premium.js';
-import { TIPS } from './pricing.js';
-import { donate, tipPriceLabel, onBillingChange } from './billing.js';
-import { celebrate, stagger } from './fx.js';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js';
-import { isSupporter } from './premium.js';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.4.1-mvjqgjx7';
+import { t, LANG, setLanguage } from './i18n.js?v=1.4.1-mvjqgjx7';
+import { showToast } from './ui.js?v=1.4.1-mvjqgjx7';
+import { modeIcon, icon } from './transit-ui.js?v=1.4.1-mvjqgjx7';
+import { escapeHtml } from './ui.js?v=1.4.1-mvjqgjx7';
+import { APP_VERSION } from '../config.js?v=1.4.1-mvjqgjx7';
+import { premiumCardHtml } from './premium-ui.js?v=1.4.1-mvjqgjx7';
+import { onPremiumChange, getDonations } from './premium.js?v=1.4.1-mvjqgjx7';
+import { TIPS } from './pricing.js?v=1.4.1-mvjqgjx7';
+import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.4.1-mvjqgjx7';
+import { celebrate, stagger } from './fx.js?v=1.4.1-mvjqgjx7';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.4.1-mvjqgjx7';
+import { isSupporter } from './premium.js?v=1.4.1-mvjqgjx7';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js';
+} from './favorites.js?v=1.4.1-mvjqgjx7';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
