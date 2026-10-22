@@ -1,6 +1,8 @@
 // שיתוף מיקום בוואטסאפ: המיקום הנוכחי, או "אני בדרך – אגיע בערך ב-…" בזמן ניווט/נסיעה.
 // שיתוף חד-פעמי (קישור למיקום ברגע השליחה) – לא מעקב רציף, ורק אחרי לחיצה של המשתמש.
 
+import { t, LOCALE } from './i18n.js';
+
 const TZ = 'Asia/Jerusalem';
 
 export const WHATSAPP_ICON =
@@ -12,7 +14,7 @@ export function mapLink({ lat, lng }) {
 }
 
 function clock(date) {
-  return new Date(date).toLocaleTimeString('he-IL', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  return new Date(date).toLocaleTimeString(LOCALE, { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
 }
 
 /** פותח וואטסאפ עם הודעה מוכנה (המשתמש בוחר למי לשלוח) */
@@ -23,7 +25,7 @@ export function openWhatsApp(text) {
 }
 
 export function shareMyLocation(position) {
-  openWhatsApp(`📍 המיקום שלי עכשיו:\n${mapLink(position)}`);
+  openWhatsApp(`📍 ${t('המיקום שלי עכשיו:')}\n${mapLink(position)}`);
 }
 
 /**
@@ -31,11 +33,11 @@ export function shareMyLocation(position) {
  * mode: 'walk' | 'transit'
  */
 export function shareTrip({ position, destName, arrival, mode = 'walk', lineText = null }) {
-  const how = mode === 'walk' ? '🚶 בהליכה' : `🚌 בתחבורה ציבורית${lineText ? ` (${lineText})` : ''}`;
+  const how = mode === 'walk' ? `🚶 ${t('בהליכה')}` : `🚌 ${t('בתחבורה ציבורית')}${lineText ? ` (${lineText})` : ''}`;
   const lines = [
-    `אני בדרך ל${destName} ${how}`,
-    arrival ? `⏱️ אגיע בערך ב-${clock(arrival)}` : null,
-    position ? `📍 איפה אני עכשיו: ${mapLink(position)}` : null
+    `${t('אני בדרך ל{dest}', { dest: destName })} ${how}`,
+    arrival ? `⏱️ ${t('אגיע בערך ב-{time}', { time: clock(arrival) })}` : null,
+    position ? `📍 ${t('איפה אני עכשיו:')} ${mapLink(position)}` : null
   ].filter(Boolean);
   openWhatsApp(lines.join('\n'));
 }

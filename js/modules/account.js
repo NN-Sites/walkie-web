@@ -8,6 +8,7 @@
 import { getFirebase, isFirebaseConfigured } from '../firebase-config.js';
 import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js';
 import { getSettings, updateSettings, onSettingsChange } from './settings.js';
+import { t } from './i18n.js';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -96,10 +97,10 @@ async function googleCredential(authMod) {
   const native = globalThis.Capacitor?.isNativePlatform?.();
   const FA = globalThis.Capacitor?.Plugins?.FirebaseAuthentication;
   if (native) {
-    if (!FA) throw new Error('התחברות עם Google עוד לא זמינה בגרסה הזו');
+    if (!FA) throw new Error(t('התחברות עם Google עוד לא זמינה בגרסה הזו'));
     const res = await FA.signInWithGoogle({ skipNativeAuth: true });
     const idToken = res?.credential?.idToken;
-    if (!idToken) throw new Error('ההתחברות בוטלה');
+    if (!idToken) throw new Error(t('ההתחברות בוטלה'));
     return authMod.GoogleAuthProvider.credential(idToken);
   }
   return null; // בדפדפן: חלון קופץ
@@ -110,7 +111,7 @@ export async function signInWithGoogle() {
   const { auth, modules } = await getFirebase();
   const a = modules.auth;
   const user = auth.currentUser;
-  if (!user) throw new Error('אין חיבור לשרת כרגע, נסו שוב בעוד רגע');
+  if (!user) throw new Error(t('אין חיבור לשרת כרגע, נסו שוב בעוד רגע'));
 
   const cred = await googleCredential(a);
   try {
@@ -148,8 +149,8 @@ export async function signOutGoogle() {
 /** הודעות שגיאה מובנות */
 export function accountErrorMessage(err) {
   const code = err?.code ?? '';
-  if (code.includes('popup-closed') || code.includes('cancelled') || /cancel|בוטלה/i.test(err?.message ?? '')) return null;
-  if (code === 'auth/operation-not-allowed' || code === 'auth/configuration-not-found') return 'התחברות עם Google עוד לא הופעלה בשרת';
-  if (code === 'auth/network-request-failed') return 'אין חיבור לאינטרנט';
-  return err?.message || 'ההתחברות נכשלה';
+  if (code.includes('popup-closed') || code.includes('cancelled') || /cancel|בוטלה|cancelled/i.test(err?.message ?? '')) return null;
+  if (code === 'auth/operation-not-allowed' || code === 'auth/configuration-not-found') return t('התחברות עם Google עוד לא הופעלה בשרת');
+  if (code === 'auth/network-request-failed') return t('אין חיבור לאינטרנט');
+  return err?.message || t('ההתחברות נכשלה');
 }

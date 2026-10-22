@@ -7,6 +7,7 @@ import { buildRouteModel, NavigationSession, RouteSimulator } from './navigation
 import { HeadingSource } from './compass.js';
 import { focusPoint } from './map.js';
 import { showToast } from './ui.js';
+import { t } from './i18n.js';
 import { vibrate } from './settings.js';
 import * as tpl from './route-ui.js';
 
@@ -137,7 +138,7 @@ export class RouteController {
     if (this.simulate) {
       this.sim = new RouteSimulator(this.model, (p) => this.onSimPosition(p));
       this.sim.start();
-      showToast('מצב הדמיה: הולכים לאורך המסלול');
+      showToast(t('מצב הדמיה: הולכים לאורך המסלול'));
     } else {
       const first = this.lastPos ?? { ...this.model.pts[0], accuracy: 10, heading: null, speed: null };
       this.onPosition(first);
@@ -226,7 +227,7 @@ export class RouteController {
       this.session = this.#newSession(this.model);
       this.routeLayer.show(this.model);
     } catch {
-      showToast('לא הצלחנו לחשב מסלול חדש – ממשיכים במסלול הקודם');
+      showToast(t('לא הצלחנו לחשב מסלול חדש – ממשיכים במסלול הקודם'));
     } finally {
       this.rerouting = false;
       if (this.mode === 'navigating' && this.lastPos) this.onPosition(this.lastPos);
@@ -271,7 +272,7 @@ export class RouteController {
   #updateCompassBtn() {
     this.compassBtn.classList.toggle('is-active', this.headingUp);
     this.compassBtn.setAttribute('aria-pressed', String(this.headingUp));
-    this.compassBtn.setAttribute('aria-label', this.headingUp ? 'מפה לפי כיוון ההליכה (לחצו לצפון למעלה)' : 'צפון למעלה (לחצו למצב מצפן)');
+    this.compassBtn.setAttribute('aria-label', this.headingUp ? t('מפה לפי כיוון ההליכה (לחצו לצפון למעלה)') : t('צפון למעלה (לחצו למצב מצפן)'));
     if (!this.headingUp) this.#rotateCompassIcon(0);
   }
 

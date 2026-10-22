@@ -16,13 +16,14 @@ const INCLUDED_TYPES = new Set(['בית ספר', 'גן ילדים']);
 const FIELDS = ['SEMEL_MOSAD', 'SHEM_MOSAD', 'ISV_SHEM_ISHUV', 'TEUR_TAT_SUG_MISGERET', 'TEUR_STATUS', 'TEUR_SHLAV_HINUH', 'TEUR_PIKOH1', 'X', 'Y'];
 
 // מילים כלליות שלא מופיעות בשם הרשמי: "בית ספר אור העתיד" -> "אור העתיד"
-const GENERIC_WORDS = new Set(['בית', 'ספר', 'ביס', 'בי"ס', 'ביה"ס', 'ביהס', 'גן', 'ילדים', 'גני']);
+const GENERIC_WORDS = new Set(['בית', 'ספר', 'ביס', 'ביהס', 'בהס', 'גן', 'ילדים', 'גני', 'של', 'עש']);
+const KINDERGARTEN_WORDS = new Set(['גן', 'גני', 'ילדים']);
 
+// מרשמים נפוצים: "ממד" / "ממ"ד", "חטב" / "חט"ב", "בי"ס" – בלי גרשיים בשני הצדדים
 function normalizeText(text) {
   return String(text ?? '')
     .toLowerCase()
-    .replace(/[״]/g, '"')
-    .replace(/[׳']/g, '')
+    .replace(/["״׳']/g, '')
     .replace(/[-–/\\.,()]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -58,6 +59,7 @@ export class EducationIndex {
     this.log = log;
     this.items = [];
     this.keys = [];
+    this.nameKeys = [];
     this.loadedAt = null;
     this.loading = null;
   }
@@ -76,21 +78,32 @@ export class EducationIndex {
     await this.loading;
   }
 
-  /** חיפוש לפי שם (+ עיר): כל המילים הלא-כלליות צריכות להופיע. ממוין: התחלת שם, ואז קרבה */
+  /**
+   * חיפוש לפי שם (+ עיר / שלב: "תיכון", "יסודי"): כל המילים הלא-כלליות צריכות להופיע.
+   * ממוין לפי קרבה, עם קנס (בק"מ) לגן ילדים כשמחפשים בית ספר, להתאמה באמצע מילה ולשם שלא מתחיל במילה הראשונה.
+   */
   search(query, near = null, limit = 5) {
-    const tokens = normalizeText(query).split(' ').filter((t) => t && !GENERIC_WORDS.has(t));
+    const words = normalizeText(query).split(' ').filter(Boolean);
+    const tokens = words.filter((t) => !GENERIC_WORDS.has(t));
     if (tokens.length === 0) return [];
+    const wantsKindergarten = words.some((w) => KINDERGARTEN_WORDS.has(w));
+    const wantsSchool = !wantsKindergarten && words.some((w) => ['ספר', 'ביס', 'ביהס', 'תיכון', 'יסודי', 'חטב', 'מקיף'].includes(w));
 
     const matches = [];
     for (let i = 0; i < this.items.length; i++) {
       const hay = this.keys[i];
       if (!tokens.every((t) => hay.includes(t))) continue;
       const item = this.items[i];
-      const nameKey = normalizeText(item.name);
-      const startsWith = nameKey.startsWith(tokens[0]) ? 0 : 1;
-      const d = near ? distanceMeters(near, item) : 0;
-      matches.push({ item, d, score: startsWith * 20000 + d });
-      if (matches.length > 300) break;
+      const isKindergarten = item.type === 'גן ילדים';
+      if (wantsSchool && isKindergarten) continue;
+      const nameKey = this.nameKeys[i];
+      const wordStarts = tokens.filter((t) => hay.startsWith(t) || hay.includes(` ${t}`)).length;
+      const km = near ? distanceMeters(near, item) / 1000 : 0;
+      const score = km
+        + (nameKey.startsWith(tokens[0]) ? 0 : 6)
+        + (tokens.length - wordStarts) * 8
+        + (isKindergarten && !wantsKindergarten ? 15 : 0);
+      matches.push({ item, d: km * 1000, score });
     }
 
     return matches
@@ -168,7 +181,9 @@ export class EducationIndex {
   #build(items, savedAt) {
     this.items = items;
     this.loadedAt = savedAt;
-    this.keys = items.map((it) => normalizeText(`${it.name} ${it.city ?? ''}`));
+    this.nameKeys = items.map((it) => normalizeText(it.name));
+    // השלב והסוג בתוך המפתח – "תיכון דה שליט" נמצא גם כשהמילה "תיכון" לא בשם הרשמי
+    this.keys = items.map((it, i) => `${this.nameKeys[i]} ${normalizeText(`${it.city ?? ''} ${it.stage ?? ''} ${it.stage === 'חטיבת ביניים' ? 'חטב' : ''} ${it.type ?? ''}`)}`);
   }
 
   async #readCache() {

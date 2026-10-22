@@ -1,0 +1,111 @@
+/* מצב לילה: data-theme="dark" על <html> (נקבע לפני הטעינה ב-index.html, ומתעדכן ב-theme.js).
+   כמעט כל הממשק בנוי על המשתנים של :root, ולכן כאן בעיקר מחליפים אותם.
+   מתחת – רק הרכיבים שיש להם צבע קבוע (גוונים בהירים של תגיות, כרטיסים "מזכוכית"). */
+
+:root[data-theme="dark"] {
+  --brand: #14b8a6;
+  --brand-600: #0d9488;
+  --brand-700: #0f766e;
+  --brand-50: #0f2a28;
+  --brand-100: #134e48;
+  --accent: #fb923c;
+  --live: #4ade80;
+  --danger: #fb7185;
+  --user: #60a5fa;
+
+  --bg: #0b1017;
+  --surface: #141b25;
+  --surface-2: #1b2430;
+  --surface-3: #232e3c;
+  --text: #e8edf4;
+  --text-2: #b4bfcd;
+  --text-muted: #8391a5;
+  --border: #29333f;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 -10px 40px rgba(0, 0, 0, 0.5), 0 -2px 10px rgba(0, 0, 0, 0.3);
+
+  color-scheme: dark;
+}
+
+/* ---------- מפה ---------- */
+
+/* אריחי OSM בהירים -> כהים: היפוך + סיבוב גוון (הכבישים נשארים בצבעים מוכרים) */
+[data-theme="dark"] #map,
+[data-theme="dark"] .leaflet-container { background: #1a1f26; }
+[data-theme="dark"] .leaflet-tile-pane .leaflet-tile {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.6);
+}
+[data-theme="dark"] .leaflet-control-attribution { background: rgba(20, 27, 37, 0.85) !important; color: var(--text-muted); }
+[data-theme="dark"] .leaflet-control-attribution a { color: var(--user); }
+
+[data-theme="dark"] .stop-pin,
+[data-theme="dark"] .lstop-dot,
+[data-theme="dark"] .tl-dot { background: var(--surface); }
+[data-theme="dark"] .user-core { border-color: #0b1017; }
+
+/* ---------- משטחים "מזכוכית" ---------- */
+
+[data-theme="dark"] .search-pill,
+[data-theme="dark"] .topbar-close,
+[data-theme="dark"] .quick-chip,
+[data-theme="dark"] .tabbar,
+[data-theme="dark"] .directions {
+  background: rgba(20, 27, 37, 0.96);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .quick-chip { border-color: rgba(255, 255, 255, 0.14); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5); }
+[data-theme="dark"] .toast { background: rgba(232, 237, 244, 0.95); color: #0b1324; }
+/* שם התחנה מעל הסמן: הרקע הוא var(--text), שבלילה בהיר – אז גם הטקסט מתהפך */
+[data-theme="dark"] .leaflet-tooltip.stop-label { color: #0b1324; }
+[data-theme="dark"] .sheet-handle span { background: #3a4656; }
+[data-theme="dark"] .sheet.is-dragging .sheet-handle span { background: #4b596b; }
+[data-theme="dark"] .switch:not(:checked) { background: #3a4656; }
+[data-theme="dark"] .switch::after { background: #e8edf4; }
+[data-theme="dark"] .leg-sep { color: #4b596b; }
+
+/* ---------- גוונים של תגיות וכפתורים ---------- */
+
+[data-theme="dark"] .stop-head-icon.is-focused,
+[data-theme="dark"] .result-icon.kind-poi { background: #3a2412; }
+[data-theme="dark"] .chip-warn,
+[data-theme="dark"] .pm-reason { background: #3a2412; color: #fdba74; }
+[data-theme="dark"] .pm-until { color: #fdba74; }
+[data-theme="dark"] .chip-live,
+[data-theme="dark"] .dep-chip.is-live { background: #12301f; }
+[data-theme="dark"] .notice { background: #16233b; color: #bfdbfe; }
+[data-theme="dark"] .btn-walk,
+[data-theme="dark"] .dir-chip,
+[data-theme="dark"] .dir-time.is-set { background: #16233b; border-color: #1e3a6e; }
+[data-theme="dark"] .btn-end { background: #3b1518; color: #fda4af; }
+[data-theme="dark"] .fab-share { color: var(--live); }
+[data-theme="dark"] .fab-share:active,
+[data-theme="dark"] .btn-share-trip,
+[data-theme="dark"] .donate-thanks,
+[data-theme="dark"] .supporter-badge { background: #12301f; color: #86efac; }
+[data-theme="dark"] .star-btn.is-on { background: #33280c; border-color: #6b5413; color: #fcd34d; }
+[data-theme="dark"] .dir-fav.is-on { color: #fbbf24; }
+[data-theme="dark"] .fav-stop-main { background: #1f1b10; border-color: #4a3d14; }
+
+/* רכבת (כחול כהה) ורכבת קלה (אדום): על רקע כהה צריך גוון בהיר יותר לטקסט */
+[data-theme="dark"] .mode-tag.mode-rail { color: #a5b4fc; }
+[data-theme="dark"] .mode-tag.mode-lightrail { color: #fca5a5; }
+[data-theme="dark"] .nearby-icon.mode-rail,
+[data-theme="dark"] .stop-head-icon.mode-rail,
+[data-theme="dark"] .set-icon.mode-rail { background: #1c2450; color: #a5b4fc; }
+[data-theme="dark"] .nearby-icon.mode-lightrail,
+[data-theme="dark"] .stop-head-icon.mode-lightrail,
+[data-theme="dark"] .set-icon.mode-lightrail { background: #3b1518; color: #fca5a5; }
+
+/* ---------- באנר הניווט: כהה יותר בלילה, פחות מסנוור ---------- */
+
+[data-theme="dark"] .nav-banner { filter: brightness(0.88); }
+
+/* ---------- מעבר חלק בין המצבים (לא בזמן הטעינה הראשונה) ---------- */
+
+:root.theme-anim,
+:root.theme-anim * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
+}

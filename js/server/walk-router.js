@@ -175,9 +175,27 @@ const OSRM_TO_VALHALLA_TYPE = {
   straight: 8
 };
 
-function osrmInstruction(step) {
-  const street = step.name ? ` אל ${step.name}` : '';
+const OSRM_MODIFIERS_EN = {
+  left: 'Turn left',
+  right: 'Turn right',
+  'slight left': 'Bear left',
+  'slight right': 'Bear right',
+  'sharp left': 'Turn sharp left',
+  'sharp right': 'Turn sharp right',
+  uturn: 'Make a U-turn',
+  straight: 'Continue straight'
+};
+
+function osrmInstruction(step, lang = 'he') {
   const { type, modifier } = step.maneuver;
+  if (lang === 'en') {
+    const onto = step.name ? ` onto ${step.name}` : '';
+    if (type === 'depart') return `Head out${step.name ? ` on ${step.name}` : ''}.`;
+    if (type === 'arrive') return 'You have arrived.';
+    if (type === 'roundabout' || type === 'rotary') return `Enter the roundabout and exit${onto}.`;
+    return `${OSRM_MODIFIERS_EN[modifier] ?? 'Continue'}${onto}.`;
+  }
+  const street = step.name ? ` אל ${step.name}` : '';
   if (type === 'depart') return `צא לדרך${step.name ? ` על ${step.name}` : ''}.`;
   if (type === 'arrive') return 'הגעת ליעד.';
   if (type === 'roundabout' || type === 'rotary') return `היכנס לכיכר וצא${street}.`;
@@ -194,22 +212,22 @@ export class WalkRouter {
   }
 
   /** options.speedKmh – מהירות הליכה מההגדרות (איטית/רגילה/מהירה) */
-  async route(from, to, { speedKmh = WALK_KMH } = {}) {
+  async route(from, to, { speedKmh = WALK_KMH, lang = 'he' } = {}) {
     const direct = distanceMeters(from, to);
     if (direct > MAX_WALK_DISTANCE_M) throw new RoutingError('Too far to walk', 'too_far');
     if (direct < 5) throw new RoutingError('Origin equals destination', 'too_close');
 
-    const key = `${from.lat.toFixed(4)},${from.lng.toFixed(4)}>${to.lat.toFixed(4)},${to.lng.toFixed(4)}@${speedKmh}`;
+    const key = `${from.lat.toFixed(4)},${from.lng.toFixed(4)}>${to.lat.toFixed(4)},${to.lng.toFixed(4)}@${speedKmh}|${lang}`;
     const hit = this.#cache.get(key);
     if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.data;
 
     let data;
     try {
-      data = await this.#valhalla(from, to, speedKmh);
+      data = await this.#valhalla(from, to, speedKmh, lang);
     } catch (err) {
       if (err instanceof RoutingError && err.code === 'no_route') throw err;
       this.log.warn?.(`[route] Valhalla failed (${err.message}), falling back to OSRM`);
-      data = await this.#osrm(from, to, speedKmh);
+      data = await this.#osrm(from, to, speedKmh, lang);
     }
 
     this.#cache.set(key, { at: Date.now(), data });
@@ -217,7 +235,7 @@ export class WalkRouter {
     return data;
   }
 
-  async #valhalla(from, to, speedKmh) {
+  async #valhalla(from, to, speedKmh, lang = 'he') {
     const costing = { ...PEDESTRIAN_COSTING, walking_speed: speedKmh };
     const request = {
       locations: [
@@ -227,7 +245,7 @@ export class WalkRouter {
       costing: 'pedestrian',
       costing_options: { pedestrian: costing },
       alternates: 2,
-      directions_options: { units: 'kilometers', language: 'he-IL' }
+      directions_options: { units: 'kilometers', language: lang === 'en' ? 'en-US' : 'he-IL' }
     };
 
     const res = await fetchWithTimeout(
@@ -331,7 +349,7 @@ export class WalkRouter {
     return json.edges;
   }
 
-  async #osrm(from, to, speedKmh = WALK_KMH) {
+  async #osrm(from, to, speedKmh = WALK_KMH, lang = 'he') {
     const url =
       `${OSRM_FOOT_BASE}/route/v1/foot/${from.lng},${from.lat};${to.lng},${to.lat}` +
       '?overview=full&geometries=polyline&steps=true';
@@ -373,7 +391,7 @@ export class WalkRouter {
         s.maneuver.type === 'roundabout' || s.maneuver.type === 'rotary' ? 26 :
         OSRM_TO_VALHALLA_TYPE[s.maneuver.modifier] ?? 8;
       return {
-        instruction: osrmInstruction(s),
+        instruction: osrmInstruction(s, lang),
         verbal: osrmInstruction(s),
         type,
         distance: Math.round(s.distance),

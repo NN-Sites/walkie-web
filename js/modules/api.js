@@ -9,6 +9,7 @@ import {
   MAX_STOPS
 } from '../config.js';
 import { getSettings, transitPrefsParams } from './settings.js';
+import { LANG } from './i18n.js';
 
 export class ApiError extends Error {
   constructor(message, status = 0) {
@@ -180,5 +181,6 @@ export function fetchWalkRoute(from, to, signal) {
   const f = `${from.lat.toFixed(6)},${from.lng.toFixed(6)}`;
   const t = `${to.lat.toFixed(6)},${to.lng.toFixed(6)}`;
   const speed = getSettings().walkSpeed;
-  return getJson(`/route/walk?from=${f}&to=${t}&speed=${speed}`, { timeoutMs: API_ROUTE_TIMEOUT_MS, signal });
+  // lang – שפת הוראות ההליכה ("פנו ימינה" / "Turn right")
+  return getJson(`/route/walk?from=${f}&to=${t}&speed=${speed}&lang=${LANG}`, { timeoutMs: API_ROUTE_TIMEOUT_MS, signal });
 }

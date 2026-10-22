@@ -5,6 +5,7 @@
 // בדפדפן ב-localhost אין Play: "רכישה" מפעילה מצב בדיקה (premium.js).
 
 import { TIPS } from './pricing.js';
+import { t } from './i18n.js';
 import { getPricing, setPlayActive, setTestPremium, canUseTestPurchase, recordDonation } from './premium.js';
 
 let store = null;
@@ -78,7 +79,7 @@ export function billingAvailable() {
 
 async function order(p) {
   const offer = p.getOffer();
-  if (!offer) throw new Error('המוצר לא זמין כרגע ב-Google Play');
+  if (!offer) throw new Error(t('המוצר לא זמין כרגע ב-Google Play'));
   const err = await offer.order();
   if (err && err.code !== globalThis.CdvPurchase?.ErrorCode?.PAYMENT_CANCELLED) throw new Error(err.message);
   return !err;
@@ -90,20 +91,20 @@ export async function purchase() {
     setTestPremium(true);
     return true;
   }
-  throw new Error('התשלום זמין רק באפליקציה שהותקנה מ-Google Play');
+  throw new Error(t('התשלום זמין רק באפליקציה שהותקנה מ-Google Play'));
 }
 
 /** תרומה חד-פעמית. מחזיר true אם התשלום נשלח (התודה נרשמת כשהעסקה נסגרת). */
 export async function donate(tipId) {
   const tip = tipById(tipId);
-  if (!tip) throw new Error('סכום לא מוכר');
+  if (!tip) throw new Error(t('סכום לא מוכר'));
   const p = tipProducts.get(tipId);
   if (store && p) return order(p);
   if (canUseTestPurchase()) {
     recordDonation(tip.amount); // בדיקה בדפדפן
     return true;
   }
-  throw new Error('תרומה זמינה רק באפליקציה שהותקנה מ-Google Play');
+  throw new Error(t('תרומה זמינה רק באפליקציה שהותקנה מ-Google Play'));
 }
 
 /** מחיר התרומה כפי ש-Play מציג, או הסכום מהקוד */
@@ -114,7 +115,7 @@ export function tipPriceLabel(tipId) {
 export async function restore() {
   if (!store) {
     if (canUseTestPurchase()) return false;
-    throw new Error('שחזור רכישות זמין רק באפליקציה');
+    throw new Error(t('שחזור רכישות זמין רק באפליקציה'));
   }
   await store.restorePurchases();
   const owned = store.owned(getPricing().productId);

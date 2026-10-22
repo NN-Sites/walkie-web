@@ -2,28 +2,29 @@
 
 import { escapeHtml } from './ui.js';
 import { WHATSAPP_ICON } from './share.js';
+import { t, tn, LOCALE } from './i18n.js';
 
 // ---------- פורמטים ----------
 
 export function formatDuration(seconds) {
   const min = Math.max(1, Math.round(seconds / 60));
-  if (min < 60) return `${min} דק'`;
+  if (min < 60) return t('{n} דק\'', { n: min });
   const h = Math.floor(min / 60);
   const m = min % 60;
-  return m ? `${h} ש' ${m} דק'` : `${h} ש'`;
+  return m ? t('{h} ש\' {m} דק\'', { h, m }) : t('{h} ש\'', { h });
 }
 
 export function formatClock(secondsFromNow) {
-  return new Date(Date.now() + secondsFromNow * 1000).toLocaleTimeString('he-IL', {
+  return new Date(Date.now() + secondsFromNow * 1000).toLocaleTimeString(LOCALE, {
     hour: '2-digit',
     minute: '2-digit'
   });
 }
 
 export function formatNavDistance(m) {
-  if (m >= 1000) return `${(m / 1000).toFixed(1)} ק"מ`;
-  if (m >= 100) return `${Math.round(m / 10) * 10} מ'`;
-  return `${Math.max(5, Math.round(m / 5) * 5)} מ'`;
+  if (m >= 1000) return t('{n} ק"מ', { n: (m / 1000).toFixed(1) });
+  if (m >= 100) return t('{n} מ\'', { n: Math.round(m / 10) * 10 });
+  return t('{n} מ\'', { n: Math.max(5, Math.round(m / 5) * 5) });
 }
 
 // ---------- אייקוני תמרון ----------
@@ -66,7 +67,7 @@ export function maneuverIcon(type, size = 22) {
 
 export function routeLoadingHtml(dest) {
   return `
-    <p class="eyebrow">מחשב מסלול הליכה…</p>
+    <p class="eyebrow">${t('מחשב מסלול הליכה…')}</p>
     <h2 class="stop-title">${escapeHtml(dest.name)}</h2>
     <div class="skeleton" style="margin-top:14px">
       <div class="sk-title"></div>
@@ -81,14 +82,14 @@ const ROUTE_ERRORS = {
 };
 
 export function routeErrorHtml(dest, status) {
-  const msg = ROUTE_ERRORS[status] ?? 'לא הצלחנו לחשב מסלול כרגע. בדקו את החיבור ונסו שוב.';
+  const msg = t(ROUTE_ERRORS[status] ?? 'לא הצלחנו לחשב מסלול כרגע. בדקו את החיבור ונסו שוב.');
   return `
-    <p class="eyebrow">מסלול הליכה</p>
+    <p class="eyebrow">${t('מסלול הליכה')}</p>
     <h2 class="stop-title">${escapeHtml(dest.name)}</h2>
     <div class="state-box" style="margin-top:14px"><span>${msg}</span></div>
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn-secondary" type="button" data-action="route-retry">לנסות שוב</button>
-      <button class="btn-secondary" type="button" data-action="route-close">סגירה</button>
+      <button class="btn-secondary" type="button" data-action="route-retry">${t('לנסות שוב')}</button>
+      <button class="btn-secondary" type="button" data-action="route-close">${t('סגירה')}</button>
     </div>`;
 }
 
@@ -96,22 +97,22 @@ export function routePreviewHtml(model, dest, { originIsUser }) {
   const c = model.crossings ?? { signalized: 0, marked: 0, waitSeconds: 0 };
   const pills = [
     `<span class="meta-pill"><strong>${formatNavDistance(model.distance)}</strong></span>`,
-    c.signalized ? `<span class="meta-pill">🚦 ${c.signalized} רמזורים</span>` : '',
-    c.marked ? `<span class="meta-pill">🚸 ${c.marked} מעברי חצייה</span>` : ''
+    c.signalized ? `<span class="meta-pill">🚦 ${tn(c.signalized, 'רמזור אחד', '{n} רמזורים')}</span>` : '',
+    c.marked ? `<span class="meta-pill">🚸 ${tn(c.marked, 'מעבר חצייה אחד', '{n} מעברי חצייה')}</span>` : ''
   ].filter(Boolean);
 
   const waitMin = Math.round(c.waitSeconds / 60);
   const explain = [];
   if (model.analysis === 'full' && c.waitSeconds >= 30) {
-    explain.push(`הזמן כולל כ-${waitMin > 0 ? `${waitMin} דק'` : 'חצי דקה'} המתנה צפויה ברמזורים ובמעברי חצייה.`);
+    explain.push(t('הזמן כולל כ-{wait} המתנה צפויה ברמזורים ובמעברי חצייה.', { wait: waitMin > 0 ? t('{n} דק\'', { n: waitMin }) : t('חצי דקה') }));
   } else if (model.analysis !== 'full') {
-    explain.push('זמני ההמתנה בחציות מוערכים (אין כרגע נתוני רמזורים מפורטים).');
+    explain.push(t('זמני ההמתנה בחציות מוערכים (אין כרגע נתוני רמזורים מפורטים).'));
   }
   if (model.chosenBecause === 'fewer_waits') {
-    explain.push('בחרנו מסלול עם פחות המתנות, גם אם הוא מעט ארוך יותר.');
+    explain.push(t('בחרנו מסלול עם פחות המתנות, גם אם הוא מעט ארוך יותר.'));
   }
   if (!originIsUser) {
-    explain.push('<strong>אין מיקום GPS</strong> – המסלול מחושב ממרכז המפה.');
+    explain.push(`<strong>${t('אין מיקום GPS')}</strong> – ${t('המסלול מחושב ממרכז המפה.')}`);
   }
 
   const steps = model.maneuvers
@@ -126,18 +127,18 @@ export function routePreviewHtml(model, dest, { originIsUser }) {
     .join('');
 
   return `
-    <p class="eyebrow">מסלול הליכה ${dest.kind === 'stop' ? '<span class="chip">תחנת אוטובוס</span>' : ''}</p>
+    <p class="eyebrow">${t('מסלול הליכה')} ${dest.kind === 'stop' ? `<span class="chip">${t('תחנת אוטובוס')}</span>` : ''}</p>
     <h2 class="stop-title">${escapeHtml(dest.name)}</h2>
     <div class="route-time">
       <span class="route-time-big">${formatDuration(model.realisticSeconds)}</span>
-      <span class="route-time-eta">הגעה ב-${formatClock(model.realisticSeconds)}</span>
+      <span class="route-time-eta">${t('הגעה ב-{time}', { time: formatClock(model.realisticSeconds) })}</span>
     </div>
     <div class="stop-meta">${pills.join('')}</div>
     ${explain.length ? `<p class="route-explain">${explain.join(' ')}</p>` : ''}
     <button class="btn-go" type="button" data-action="route-start">
-      ${maneuverIcon(1, 22)} יציאה
+      ${maneuverIcon(1, 22)} ${t('יציאה')}
     </button>
-    <h3 class="section-title">הוראות הליכה</h3>
+    <h3 class="section-title">${t('הוראות הליכה')}</h3>
     <ul class="steps">${steps}</ul>`;
 }
 
@@ -148,8 +149,8 @@ export function bannerHtml(state, { rerouting = false } = {}) {
     return `
       <div class="nav-icon">${maneuverIcon(1, 30)}</div>
       <div class="nav-text">
-        <div class="nav-dist">מחשב מחדש…</div>
-        <div class="nav-instr">סטית מהמסלול, מחפשים דרך חדשה</div>
+        <div class="nav-dist">${t('מחשב מחדש…')}</div>
+        <div class="nav-instr">${t('סטית מהמסלול, מחפשים דרך חדשה')}</div>
       </div>`;
   }
   const m = state.next;
@@ -157,7 +158,7 @@ export function bannerHtml(state, { rerouting = false } = {}) {
   return `
     <div class="nav-icon">${maneuverIcon(m.type, 34)}</div>
     <div class="nav-text">
-      <div class="nav-dist">${isArrival ? `${formatNavDistance(state.remaining)} ליעד` : formatNavDistance(state.distToNext)}</div>
+      <div class="nav-dist">${isArrival ? t('{dist} ליעד', { dist: formatNavDistance(state.remaining) }) : formatNavDistance(state.distToNext)}</div>
       <div class="nav-instr">${escapeHtml(m.instruction)}</div>
     </div>`;
 }
@@ -167,10 +168,10 @@ export function navPanelHtml(state) {
     <div class="nav-panel">
       <div class="nav-summary">
         <div class="nav-remaining">${formatDuration(state.remainingSeconds)}</div>
-        <div class="nav-sub">${formatNavDistance(state.remaining)} · הגעה ב-${formatClock(state.remainingSeconds)}</div>
+        <div class="nav-sub">${formatNavDistance(state.remaining)} · ${t('הגעה ב-{time}', { time: formatClock(state.remainingSeconds) })}</div>
       </div>
-      <button class="btn-share-trip" type="button" data-action="share-trip" aria-label="שיתוף זמן ההגעה בוואטסאפ">${WHATSAPP_ICON}</button>
-      <button class="btn-end" type="button" data-action="route-end">סיום</button>
+      <button class="btn-share-trip" type="button" data-action="share-trip" aria-label="${t('שיתוף זמן ההגעה בוואטסאפ')}">${WHATSAPP_ICON}</button>
+      <button class="btn-end" type="button" data-action="route-end">${t('סיום')}</button>
     </div>`;
 }
 
@@ -178,8 +179,8 @@ export function arrivedHtml(dest) {
   return `
     <div class="arrived">
       <div class="arrived-emoji">🎉</div>
-      <h2 class="arrived-title">הגעת ליעד</h2>
+      <h2 class="arrived-title">${t('הגעת ליעד')}</h2>
       <p class="arrived-sub">${escapeHtml(dest.name)}</p>
-      <button class="btn-go" type="button" data-action="route-end">סיום</button>
+      <button class="btn-go" type="button" data-action="route-end">${t('סיום')}</button>
     </div>`;
 }

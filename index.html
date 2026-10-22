@@ -8,6 +8,23 @@
   <meta name="description" content="Walkie – ניווט רגלי ותחבורה ציבורית, מהיר ונקי מפרסומות">
   <title>Walkie</title>
 
+  <!-- שפה, כיוון ומצב לילה – לפני הציור הראשון, כדי שלא יהיה הבהוב (לבן / RTL שמתהפך).
+       שפה: עברית תמיד, אלא אם המשתמש בחר אנגלית בהגדרות. מצב לילה: הגדרה שמורה, אחרת לפי המכשיר -->
+  <script>
+    (function () {
+      var s = {};
+      try { s = JSON.parse(localStorage.getItem('walkie:settings') || '{}') || {}; } catch (e) {}
+      var root = document.documentElement;
+      var lang = s.lang === 'en' ? 'en' : 'he';
+      root.lang = lang;
+      root.dir = lang === 'en' ? 'ltr' : 'rtl';
+      var dark = s.theme === 'dark' || (s.theme !== 'light' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+      root.setAttribute('data-theme', dark ? 'dark' : 'light');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#141b25' : '#ffffff');
+      document.querySelector('meta[name="color-scheme"]').setAttribute('content', dark ? 'dark' : 'light');
+    })();
+  </script>
+
   <!-- "הוספה למסך הבית" (אייפון / אנדרואיד): אייקון, שם, ופתיחה במסך מלא בלי שורת כתובת -->
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/icon-512.png">
@@ -27,6 +44,7 @@
   <link rel="stylesheet" href="css/tabs.css">
   <link rel="stylesheet" href="css/premium.css">
   <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/theme.css">
   <!-- אנימציית פתיחה (~1.5 שנ'): הלוגו מצטייר, ואז עיגול נפתח מהלוגו אל האפליקציה.
        בתוך ה-HTML כדי שתופיע מהפריים הראשון, בהמשך ישיר למסך הפתיחה של אנדרואיד (אותו צבע).
        כל האנימציות כאן הן transform/opacity בלבד – רצות על ה-GPU (compositor), ולכן נשארות חלקות

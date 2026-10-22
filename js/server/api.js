@@ -5,7 +5,7 @@
 // GET /api/stops/nearby?lat=..&lng=..&radius=..
 // GET /api/stops/:code/arrivals
 // GET /api/search?q=..&lat=..&lng=..&category=..   (category = חיפוש מקומות מסוג מסוים סביב המיקום)
-// GET /api/route/walk?from=lat,lng&to=lat,lng&speed=slow|normal|fast
+// GET /api/route/walk?from=lat,lng&to=lat,lng&speed=slow|normal|fast&lang=he|en
 // GET /api/route/transit?from=lat,lng&to=lat,lng&time=ISO&arriveBy=0|1&cursor=..&modes=bus,rail,lightrail&maxWalk=MIN&wheelchair=1
 // GET /api/transit/live?stop=CODE&trip=GTFS_TRIP_ID&line=..&scheduled=ISO&route=..&start=HH:MM
 // GET /api/stations/nearby?lat=..&lng=..&mode=all|bus|rail|lightrail
@@ -148,7 +148,7 @@ export function createApi({ stopsIndex, arrivalsService, walkRouter, geocoder, t
     if (!from || !to) return reply(400, { error: 'invalid_points' });
     const speedKmh = WALK_SPEEDS[params.get('speed')] ?? WALK_SPEEDS.normal;
     try {
-      const route = await walkRouter.route(from, to, { speedKmh });
+      const route = await walkRouter.route(from, to, { speedKmh, lang: params.get('lang') === 'en' ? 'en' : 'he' });
       return reply(200, route, 300);
     } catch (err) {
       if (err instanceof RoutingError) {

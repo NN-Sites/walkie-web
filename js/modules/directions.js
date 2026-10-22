@@ -5,15 +5,16 @@ import { distanceMeters } from './geo.js';
 import { showToast } from './ui.js';
 import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js';
 import { STAR_ON, STAR_OFF } from './favorites-ui.js';
+import { t as tr, LOCALE } from './i18n.js';
 
-export const MY_LOCATION = Object.freeze({ id: 'my-location', kind: 'mylocation', name: 'המיקום שלי' });
+export const MY_LOCATION = Object.freeze({ id: 'my-location', kind: 'mylocation', name: tr('המיקום שלי') });
 
 const WALK_DEFAULT_M = 900;   // יעד קרוב מזה – לשונית הליכה כברירת מחדל
 const TZ = 'Asia/Jerusalem';
 
 function fmtMinutes(seconds) {
   const m = Math.max(1, Math.round(seconds / 60));
-  return m < 60 ? `${m} דק'` : `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} ש'`;
+  return m < 60 ? tr('{n} דק\'', { n: m }) : tr('{h}:{mm} ש\'', { h: Math.floor(m / 60), mm: String(m % 60).padStart(2, '0') });
 }
 
 function toLocalInputValue(date) {
@@ -131,7 +132,7 @@ export class DirectionsController {
     const origin = this.#resolve(this.origin);
     const dest = this.#resolve(this.dest);
     if (!origin || !dest) {
-      showToast('אין מיקום GPS – בחרו נקודת מוצא');
+      showToast(tr('אין מיקום GPS – בחרו נקודת מוצא'));
       return;
     }
 
@@ -162,9 +163,9 @@ export class DirectionsController {
     if (!place) return null;
     if (place.kind === 'mylocation') {
       const user = this.getUserLocation();
-      if (user) return { lat: user.lat, lng: user.lng, name: 'המיקום שלי', isUser: true };
+      if (user) return { lat: user.lat, lng: user.lng, name: tr('המיקום שלי'), isUser: true };
       const fb = this.getFallbackPoint();
-      return fb ? { ...fb, name: 'מרכז המפה', isUser: false } : null;
+      return fb ? { ...fb, name: tr('מרכז המפה'), isUser: false } : null;
     }
     return { ...place, isUser: false };
   }
@@ -173,7 +174,7 @@ export class DirectionsController {
     this.search.open({
       purpose: which,
       includeMyLocation: true,
-      placeholder: which === 'origin' ? 'מאיפה יוצאים?' : 'לאן הולכים?',
+      placeholder: which === 'origin' ? tr('מאיפה יוצאים?') : tr('לאן הולכים?'),
       onPick: (place) => {
         if (which === 'origin') this.origin = place;
         else this.dest = place;
@@ -214,14 +215,14 @@ export class DirectionsController {
   }
 
   #timeLabel() {
-    if (!this.when.time) return 'יציאה עכשיו';
+    if (!this.when.time) return tr('יציאה עכשיו');
     const t = this.when.time;
-    const time = t.toLocaleTimeString('he-IL', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+    const time = t.toLocaleTimeString(LOCALE, { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
     const today = new Date().toLocaleDateString('he-IL', { timeZone: TZ });
     const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('he-IL', { timeZone: TZ });
     const day = t.toLocaleDateString('he-IL', { timeZone: TZ });
-    const dayLabel = day === today ? '' : day === tomorrow ? 'מחר ' : `${t.toLocaleDateString('he-IL', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'numeric' })} `;
-    return `${this.when.type === 'arrive' ? 'הגעה עד' : 'יציאה ב'} ${dayLabel}${time}`;
+    const dayLabel = day === today ? '' : day === tomorrow ? `${tr('מחר')} ` : `${t.toLocaleDateString(LOCALE, { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'numeric' })} `;
+    return `${this.when.type === 'arrive' ? tr('הגעה עד') : tr('יציאה ב')} ${dayLabel}${time}`;
   }
 
   #toggleFav() {
@@ -229,7 +230,7 @@ export class DirectionsController {
     if (!place || place.kind === 'mylocation') return;
     const saved = togglePlace(place);
     if (saved === null) return; // מגבלת החשבון החינמי – נפתח מסך הפרימיום
-    showToast(saved ? `${place.name} נשמר במועדפים ⭐` : 'הוסר מהמועדפים');
+    showToast(saved ? tr('{name} נשמר במועדפים ⭐', { name: place.name }) : tr('הוסר מהמועדפים'));
   }
 
   #renderFav() {
@@ -248,8 +249,8 @@ export class DirectionsController {
     this.#renderFav();
     this.el.origin.textContent = this.origin?.name ?? '';
     this.el.dest.textContent = this.dest?.name ?? '';
-    this.el.transitTime.textContent = this.times.transit ? fmtMinutes(this.times.transit) : 'תחבורה ציבורית';
-    this.el.walkTime.textContent = this.times.walk ? fmtMinutes(this.times.walk) : 'הליכה';
+    this.el.transitTime.textContent = this.times.transit ? fmtMinutes(this.times.transit) : tr('תחבורה ציבורית');
+    this.el.walkTime.textContent = this.times.walk ? fmtMinutes(this.times.walk) : tr('הליכה');
     for (const t of this.el.tabs) {
       const on = t.dataset.tab === this.tab;
       t.classList.toggle('is-active', on);

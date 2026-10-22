@@ -2,6 +2,7 @@
 /* global L */
 
 import { MAPTILER_KEY, STOPS_DETAIL_ZOOM } from '../config.js';
+import { createMotion } from './vehicle-motion.js';
 
 const BUS_SVG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .9.4 1.7 1 2.2V20c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h8v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6v10Zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM18 11H6V6h12v5Z"/></svg>';
@@ -29,8 +30,10 @@ export function createMap(elementId, center, zoom) {
 
   const common = {
     minZoom: 3,
-    updateWhenIdle: true,      // פחות בקשות אריחים בזמן גרירה = פחות סוללה ונתונים
-    keepBuffer: 3
+    // טעינת אריחים גם בזמן גרירה (בלי "חורים" אפורים עד שהאצבע נעצרת), במרווח של 150 מ"ש
+    updateWhenIdle: false,
+    updateInterval: 150,
+    keepBuffer: 4
   };
 
   if (MAPTILER_KEY) {
@@ -149,6 +152,8 @@ export class UserLayer {
   }
 }
 
+const zIndexOf = (variant) => (variant === 'focused' ? 600 : variant === 'nearest' ? 300 : 0);
+
 export class StopsLayer {
   constructor(map, onSelect) {
     this.map = map;
@@ -191,15 +196,16 @@ export class StopsLayer {
           riseOnHover: true
         });
         marker.on('click', () => this.onSelect(stop.id));
+        marker.setZIndexOffset(zIndexOf(variant));
         marker.addTo(this.group);
         entry = { marker, variant, mode: stop.mode, name: stop.name };
         this.markers.set(stop.id, entry);
       } else if (entry.variant !== variant) {
+        // רק סמן שהשתנה נוגע ב-DOM (לא 120 סמנים בכל רינדור)
         entry.marker.setIcon(this.#icon(variant, entry.mode));
+        entry.marker.setZIndexOffset(zIndexOf(variant));
         entry.variant = variant;
       }
-
-      entry.marker.setZIndexOffset(variant === 'focused' ? 600 : variant === 'nearest' ? 300 : 0);
     }
 
     for (const [id, entry] of this.markers) {
@@ -425,6 +431,131 @@ export class TransitLayer {
     this.latLngs = [];
   }
 }
+
+// ---------- אוטובוסים בזמן אמת ----------
+
+const VEHICLE_TICK_MS = 250;        // עדכון מיקום על המסך (4 פעמים בשנייה – חלק, וחסכוני בסוללה)
+const VEHICLE_CORRECT_MS = 2500;    // מיקום אמיתי חדש: מחליקים אליו במשך הזמן הזה
+const VEHICLE_JUMP_M = 1500;        // פער גדול מזה (אוטובוס אחר / נתון ישן) – קופצים בלי החלקה
+
+/**
+ * אוטובוסים בדרך (מיקום GPS מ-SIRI) כתגית בצבע הקו עם מספר הקו.
+ * בין עדכון לעדכון האוטובוס ממשיך לנסוע לפי המודל ב-vehicle-motion.js (מהירות ממוצעת בין תחנות),
+ * וכשמגיע מיקום אמיתי – הפער מתוקן בהדרגה, בלי קפיצה.
+ * vehicles = [{ id, lat, lng, recordedAt, line, color, mode, highlight,
+ *               motion: { path, stops, holdUntil } | { target: { lat, lng, at } } }]
+ */
+export class VehiclesLayer {
+  constructor(map, { onSelect = null } = {}) {
+    this.map = map;
+    this.onSelect = onSelect;
+    this.group = L.layerGroup().addTo(map);
+    this.markers = new Map(); // id -> { marker, key, data, model, offset, offsetAt }
+    this.timer = null;
+  }
+
+  render(vehicles) {
+    const now = Date.now();
+    const seen = new Set();
+    for (const v of vehicles ?? []) {
+      if (!Number.isFinite(v.lat) || !Number.isFinite(v.lng)) continue;
+      seen.add(v.id);
+      const key = `${v.line}|${v.color}|${v.mode}|${v.highlight ? 1 : 0}`;
+      const fixAt = v.recordedAt ? Date.parse(v.recordedAt) : now;
+      const model = createMotion({ fix: { lat: v.lat, lng: v.lng, at: fixAt }, ...(v.motion ?? {}) });
+      const [lat, lng] = model.positionAt(now);
+      let entry = this.markers.get(v.id);
+      if (!entry) {
+        const marker = L.marker([lat, lng], {
+          icon: this.#icon(v),
+          keyboard: false,
+          zIndexOffset: v.highlight ? 800 : 500,
+          title: v.title ?? ''
+        });
+        entry = { marker, key, data: v, model, offset: [0, 0], offsetAt: now };
+        if (this.onSelect) marker.on('click', () => this.onSelect(entry.data));
+        marker.addTo(this.group);
+        this.markers.set(v.id, entry);
+      } else {
+        if (entry.key !== key) {
+          entry.marker.setIcon(this.#icon(v));
+          entry.marker.setZIndexOffset(v.highlight ? 800 : 500);
+          entry.key = key;
+        }
+        // הפער בין איפה שהאוטובוס מוצג עכשיו לבין המודל החדש – נסגר בהדרגה
+        const shown = entry.marker.getLatLng();
+        const far = this.map.distance(shown, [lat, lng]) > VEHICLE_JUMP_M || document.hidden;
+        entry.offset = far ? [0, 0] : [shown.lat - lat, shown.lng - lng];
+        entry.offsetAt = now;
+        entry.data = v;
+        entry.model = model;
+        if (far) entry.marker.setLatLng([lat, lng]);
+      }
+    }
+    for (const [id, entry] of this.markers) {
+      if (seen.has(id)) continue;
+      this.group.removeLayer(entry.marker);
+      this.markers.delete(id);
+    }
+    this.#schedule();
+  }
+
+  clear() {
+    this.render([]);
+  }
+
+  setVisible(visible) {
+    if (visible && !this.map.hasLayer(this.group)) this.group.addTo(this.map);
+    if (!visible && this.map.hasLayer(this.group)) this.map.removeLayer(this.group);
+    this.#schedule();
+  }
+
+  /** הטיימר רץ רק כשיש אוטובוסים שזזים (או שעוד מתקנים אליהם) והשכבה על המפה */
+  #schedule() {
+    const active = this.map.hasLayer(this.group) &&
+      [...this.markers.values()].some((e) => e.model.moving || e.offset[0] || e.offset[1]);
+    if (active && !this.timer) this.timer = setInterval(() => this.#tick(), VEHICLE_TICK_MS);
+    if (!active && this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  #tick() {
+    // בזמן אנימציית זום Leaflet מזיז את הסמנים בעצמו; ברקע אין טעם לצייר
+    if (document.hidden || this.map._animatingZoom) return;
+    const now = Date.now();
+    let settling = false;
+    for (const e of this.markers.values()) {
+      const hasOffset = !!(e.offset[0] || e.offset[1]);
+      if (!e.model.moving && !hasOffset) continue;
+      const [lat, lng] = e.model.positionAt(now);
+      let [dLat, dLng] = [0, 0];
+      if (hasOffset) {
+        const p = Math.min(1, (now - e.offsetAt) / VEHICLE_CORRECT_MS);
+        const k = 1 - p * p * (3 - 2 * p); // smoothstep: מתחיל ומסיים בעדינות
+        [dLat, dLng] = [e.offset[0] * k, e.offset[1] * k];
+        if (p >= 1) e.offset = [0, 0];
+        else settling = true;
+      }
+      e.marker.setLatLng([lat + dLat, lng + dLng]);
+    }
+    if (!settling) this.#schedule();
+  }
+
+  #icon(v) {
+    const label = String(v.line ?? '').slice(0, 5).replace(/[<>&"']/g, '');
+    const color = /^#[0-9a-f]{3,8}$/i.test(v.color ?? '') ? v.color : '#0d9488';
+    // iconSize: null – הגודל לפי התוכן; המרכוז ב-CSS (translate -50%)
+    return L.divIcon({
+      className: 'vehicle-marker',
+      html: `<div class="vehicle-pin${v.highlight ? ' is-highlight' : ''}" style="--c:${color}">${MODE_SVG[v.mode] ?? BUS_SVG}<b>${label}</b></div>`,
+      iconSize: null,
+      iconAnchor: [0, 0]
+    });
+  }
+}
+
 
 // ---------- סיבוב המפה לפי כיוון ההליכה (Heading-up) ----------
 

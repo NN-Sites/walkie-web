@@ -11,6 +11,7 @@ import {
   STORAGE_KEYS
 } from '../config.js';
 import { offsetMeters } from './geo.js';
+import { t } from './i18n.js';
 import { fetchNearbyFromApi, fetchWithTimeout } from './api.js';
 
 const OVERPASS_ENDPOINTS = [
@@ -57,7 +58,7 @@ async function fromApi(center, signal) {
   const json = await fetchNearbyFromApi(center, STOP_SEARCH_RADIUS_M, signal);
   return (json.stops || []).slice(0, MAX_STOPS).map((s) => ({
     id: s.id,
-    name: s.name || 'תחנה ללא שם',
+    name: s.name || t('תחנה ללא שם'),
     code: s.code ?? null,
     city: s.city ?? null,
     lat: s.lat,
@@ -87,7 +88,7 @@ function parseOverpass(elements) {
     const ref = tags.ref || tags['gtfs:stop_code'] || null;
     stops.push({
       id: `osm:${el.id}`,
-      name: tags['name:he'] || tags.name || 'תחנה ללא שם',
+      name: tags['name:he'] || tags.name || t('תחנה ללא שם'),
       // בישראל ref ב-OSM הוא בדרך כלל קוד התחנה של משרד התחבורה
       code: ref && /^\d{1,6}$/.test(ref) ? ref : null,
       city: null,
@@ -247,7 +248,37 @@ export function demoArrivals(stop, now = Date.now()) {
   return result;
 }
 
-export function lineColor(line) {
+// צבעי המפעילים (כמו על האוטובוסים עצמם). ההתאמה לפי חלק מהשם: "אלקטרה אפיקים" -> אפיקים.
+// הסדר חשוב: "אגד תעבורה" לפני "אגד", "דן בדרום" נתפס ב"דן".
+const OPERATOR_COLORS = [
+  ['אפיקים', '#5fa31a'],      // ירוק בהיר
+  ['אגד תעבורה', '#0f766e'],
+  ['אגד', '#0b6b3a'],         // ירוק כהה
+  ['מטרופולין', '#ea7a0c'],   // כתום
+  ['סופרבוס', '#c62828'],
+  ['קווים', '#7e3fa0'],
+  ['נתיב אקספרס', '#b45309'],
+  ['אקסטרה', '#be185d'],
+  ['גלים', '#0284c7'],
+  ['תנופה', '#d97706'],
+  ['בית שמש אקספרס', '#4338ca'],
+  ['כפיר', '#0e7490'],
+  ['ש.א.מ', '#9333ea'],
+  ['גולן', '#8d5a2b'],
+  ['דן', '#1d5fbf']           // כחול (דן, דן בדרום, דן באר שבע)
+];
+
+/** צבע המפעיל לפי שם החברה, או null אם לא מוכרת */
+export function operatorColor(agency) {
+  if (!agency) return null;
+  const name = String(agency);
+  return OPERATOR_COLORS.find(([key]) => name.includes(key))?.[1] ?? null;
+}
+
+/** צבע קו: לפי המפעיל אם ידוע, אחרת צבע קבוע לפי מספר הקו */
+export function lineColor(line, agency = null) {
+  const op = operatorColor(agency);
+  if (op) return op;
   const palette = ['#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a', '#0891b2', '#4f46e5'];
   return palette[hashString(String(line)) % palette.length];
 }

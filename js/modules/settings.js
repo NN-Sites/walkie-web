@@ -10,7 +10,10 @@ export const DEFAULT_SETTINGS = Object.freeze({
   walkSpeed: 'normal',                                // slow | normal | fast
   wheelchair: false,                                  // מסלולים נגישים
   vibrate: true,                                      // רטט לפני פנייה / ירידה
-  showStops: true                                     // סמני תחנות במפה (מסך הבית)
+  showStops: true,                                    // סמני תחנות במפה (מסך הבית)
+  showBuses: true,                                    // אוטובוסים בזמן אמת על המפה
+  theme: 'system',                                    // system | light | dark
+  lang: null                                          // he | en | null = עברית
 });
 
 const listeners = new Set();

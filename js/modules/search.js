@@ -9,6 +9,19 @@ import {
 import { fetchSearch } from './api.js';
 import { formatDistance } from './geo.js';
 import { escapeHtml } from './ui.js';
+import { t, IS_EN } from './i18n.js';
+
+/** כותרת משנה מהשרת ("תחנה 1234 · תל אביב", "מסעדה · חיפה") – מתרגמים את מה שאפשר, שמות נשארים */
+function localizeSubtitle(sub) {
+  if (!IS_EN) return sub;
+  return String(sub).split(' · ').map((part) => {
+    const stop = /^תחנה (\d+)$/.exec(part);
+    if (stop) return t('תחנה {code}', { code: stop[1] });
+    const school = /^בית ספר (.+)$/.exec(part);
+    if (school) return t('בית ספר {stage}', { stage: t(school[1]) });
+    return t(part);
+  }).join(' · ');
+}
 
 const KIND_ICONS = {
   stop: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .9.4 1.7 1 2.2V20c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h8v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6v10Zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM18 11H6V6h12v5Z"/></svg>',
@@ -121,7 +134,7 @@ export class SearchOverlay {
     this.isOpen = true;
     this.pickHandler = options.onPick ?? this.onPick;
     this.includeMyLocation = !!options.includeMyLocation;
-    this.input.placeholder = options.placeholder ?? 'כתובת, מקום או תחנה';
+    this.input.placeholder = options.placeholder ?? t('כתובת, מקום או תחנה');
     this.root.hidden = false;
     document.body.classList.add('searching');
     try {
@@ -170,7 +183,7 @@ export class SearchOverlay {
     this.controller = controller;
 
     if (this.items.length === 0) {
-      this.results.innerHTML = '<div class="search-hint">מחפש…</div>';
+      this.results.innerHTML = `<div class="search-hint">${t('מחפש…')}</div>`;
     }
 
     try {
@@ -181,38 +194,38 @@ export class SearchOverlay {
       const isCategory = json.mode === 'category' && json.category;
       if (this.items.length === 0) {
         this.results.innerHTML = isCategory
-          ? `<div class="search-hint">לא מצאנו ${escapeHtml(json.category.label)} באזור.</div>`
-          : `<div class="search-hint">לא נמצאו תוצאות עבור "${escapeHtml(q)}".<br>נסו כתובת, שם מקום או מספר תחנה.</div>`;
+          ? `<div class="search-hint">${t('לא מצאנו {what} באזור.', { what: escapeHtml(t(json.category.label)) })}</div>`
+          : `<div class="search-hint">${t('לא נמצאו תוצאות עבור "{q}".', { q: escapeHtml(q) })}<br>${t('נסו כתובת, שם מקום או מספר תחנה.')}</div>`;
         return;
       }
 
       const heading = isCategory
-        ? `<h3 class="search-heading">${escapeHtml(json.category.emoji ?? '')} ${escapeHtml(json.category.label)} בסביבה · לפי מרחק</h3>`
+        ? `<h3 class="search-heading">${escapeHtml(json.category.emoji ?? '')} ${t('{what} בסביבה · לפי מרחק', { what: escapeHtml(t(json.category.label)) })}</h3>`
         : '';
       this.results.innerHTML = heading + this.items.map((r, i) => this.#row(r, i)).join('');
     } catch (err) {
       if (err?.name === 'AbortError') return;
       this.items = [];
-      this.results.innerHTML = '<div class="search-hint">החיפוש לא זמין כרגע. בדקו את החיבור ונסו שוב.</div>';
+      this.results.innerHTML = `<div class="search-hint">${t('החיפוש לא זמין כרגע. בדקו את החיבור ונסו שוב.')}</div>`;
     }
   }
 
   #renderRecents() {
     this.items = readRecents();
     if (this.includeMyLocation) {
-      this.items.unshift({ id: 'my-location', kind: 'mylocation', name: 'המיקום שלי', subtitle: 'לפי GPS' });
+      this.items.unshift({ id: 'my-location', kind: 'mylocation', name: t('המיקום שלי'), subtitle: t('לפי GPS') });
       this.results.innerHTML = this.items.map((r, i) => this.#row(r, i, i > 0)).join('');
       return;
     }
     if (this.items.length === 0) {
       this.results.innerHTML =
-        '<div class="search-hint">חפשו כתובת, שם של מקום או עסק,<br>או שם/מספר של תחנה.</div>';
+        `<div class="search-hint">${t('חפשו כתובת, שם של מקום או עסק,')}<br>${t('או שם/מספר של תחנה.')}</div>`;
       return;
     }
     this.results.innerHTML = `
       <div class="search-heading-row">
-        <h3 class="search-heading">חיפושים אחרונים</h3>
-        <button class="link-btn" type="button" data-action="clear-recents">ניקוי הכל</button>
+        <h3 class="search-heading">${t('חיפושים אחרונים')}</h3>
+        <button class="link-btn" type="button" data-action="clear-recents">${t('ניקוי הכל')}</button>
       </div>` + this.items.map((r, i) => this.#row(r, i, true)).join('');
   }
 
@@ -227,7 +240,7 @@ export class SearchOverlay {
         <span class="result-icon kind-${escapeHtml(kind)}">${icon}</span>
         <span class="result-text">
           <span class="result-name">${escapeHtml(r.name)}</span>
-          ${r.subtitle ? `<span class="result-sub">${escapeHtml(r.subtitle)}</span>` : ''}
+          ${r.subtitle ? `<span class="result-sub">${escapeHtml(localizeSubtitle(r.subtitle))}</span>` : ''}
         </span>
         ${dist}
       </button>`;
@@ -236,7 +249,7 @@ export class SearchOverlay {
     return `
       <div class="result-row">
         ${button}
-        <button class="result-remove" type="button" data-remove-id="${escapeHtml(r.id)}" aria-label="מחיקת ${escapeHtml(r.name)} מהחיפושים האחרונים">
+        <button class="result-remove" type="button" data-remove-id="${escapeHtml(r.id)}" aria-label="${t('מחיקת {name} מהחיפושים האחרונים', { name: escapeHtml(r.name) })}">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z"/></svg>
         </button>
       </div>`;

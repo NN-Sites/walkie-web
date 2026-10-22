@@ -28,6 +28,11 @@ const LIVE_MATCH_EARLY_MIN = 2;
 const LIVE_MATCH_LATE_MIN = 12;
 const LIVE_LOOKAHEAD_MIN = 75;       // זמן אמת רלוונטי רק לנסיעות שיוצאות בשעה הקרובה
 const LATE_BUS_WINDOW_MS = 20 * 60 * 1000; // אוטובוס שמאחר עד 20 דק' עדיין נמצא ב"יציאה עכשיו"
+// ברירת המחדל של המנוע היא 15 דק' הליכה לתחנה/מתחנה. יעד שרחוק יותר מכל תחנה מקבל "אין מסלול"
+// או מסלול לילה מטורף (7 שעות דרך קו שבמקרה עובר ליד) – אז מחפשים שוב עם רדיוס הליכה רחב יותר
+const FALLBACK_WALK_MIN = 35;
+const WALK_OPTION_MAX_M = 6000;          // הליכה כחלופה (וכרף השוואה) עד 6 ק"מ בקו אווירי
+const SLOWER_THAN_WALK_GRACE_MS = 3 * 60 * 1000;
 
 // משפחות אמצעי תחבורה (MOTIS mode -> Walkie)
 export const MODE_FAMILY = {
@@ -419,10 +424,10 @@ export class TransitPlanner {
     // "יציאה עכשיו": גם חיפוש מלפני 20 דק' – אוטובוס מאחר שלפי לוח הזמנים כבר יצא לא מופיע
     // בחיפוש הרגיל, אבל בפועל עוד לא הגיע לתחנה (Google/Moovit מציגים אותו לפי זמן אמת)
     const departNow = !arriveBy && !cursor && Math.abs(when.getTime() - Date.now()) < 5 * 60000;
-    const [raw, walk, rail, late] = await Promise.all([
+    let [raw, walk, rail, late] = await Promise.all([
       this.#fetchPlan({ from, to, when, arriveBy, cursor, prefs }),
       // הליכה כחלופה – רק כשהיעד במרחק הליכה סביר
-      !cursor && direct <= 4000 ? this.#walkOption(from, to) : Promise.resolve(null),
+      !cursor && direct <= WALK_OPTION_MAX_M ? this.#walkOption(from, to) : Promise.resolve(null),
       // חלופת רכבת מהתחנה הקרובה (המנוע לפעמים מעדיף אוטובוסים ומסתיר אותה)
       !cursor && !arriveBy ? this.#railOptions({ from, to, when, prefs }).catch((err) => {
         this.log.warn?.(`[transit] rail options failed: ${err.message}`);
@@ -433,9 +438,27 @@ export class TransitPlanner {
         : Promise.resolve(null)
     ]);
 
+    const reference = arriveBy ? Date.now() : Math.max(Date.now(), when.getTime());
+    // מסלול שמגיע אחרי שכבר היינו מגיעים ברגל – לא באמת חלופה (הליכה מוצגת בנפרד)
+    const slowerThanWalk = (it) => {
+      if (!walk?.seconds) return false;
+      const total = arriveBy ? Date.parse(it.end) - Date.parse(it.start) : Date.parse(it.end) - reference;
+      return total > walk.seconds * 1000 + SLOWER_THAN_WALK_GRACE_MS;
+    };
+
+    let regular = (raw.itineraries ?? []).map(normalizeItinerary);
+    const walkLimit = prefs.maxWalkMin ?? 15;
+    if (!cursor && walkLimit < FALLBACK_WALK_MIN && !regular.some((it) => !slowerThanWalk(it))) {
+      const wider = await this.#fetchPlan({ from, to, when, arriveBy, cursor, prefs: { ...prefs, maxWalkMin: FALLBACK_WALK_MIN } }).catch(() => null);
+      const widerList = (wider?.itineraries ?? []).map(normalizeItinerary);
+      if (widerList.length) {
+        raw = wider;
+        regular = widerList;
+      }
+    }
+
     // נסיעות מהחיפוש המוקדם – רק אלה שעוד לא מופיעות בחיפוש הרגיל (אותה נסיעה = אותם trip_id)
     const tripsKey = (it) => it.legs.filter((l) => l.mode !== 'walk').map((l) => l.tripId).join('>');
-    const regular = (raw.itineraries ?? []).map(normalizeItinerary);
     const known = new Set(regular.map(tripsKey));
     const lateOnes = (late?.itineraries ?? []).map(normalizeItinerary).filter((it) => !known.has(tripsKey(it)));
     const lateIds = new Set(lateOnes.map((it) => it.id));
@@ -446,7 +469,6 @@ export class TransitPlanner {
     // זמן אמת לפני הסינון והדירוג – כדי שהסדר וזמני ההגעה יהיו לפי מה שקורה בפועל בכביש,
     // ומסלולים עם אוטובוס שכבר אי אפשר לתפוס לא יוצגו (כמו Google/Moovit)
     await this.#attachLive(all);
-    const reference = arriveBy ? Date.now() : Math.max(Date.now(), when.getTime());
     for (const it of all) {
       applyRealtime(it, reference);
       // מהחיפוש המוקדם: רק אם זיהינו בוודאות את האוטובוס עצמו (לא "האוטובוס הבא באותו קו")
@@ -454,9 +476,10 @@ export class TransitPlanner {
       // "הגעה עד": אוטובוס מאחר שכבר לא מביא בזמן – לא מציגים אותו כאפשרות
       if (arriveBy && Date.parse(it.end) > when.getTime() + MISSED_GRACE_MS) it.missed = true;
     }
-    const catchable = all.filter((it) => !it.missed);
+    const sensible = all.filter((it) => !slowerThanWalk(it));
+    const catchable = sensible.filter((it) => !it.missed);
     // מחיר ברב-קו לכל מסלול (מחירון משרד התחבורה)
-    const itineraries = filterItineraries(catchable.length ? catchable : all, arriveBy, { protect: (it) => it.viaRail === true })
+    const itineraries = filterItineraries(catchable.length ? catchable : sensible, arriveBy, { protect: (it) => it.viaRail === true })
       .map((it) => ({ ...it, fare: computeFare(it) }));
 
     const data = {

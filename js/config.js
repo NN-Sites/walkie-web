@@ -1,7 +1,7 @@
 // הגדרות גלובליות של Walkie – מקום אחד לכל המספרים הקסומים.
 
 // לעדכן יחד עם versionName ב-android/app/build.gradle
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.4.1';
 
 // מרכז ברירת מחדל (תל אביב, עזריאלי) – בשימוש רק אם אין מיקום שמור ואין עדיין GPS
 export const DEFAULT_CENTER = [32.0741, 34.7922];
@@ -33,6 +33,8 @@ export const ARRIVALS_REFRESH_MS = 30000;  // רענון אוטומטי של ה�
 export const ARRIVALS_CLIENT_TTL_MS = 20000;
 export const ARRIVALS_GROUP_LIMIT = 8;     // כמה קווים להציג
 export const ARRIVALS_MAX_AHEAD_MIN = 180; // יציאות רחוקות יותר (מחר בבוקר) לא מוצגות
+export const ARRIVAL_GONE_MS = 30000;      // "עכשיו" נעלם חצי דקה אחרי זמן ההגעה
+export const NOW_TICK_MS = 10000;          // רענון התצוגה כל 10 שניות – כדי ש"עכשיו" ייעלם בזמן
 
 // GPS וחיסכון בסוללה
 export const MIN_MOVE_METERS = 4;          // התעלמות מרעש GPS קטן

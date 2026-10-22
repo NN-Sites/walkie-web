@@ -562,3 +562,68 @@ body.has-route:not(.navigating) .toast { top: calc(var(--safe-top) + 150px); }
 
 .fare-note { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
 .fare-note a { color: inherit; }
+
+/* ---------- אוטובוסים בזמן אמת על המפה ---------- */
+
+.vehicle-marker { background: none; border: 0; }
+
+/* תגית בצבע הקו: אייקון + מספר הקו. ממורכזת על המיקום (iconSize: null) */
+.vehicle-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  padding: 0 7px 0 5px;
+  border-radius: 12px;
+  background: var(--c, var(--brand));
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  direction: ltr;
+  box-shadow: 0 0 0 2px #fff, 0 3px 10px rgba(11, 19, 36, 0.28);
+  cursor: pointer;
+  animation: vehicle-in 0.35s var(--ease-spring) both;
+}
+
+.vehicle-pin svg { width: 14px; height: 14px; flex: none; }
+
+/* "פעימה" עדינה – מסמנת שזה מיקום חי ולא תחנה */
+.vehicle-pin::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 3px var(--c, var(--brand));
+  opacity: 0;
+  animation: vehicle-pulse 2.4s ease-out infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.vehicle-pin.is-highlight {
+  height: 30px;
+  padding: 0 10px 0 7px;
+  border-radius: 15px;
+  font-size: 14.5px;
+  box-shadow: 0 0 0 2.5px #fff, 0 5px 16px rgba(11, 19, 36, 0.35);
+}
+.vehicle-pin.is-highlight svg { width: 17px; height: 17px; }
+
+.is-zoomed-out .vehicle-pin:not(.is-highlight) { transform: translate(-50%, -50%) scale(0.85); }
+
+@keyframes vehicle-in { from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } }
+/* רק transform + opacity – רץ על ה-GPU, בלי לצייר מחדש את המפה בכל פריים */
+@keyframes vehicle-pulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  70%, 100% { transform: scale(1.35); opacity: 0; }
+}
+
+[data-theme="dark"] .vehicle-pin { box-shadow: 0 0 0 2px #0b1017, 0 3px 10px rgba(0, 0, 0, 0.5); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vehicle-pin, .vehicle-pin::after { animation: none; }
+}

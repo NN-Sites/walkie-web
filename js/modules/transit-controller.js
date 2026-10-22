@@ -8,16 +8,19 @@ import { focusPoint } from './map.js';
 import { showToast } from './ui.js';
 import { vibrate, transitPrefsParams } from './settings.js';
 import * as tpl from './transit-ui.js';
+import { t } from './i18n.js';
+import { serviceStatus, serviceNotice } from './service-calendar.js';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה
 const TRIP_ZOOM = 17;
 
 export class TransitController {
-  constructor({ map, sheet, layer, banner, getOcclusion, onModeChange, onSimPosition, onPlanned, simulate = false }) {
+  constructor({ map, sheet, layer, vehicles = null, banner, getOcclusion, onModeChange, onSimPosition, onPlanned, simulate = false }) {
     this.map = map;
     this.sheet = sheet;
     this.layer = layer;
+    this.vehicles = vehicles;   // האוטובוס שמחכים לו, בזמן אמת על המפה
     this.banner = banner;
     this.getOcclusion = getOcclusion;
     this.onModeChange = onModeChange;
@@ -71,6 +74,7 @@ export class TransitController {
     this.listFilter = 'all';
     this.selected = null;
     this.layer.clear();
+    this.vehicles?.clear();
     this.#setMode('loading');
     this.sheet.renderCustom(tpl.loadingHtml(), 'transit-loading');
     this.sheet.setSnap('half');
@@ -120,7 +124,7 @@ export class TransitController {
         nextCursor: more.nextCursor
       };
     } catch {
-      showToast('לא הצלחנו לטעון מסלולים נוספים');
+      showToast(t('לא הצלחנו לטעון מסלולים נוספים'));
     } finally {
       this.loadingMore = false;
       this.#render();
@@ -191,10 +195,10 @@ export class TransitController {
       onArrive: () => this.#arrive(),
       onAlightSoon: (leg) => {
         vibrate([200, 100, 200, 100, 200]);
-        showToast(`מתקרבים – רדו ב${leg.to.name}`);
+        showToast(t('מתקרבים – רדו ב{stop}', { stop: leg.to.name }));
       },
       onLegChange: () => this.#refreshLive(),
-      onOffRoute: () => showToast('נראה שסטית מהמסלול. אפשר לחפש מסלול חדש מהמיקום הנוכחי.')
+      onOffRoute: () => showToast(t('נראה שסטית מהמסלול. אפשר לחפש מסלול חדש מהמיקום הנוכחי.'))
     });
     this.trip = { model, session };
 
@@ -209,7 +213,7 @@ export class TransitController {
     if (this.simulate) {
       this.sim = new RouteSimulator(model, (p) => this.onSimPosition(p), { speedAt: TripSession.speedAt(model) });
       this.sim.start();
-      showToast('מצב הדמיה: הנסיעה מתקדמת לבד');
+      showToast(t('מצב הדמיה: הנסיעה מתקדמת לבד'));
     } else {
       this.onPosition(this.lastPos ?? { ...model.pts[0], accuracy: 10 });
     }
@@ -232,6 +236,7 @@ export class TransitController {
     this.#stopTrip();
     this.#stopListRefresh();
     this.layer.clear();
+    this.vehicles?.clear();
     this.result = null;
     this.selected = null;
     this.request = null;
@@ -252,6 +257,7 @@ export class TransitController {
 
   #render(isNew = false) {
     const now = Date.now();
+    this.#renderVehicle();
     if (this.mode === 'list' && this.result) {
       this.sheet.renderCustom(
         tpl.listHtml(this.result, {
@@ -259,15 +265,17 @@ export class TransitController {
           now,
           filter: this.listFilter,
           // האם ההגדרות מצמצמות את החיפוש (להסבר כשאין תוצאות)
-          restricted: Object.keys(transitPrefsParams()).length > 0
+          restricted: Object.keys(transitPrefsParams()).length > 0,
+          // שבת / חג בזמן המבוקש (יציאה עכשיו או בשעה שנבחרה)
+          notice: serviceNotice(serviceStatus(this.request.when?.time?.getTime?.() ?? now, this.request.origin))
         }),
         isNew ? `transit-list:${this.result.generatedAt}` : this.sheet.lastFocusKey
       );
     } else if (this.mode === 'detail' && this.selected) {
       this.sheet.renderCustom(
         tpl.detailHtml(this.selected, {
-          originName: this.request.origin.name ?? 'נקודת מוצא',
-          destName: this.request.dest.name ?? 'יעד',
+          originName: this.request.origin.name ?? t('נקודת מוצא'),
+          destName: this.request.dest.name ?? t('יעד'),
           now
         }),
         isNew ? `transit-detail:${this.selected.id}` : this.sheet.lastFocusKey
@@ -278,7 +286,8 @@ export class TransitController {
   }
 
   #renderTrip(state) {
-    const { html, tone } = tpl.tripBannerHtml(state, { destName: this.request.dest.name ?? 'יעד' });
+    this.#renderVehicle();
+    const { html, tone } = tpl.tripBannerHtml(state, { destName: this.request.dest.name ?? t('יעד') });
     if (this.banner.innerHTML !== html) this.banner.innerHTML = html;
     this.banner.dataset.tone = tone;
     this.banner.hidden = false;
@@ -287,6 +296,7 @@ export class TransitController {
 
   #arrive() {
     this.mode = 'arrived';
+    this.vehicles?.clear();
     vibrate([100, 50, 100, 50, 220]);
     this.sim?.stop();
     this.sim = null;
@@ -295,7 +305,7 @@ export class TransitController {
     this.#releaseWakeLock();
     this.banner.hidden = true;
     document.body.classList.remove('navigating');
-    this.sheet.renderCustom(tpl.tripArrivedHtml(this.request.dest.name ?? 'יעד'), 'transit-arrived');
+    this.sheet.renderCustom(tpl.tripArrivedHtml(this.request.dest.name ?? t('יעד')), 'transit-arrived');
     this.sheet.setSnap('half');
     this.onModeChange?.('arrived');
   }
@@ -320,6 +330,40 @@ export class TransitController {
       if (this.mode === 'detail') this.#refreshSelectedLive();
       this.#render();
     }, LIST_REFRESH_MS);
+  }
+
+  /**
+   * האוטובוס הרלוונטי על המפה: בפירוט מסלול – הקו הראשון; בליווי נסיעה – הקו שעליו מחכים / הבא בתור
+   * (בזמן הנסיעה עצמה אנחנו באוטובוס, אז לא מציגים אותו).
+   */
+  #renderVehicle() {
+    if (!this.vehicles) return;
+    let leg = null;
+    if (this.mode === 'detail') {
+      leg = this.selected?.legs.find((l) => l.mode !== 'walk');
+    } else if (this.mode === 'trip' && this.trip?.session.state) {
+      const st = this.trip.session.state;
+      leg = st.phase === 'waiting' ? st.boardLeg : st.phase === 'walking' && st.next?.mode !== 'walk' ? st.next : null;
+    }
+    const v = leg?.live?.vehicle;
+    if (!v || (leg.live.recordedAt && Date.now() - Date.parse(leg.live.recordedAt) > 5 * 60000)) {
+      this.vehicles.clear();
+      return;
+    }
+    this.vehicles.render([{
+      id: 'trip-bus',
+      lat: v.lat,
+      lng: v.lng,
+      line: leg.line,
+      mode: leg.mode,
+      color: tpl.legColor(leg),
+      highlight: true,
+      etaMin: Math.max(0, Math.round((Date.parse(leg.live.eta) - Date.now()) / 60000)),
+      destination: leg.headsign ?? null,
+      recordedAt: leg.live.recordedAt ?? null,
+      // בין עדכונים – מתקדם לכיוון תחנת העלייה לפי זמן ההגעה בזמן אמת
+      motion: { target: { lat: leg.from.lat, lng: leg.from.lng, at: Date.parse(leg.live.eta) } }
+    }]);
   }
 
   #stopListRefresh() {

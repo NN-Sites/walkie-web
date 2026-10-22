@@ -5,6 +5,7 @@ import { formatDistance, walkMinutes } from './geo.js';
 import { lineColor } from './stops.js';
 import { groupArrivals } from './arrivals.js';
 import { starButton } from './favorites-ui.js';
+import { t } from './i18n.js';
 
 const ICONS = {
   bus: (s = 18) =>
@@ -20,12 +21,12 @@ const ICONS = {
 };
 
 const MODE_ICON_SM = {
-  rail: '<svg viewBox="0 0 24 24" width="18" height="18" aria-label="רכבת"><path fill="currentColor" d="M12 2C8 2 4 2.5 4 6v9.5A3.5 3.5 0 0 0 7.5 19L6 20.5v.5h2.2l2-2h3.6l2 2H18v-.5L16.5 19a3.5 3.5 0 0 0 3.5-3.5V6c0-3.5-3.6-4-8-4ZM7.5 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3.5-7H6V6h5v4Zm2 0V6h5v4h-5Zm3.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>'
+  rail: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2C8 2 4 2.5 4 6v9.5A3.5 3.5 0 0 0 7.5 19L6 20.5v.5h2.2l2-2h3.6l2 2H18v-.5L16.5 19a3.5 3.5 0 0 0 3.5-3.5V6c0-3.5-3.6-4-8-4ZM7.5 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3.5-7H6V6h5v4Zm2 0V6h5v4h-5Zm3.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>'
 };
 
 const SOURCE_CHIPS = {
-  osm: '<span class="chip">OpenStreetMap</span>',
-  demo: '<span class="chip chip-warn">תחנות דמה</span>'
+  osm: () => '<span class="chip">OpenStreetMap</span>',
+  demo: () => `<span class="chip chip-warn">${t('תחנות דמה')}</span>`
 };
 
 export function escapeHtml(value) {
@@ -35,6 +36,20 @@ export function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
+}
+
+/**
+ * הודעת שבת / חג / ערב שבת (service-calendar.js -> serviceNotice).
+ * notice = { tone: 'rest' | 'erev' | 'resuming', title, text }
+ */
+export function serviceNoticeHtml(notice) {
+  if (!notice) return '';
+  const emoji = notice.tone === 'rest' ? '🕯️' : notice.tone === 'erev' ? '⏳' : '🚌';
+  return `
+    <div class="service-notice is-${notice.tone}" role="status">
+      <span class="service-notice-icon" aria-hidden="true">${emoji}</span>
+      <div class="service-notice-text"><strong>${escapeHtml(notice.title)}</strong><span>${escapeHtml(notice.text)}</span></div>
+    </div>`;
 }
 
 // ---------- Toast ----------
@@ -314,11 +329,14 @@ export class Sheet {
     const { focused, loading, locationDenied } = model;
     const parts = [];
 
+    // שבת / חג: ההודעה הכי חשובה במסך – מעל הכל
+    if (model.serviceNotice) parts.push(serviceNoticeHtml(model.serviceNotice));
+
     if (locationDenied) {
       parts.push(`
         <div class="notice">
-          <div class="notice-text"><strong>המיקום כבוי.</strong> מציגים תחנות סביב מרכז המפה.</div>
-          <button class="btn" type="button" data-action="retry-location">הפעלת מיקום</button>
+          <div class="notice-text"><strong>${t('המיקום כבוי.')}</strong> ${t('מציגים תחנות סביב מרכז המפה.')}</div>
+          <button class="btn" type="button" data-action="retry-location">${t('הפעלת מיקום')}</button>
         </div>`);
     }
 
@@ -335,7 +353,7 @@ export class Sheet {
     }
 
     if (!focused) {
-      parts.push(`<div class="empty">לא נמצאו תחנות באזור הזה.<br>אפשר להזיז את המפה כדי לחפש.</div>`);
+      parts.push(`<div class="empty">${t('לא נמצאו תחנות באזור הזה.')}<br>${t('אפשר להזיז את המפה כדי לחפש.')}</div>`);
       this.#commit(parts.join(''), 'empty');
       return;
     }
@@ -347,7 +365,7 @@ export class Sheet {
 
     if (model.others.length > 0) {
       parts.push(`
-        <h3 class="section-title">תחנות נוספות בסביבה</h3>
+        <h3 class="section-title">${t('תחנות נוספות בסביבה')}</h3>
         <ul class="nearby">${model.others.map((s) => this.#nearbyRow(s)).join('')}</ul>
       `);
     }
@@ -369,12 +387,12 @@ export class Sheet {
 
   #header({ focused, isNearest, hasUserLocation, source, isFavStop }) {
     const eyebrow = isNearest
-      ? hasUserLocation ? 'התחנה הקרובה אליך' : 'התחנה הקרובה למרכז המפה'
-      : 'תחנה נבחרת';
+      ? hasUserLocation ? t('התחנה הקרובה אליך') : t('התחנה הקרובה למרכז המפה')
+      : t('תחנה נבחרת');
 
     const meta = [
-      `<span class="meta-pill">${ICONS.walk}<strong>${walkMinutes(focused.distance)} דק'</strong> · ${formatDistance(focused.distance)}</span>`,
-      focused.code ? `<span class="meta-pill">קוד ${escapeHtml(focused.code)}</span>` : '',
+      `<span class="meta-pill">${ICONS.walk}<strong>${t('{n} דק\'', { n: walkMinutes(focused.distance) })}</strong> · ${formatDistance(focused.distance)}</span>`,
+      focused.code ? `<span class="meta-pill">${t('קוד {code}', { code: escapeHtml(focused.code) })}</span>` : '',
       focused.city ? `<span class="meta-pill">${escapeHtml(focused.city)}</span>` : ''
     ].filter(Boolean);
 
@@ -382,41 +400,41 @@ export class Sheet {
       <div class="stop-head">
         <div class="stop-head-icon${isNearest ? '' : ' is-focused'}">${focused.mode === 'rail' ? MODE_ICON_SM.rail : ICONS.bus(22)}</div>
         <div class="stop-head-text">
-          <p class="eyebrow">${eyebrow} ${SOURCE_CHIPS[source] ?? ''}</p>
+          <p class="eyebrow">${eyebrow} ${SOURCE_CHIPS[source]?.() ?? ''}</p>
           <h2 class="stop-title">${escapeHtml(focused.name)}</h2>
         </div>
       </div>
       <div class="stop-meta">${meta.join('')}</div>
       <div class="stop-actions">
         <button class="btn-secondary btn-walk" type="button" data-action="walk-to-stop" data-stop-id="${escapeHtml(focused.id)}">
-          ${ICONS.walk} ניווט רגלי לתחנה
+          ${ICONS.walk} ${t('ניווט רגלי לתחנה')}
         </button>
-        ${focused.code ? starButton({ on: !!isFavStop, action: 'toggle-fav-stop', data: { 'stop-id': focused.id }, label: 'שמירת התחנה' }) : ''}
+        ${focused.code ? starButton({ on: !!isFavStop, action: 'toggle-fav-stop', data: { 'stop-id': focused.id }, label: t('שמירת התחנה') }) : ''}
       </div>
     `;
   }
 
   #arrivalsSection(state) {
     let chip = '';
-    if (state?.demo) chip = '<span class="chip chip-warn">זמנים לדוגמה</span>';
-    else if (state?.live && state.arrivals) chip = '<span class="chip chip-live"><span class="live-dot"></span>זמן אמת</span>';
+    if (state?.demo) chip = `<span class="chip chip-warn">${t('זמנים לדוגמה')}</span>`;
+    else if (state?.live && state.arrivals) chip = `<span class="chip chip-live"><span class="live-dot"></span>${t('זמן אמת')}</span>`;
 
-    const title = `<h3 class="section-title"><span>הגעות קרובות</span>${chip}</h3>`;
+    const title = `<h3 class="section-title"><span>${t('הגעות קרובות')}</span>${chip}</h3>`;
 
     if (!state || state.status === 'unsupported') {
-      return `${title}${this.#stateBox(ICONS.pin, 'לתחנה הזו אין קוד של משרד התחבורה, ולכן אין לה זמני הגעה.')}`;
+      return `${title}${this.#stateBox(ICONS.pin, t('לתחנה הזו אין קוד של משרד התחבורה, ולכן אין לה זמני הגעה.'))}`;
     }
 
     if (!state.arrivals) {
       if (state.status === 'error') {
-        return `${title}${this.#stateBox(ICONS.cloudOff, 'זמני ההגעה לא זמינים כרגע. ננסה שוב בעוד רגע.')}`;
+        return `${title}${this.#stateBox(ICONS.cloudOff, t('זמני ההגעה לא זמינים כרגע. ננסה שוב בעוד רגע.'))}`;
       }
       return `${title}<div class="skeleton"><div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div></div>`;
     }
 
     const groups = groupArrivals(state.arrivals);
     if (groups.length === 0) {
-      return `${title}${this.#stateBox(ICONS.clock, 'אין כרגע אוטובוסים בדרך לתחנה הזו.')}`;
+      return `${title}${this.#stateBox(ICONS.clock, t('אין כרגע אוטובוסים בדרך לתחנה הזו.'))}`;
     }
 
     return `${title}<ul class="arrivals">${groups.map((g) => this.#arrivalRow(g, state.live)).join('')}</ul>`;
@@ -427,14 +445,14 @@ export class Sheet {
     const rows = favorites.map(({ stop, state }) => {
       let body;
       if (!state || (!state.arrivals && state.status !== 'error')) {
-        body = '<span class="fav-dep-muted">טוען…</span>';
+        body = `<span class="fav-dep-muted">${t('טוען…')}</span>`;
       } else if (!state.arrivals?.length) {
-        body = `<span class="fav-dep-muted">${state.status === 'error' ? 'לא זמין כרגע' : 'אין יציאות קרובות'}</span>`;
+        body = `<span class="fav-dep-muted">${state.status === 'error' ? t('לא זמין כרגע') : t('אין יציאות קרובות')}</span>`;
       } else {
         body = groupArrivals(state.arrivals).slice(0, 3).map((g) => {
           const m = g.minutes[0];
-          const color = g.mode === 'rail' ? '#1e3a8a' : g.mode === 'lightrail' ? '#dc2626' : lineColor(g.line);
-          return `<span class="fav-dep"><b style="background:${color}">${g.mode === 'rail' ? 'רכבת' : escapeHtml(g.line)}</b>${m === 0 ? 'עכשיו' : `${m} דק'`}${g.live ? '<i class="live-dot"></i>' : ''}</span>`;
+          const color = g.mode === 'rail' ? '#1e3a8a' : g.mode === 'lightrail' ? '#dc2626' : lineColor(g.line, g.agency);
+          return `<span class="fav-dep"><b style="background:${color}">${g.mode === 'rail' ? t('רכבת') : escapeHtml(g.line)}</b>${m === 0 ? t('עכשיו') : t('{n} דק\'', { n: m })}${g.live ? '<i class="live-dot"></i>' : ''}</span>`;
         }).join('');
       }
       return `
@@ -445,7 +463,7 @@ export class Sheet {
           </button>
         </li>`;
     }).join('');
-    return `<h3 class="section-title">התחנות שלי</h3><ul class="fav-stops">${rows}</ul>`;
+    return `<h3 class="section-title">${t('התחנות שלי')}</h3><ul class="fav-stops">${rows}</ul>`;
   }
 
   #stateBox(icon, text) {
@@ -456,19 +474,19 @@ export class Sheet {
     const [first, ...rest] = g.minutes;
     const live = g.live ?? sectionLive;
     const isRail = g.mode === 'rail';
-    const dest = g.destination ? `לכיוון ${escapeHtml(g.destination)}` : `קו ${escapeHtml(g.line)}`;
+    const dest = g.destination ? t('לכיוון {dest}', { dest: escapeHtml(g.destination) }) : t('קו {line}', { line: escapeHtml(g.line) });
     const subParts = [];
-    if (rest.length) subParts.push(`גם בעוד ${rest.join(', ')} דק'`);
-    if (isRail && g.trainNumber) subParts.push(`רכבת ${escapeHtml(g.trainNumber)}`);
+    if (rest.length) subParts.push(t('גם בעוד {list} דק\'', { list: rest.join(', ') }));
+    if (isRail && g.trainNumber) subParts.push(t('רכבת {n}', { n: escapeHtml(g.trainNumber) }));
     if (g.agency) subParts.push(escapeHtml(g.agency));
-    if (!live) subParts.push('לפי לוח זמנים');
+    if (!live) subParts.push(t('לפי לוח זמנים'));
 
     const eta =
       first === 0
-        ? `<div class="arrival-eta is-now"><span class="eta-num">עכשיו</span></div>`
-        : `<div class="arrival-eta${live ? ' is-live' : ''}"><span class="eta-num">${first}</span><span class="eta-unit">דק'</span></div>`;
+        ? `<div class="arrival-eta is-now"><span class="eta-num">${t('עכשיו')}</span></div>`
+        : `<div class="arrival-eta${live ? ' is-live' : ''}"><span class="eta-num">${first}</span><span class="eta-unit">${t('דק\'')}</span></div>`;
 
-    const badgeColor = isRail ? '#1e3a8a' : g.mode === 'lightrail' ? '#dc2626' : lineColor(g.line);
+    const badgeColor = isRail ? '#1e3a8a' : g.mode === 'lightrail' ? '#dc2626' : lineColor(g.line, g.agency);
     const badgeText = isRail ? `${MODE_ICON_SM.rail}` : escapeHtml(g.line);
 
     return `
@@ -484,8 +502,8 @@ export class Sheet {
 
   #nearbyRow(s) {
     const sub = s.routes?.length
-      ? `קווים: ${escapeHtml(s.routes.slice(0, 6).join(', '))}`
-      : [s.code ? `קוד ${escapeHtml(s.code)}` : '', s.city ? escapeHtml(s.city) : ''].filter(Boolean).join(' · ');
+      ? t('קווים: {list}', { list: escapeHtml(s.routes.slice(0, 6).join(', ')) })
+      : [s.code ? t('קוד {code}', { code: escapeHtml(s.code) }) : '', s.city ? escapeHtml(s.city) : ''].filter(Boolean).join(' · ');
 
     return `
       <li>
@@ -495,7 +513,7 @@ export class Sheet {
             <span class="nearby-name">${escapeHtml(s.name)}</span>
             ${sub ? `<span class="nearby-sub">${sub}</span>` : ''}
           </span>
-          <span class="nearby-dist">${formatDistance(s.distance)}<small>${walkMinutes(s.distance)} דק' הליכה</small></span>
+          <span class="nearby-dist">${formatDistance(s.distance)}<small>${t('{n} דק\' הליכה', { n: walkMinutes(s.distance) })}</small></span>
         </button>
       </li>`;
   }

@@ -6,6 +6,7 @@ import {
   WALK_SPEED_MPS,
   DETOUR_FACTOR
 } from '../config.js';
+import { t } from './i18n.js';
 
 const EARTH_RADIUS_M = 6371000;
 const toRad = (deg) => (deg * Math.PI) / 180;
@@ -42,8 +43,8 @@ export function walkMinutes(straightLineMeters) {
 }
 
 export function formatDistance(meters) {
-  if (meters < 1000) return `${Math.round(meters / 10) * 10} מ'`;
-  return `${(meters / 1000).toFixed(1)} ק"מ`;
+  if (meters < 1000) return t('{n} מ\'', { n: Math.round(meters / 10) * 10 });
+  return t('{n} ק"מ', { n: (meters / 1000).toFixed(1) });
 }
 
 /**

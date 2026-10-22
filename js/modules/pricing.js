@@ -32,7 +32,6 @@ export const PREMIUM_FEATURES = Object.freeze([
   { id: 'supporter', icon: '💚', title: 'תג תומך', desc: 'עוזרים לשמור את Walkie בלי פרסומות, לכולם', live: true },
   { id: 'bg-alerts', icon: '🔔', title: 'התראת ירידה גם כשהמסך כבוי', desc: 'הטלפון בכיס? נזכיר לרדת בתחנה', live: false },
   { id: 'leave-now', icon: '⏰', title: 'התראת "צאו עכשיו"', desc: 'לפי זמן ההליכה לתחנה וזמן האוטובוס בזמן אמת', live: false },
-  { id: 'dark', icon: '🌙', title: 'מצב לילה', desc: 'ממשק ומפה כהים, נוחים לעיניים בערב', live: false },
   { id: 'widget', icon: '📱', title: 'ווידג\'ט למסך הבית', desc: 'האוטובוס הבא מהתחנה שלך, בלי לפתוח את האפליקציה', live: false },
   { id: 'offline', icon: '🗺️', title: 'מפת העיר אופליין', desc: 'ניווט גם בלי קליטה', live: false }
 ]);

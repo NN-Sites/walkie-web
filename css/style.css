@@ -61,6 +61,19 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   text-rendering: optimizeLegibility;
+  /* אפליקציה, לא דף אינטרנט: בלי סימון טקסט ובלי תפריט "העתקה" בלחיצה ארוכה */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* בשדות הקלדה (חיפוש, תאריך) סימון ועריכה עובדים כרגיל */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 button {
@@ -89,7 +102,9 @@ button:focus-visible {
 }
 
 /* ריכוך אריחי OSM הסטנדרטיים למראה בהיר ונקי (לא חל על ספק עם סגנון משלו) */
-.tiles-soft {
+/* הפילטר על כל אריח בנפרד (ולא על כל השכבה): אריח מסונן פעם אחת ונשאר בשכבה של ה-GPU,
+   כך שגרירה וזום לא מחייבים לסנן מחדש את כל המפה בכל פריים. אותה תוצאה בדיוק – הפילטר פועל פיקסל-פיקסל */
+.tiles-soft .leaflet-tile {
   filter: saturate(0.72) brightness(1.04) contrast(0.94);
 }
 
@@ -802,3 +817,40 @@ body.sheet-full .fab-stack {
 
   .leaflet-control-attribution { margin-bottom: 0 !important; }
 }
+
+/* ---------- שבת וחגים: אין שירות / ערב שבת / השירות חוזר ---------- */
+
+.service-notice {
+  --sn-bg: #eef2ff;
+  --sn-border: #c7d2fe;
+  --sn-text: #312e81;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--sn-border);
+  border-radius: var(--radius-md);
+  background: var(--sn-bg);
+  color: var(--sn-text);
+}
+.service-notice.is-erev { --sn-bg: #fffbeb; --sn-border: #fde68a; --sn-text: #92400e; }
+.service-notice.is-resuming { --sn-bg: #ecfdf3; --sn-border: #bbf7d0; --sn-text: #166534; }
+
+.service-notice-icon { font-size: 22px; line-height: 1.2; flex: none; }
+.service-notice-text { display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; line-height: 1.45; }
+.service-notice-text strong { font-size: 15px; font-weight: 700; }
+
+[data-theme="dark"] .service-notice { --sn-bg: #1c1f3f; --sn-border: #33386b; --sn-text: #c7d2fe; }
+[data-theme="dark"] .service-notice.is-erev { --sn-bg: #2a2110; --sn-border: #5c4513; --sn-text: #fcd34d; }
+[data-theme="dark"] .service-notice.is-resuming { --sn-bg: #12301f; --sn-border: #1f5134; --sn-text: #86efac; }
+
+/* ---------- אנגלית (LTR): חיצים שמצביעים "אחורה" / "קדימה" מתהפכים ---------- */
+
+[dir="ltr"] .btn-back svg,
+[dir="ltr"] .dir-chip svg,
+[dir="ltr"] .leg-sep svg,
+[dir="ltr"] .dir-icon-btn[data-dir="close"] svg,
+[dir="ltr"] .search-bar [data-action="close"] svg,
+[dir="ltr"] .doc-bar .icon-btn svg,
+[dir="ltr"] [data-pm="close"] svg { transform: scaleX(-1); }

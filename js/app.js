@@ -9,6 +9,7 @@ import {
   NEARBY_LIST_SIZE,
   SAVE_POSITION_EVERY_MS,
   ETA_TICK_MS,
+  NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
 } from './config.js';
@@ -21,10 +22,11 @@ import {
   StopsLayer,
   RouteLayer,
   TransitLayer,
+  VehiclesLayer,
   MapRotator
 } from './modules/map.js';
 import { fetchNearbyStops } from './modules/stops.js';
-import { ArrivalsStore } from './modules/arrivals.js';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js';
 import { Sheet, showToast } from './modules/ui.js';
 import { SearchOverlay } from './modules/search.js';
 import { RouteController } from './modules/route-controller.js';
@@ -45,6 +47,13 @@ import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, o
 import { initBilling } from './modules/billing.js';
 import { supportId } from './modules/session.js';
 import { escapeHtml } from './modules/ui.js';
+import { t, translateDom } from './modules/i18n.js';
+import { initTheme } from './modules/theme.js';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js';
+
+// טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
+translateDom();
+initTheme();
 
 // מצב הדמיה לפיתוח: ?sim=1 – הניווט/הנסיעה "מתקדמים" לבד לאורך המסלול
 const SIMULATE = new URLSearchParams(location.search).has('sim');
@@ -113,6 +122,8 @@ const lineLayer = new TransitLayer(map);                                   // ל
 const stationsLayer = new StopsLayer(map, (id) => stationsView.selectById(id)); // לשונית תחנות
 stationsLayer.setVisible(false);
 const rotator = new MapRotator(map);
+// אוטובוסים בזמן אמת: בדרך לתחנה שמוצגת בלוח (מסך הבית)
+const vehiclesLayer = new VehiclesLayer(map, { onSelect: (v) => showToast(vehicleSummary(v), 4200) });
 const arrivalsStore = new ArrivalsStore(() => render());
 
 // סרגל הניווט התחתון נוצר אחרי הלוח, אבל הלוח צריך לדעת את גובהו
@@ -168,6 +179,7 @@ const transit = new TransitController({
   map,
   sheet,
   layer: transitLayer,
+  vehicles: new VehiclesLayer(map, { onSelect: (v) => showToast(vehicleSummary(v), 4200) }),
   banner,
   simulate: SIMULATE,
   getOcclusion,
@@ -200,6 +212,7 @@ const directions = new DirectionsController({
   getFallbackPoint: () => visibleCenter(),
   onOpen: () => {
     state.selectedId = null;
+    vehiclesLayer.clear(); // האוטובוסים של התחנה – המסלול מציג רק את האוטובוס שלו
     // בזמן מסלול/ניווט – הסרגל התחתון מוסתר (כמו בגוגל מפות)
     tabbar?.setHidden(true);
     sheet.refreshLayout();
@@ -216,6 +229,7 @@ const getNear = () => state.user ?? visibleCenter();
 const linesView = new LinesView({
   sheet,
   layer: lineLayer,
+  vehicles: new VehiclesLayer(map, { onSelect: (v) => showToast(vehicleSummary(v), 4200) }),
   map,
   getNear,
   getOcclusion,
@@ -225,6 +239,7 @@ const linesView = new LinesView({
 const stationsView = new StationsView({
   sheet,
   layer: stationsLayer,
+  vehicles: new VehiclesLayer(map, { onSelect: (v) => showToast(vehicleSummary(v), 4200) }),
   map,
   getNear,
   getOcclusion,
@@ -232,17 +247,17 @@ const stationsView = new StationsView({
 });
 
 /** בחירת מקום דרך מסך החיפוש (כולל "המיקום שלי") – להגדרת בית / עבודה / בית ספר */
-function pickPlace(placeholder, onPick) {
+function pickPlace(placeholder, onPick, placeName = t('המיקום שלי')) {
   search.open({
     placeholder,
     includeMyLocation: true,
     onPick: (place) => {
       if (place.kind === 'mylocation') {
         if (!state.user) {
-          showToast('אין מיקום GPS – חפשו כתובת');
+          showToast(t('אין מיקום GPS – חפשו כתובת'));
           return;
         }
-        onPick({ id: `pt:${state.user.lat.toFixed(5)},${state.user.lng.toFixed(5)}`, kind: 'place', name: placeholder.replace('כתובת ה', ''), lat: state.user.lat, lng: state.user.lng });
+        onPick({ id: `pt:${state.user.lat.toFixed(5)},${state.user.lng.toFixed(5)}`, kind: 'place', name: placeName, lat: state.user.lat, lng: state.user.lng });
         return;
       }
       onPick(place);
@@ -264,12 +279,12 @@ const settingsView = new SettingsView(document.getElementById('settings-page'), 
 new QuickBar(document.getElementById('quick-places'), {
   onGo: (place) => openDirectionsTo(place),
   onSet: (which) => {
-    const label = which === 'home' ? 'הבית' : secondLabel().label;
-    pickPlace(`כתובת ה${which === 'home' ? 'בית' : secondLabel().label}`, (place) => {
+    const label = which === 'home' ? t('בית') : t(secondLabel().label);
+    pickPlace(which === 'home' ? t('כתובת הבית') : t('כתובת ה{place}', { place: label }), (place) => {
       if (which === 'home') setHome(place);
       else setSecond(place);
-      showToast(`${label} נשמר – לחיצה אחת ויוצאים לדרך`);
-    });
+      showToast(t('{place} נשמר – לחיצה אחת ויוצאים לדרך', { place: label }));
+    }, label);
   }
 });
 
@@ -306,7 +321,10 @@ tabbar = new TabBar(document.getElementById('tabbar'), {
 });
 sheet.refreshLayout();
 
-onSettingsChange((s) => stopsLayer.setVisible(tabbar.active === 'home' && s.showStops));
+onSettingsChange((s) => {
+  stopsLayer.setVisible(tabbar.active === 'home' && s.showStops);
+  render(); // אוטובוסים בזמן אמת הופעלו / כובו
+});
 stopsLayer.setVisible(getSettings().showStops);
 
 const tracker = new LocationTracker({
@@ -358,7 +376,13 @@ function render() {
   stopsLayer.render(ranked, nearest?.id, focused?.id);
 
   // בזמן תכנון מסלול / ניווט, או בלשונית אחרת – הלוח שייך למסך אחר
-  if (directions.isActive || tabbar.active !== 'home') return;
+  if (directions.isActive || tabbar.active !== 'home') {
+    vehiclesLayer.clear();
+    return;
+  }
+
+  const arrivalsState = focused ? arrivalsStore.get(focused) : null;
+  vehiclesLayer.render(getSettings().showBuses && !arrivalsState?.demo ? vehiclesFromArrivals(arrivalsState?.arrivals, arrivalColor, { stop: focused }) : []);
 
   // מעבר לתחנה חדשה -> טעינת זמני הגעה
   if (focused && focused.id !== state.focusedId) {
@@ -372,8 +396,10 @@ function render() {
     focused,
     isNearest: !!focused && focused.id === nearest?.id && !state.selectedId,
     others: ranked.filter((s) => s.id !== focused?.id).slice(0, NEARBY_LIST_SIZE),
-    arrivalsState: focused ? arrivalsStore.get(focused) : null,
+    arrivalsState,
     source: state.source,
+    // שבת / חג / ערב שבת – לפי המיקום (זמני השקיעה משתנים בין צפון לדרום)
+    serviceNotice: serviceNotice(serviceStatus(Date.now(), state.user ?? focused)),
     hasUserLocation: !!state.user && state.followUser,
     locationDenied: state.locationDenied,
     loading: state.loading,
@@ -418,7 +444,7 @@ async function loadStops(center) {
     state.loading = false;
 
     if (source === 'demo') {
-      showToast('אין חיבור לשרת התחנות – מוצגות תחנות דמה');
+      showToast(t('אין חיבור לשרת התחנות – מוצגות תחנות דמה'));
       demoRetryTimer = setTimeout(() => {
         if (document.visibilityState === 'visible' && state.source === 'demo') loadStops(center);
       }, DEMO_RETRY_MS);
@@ -428,7 +454,7 @@ async function loadStops(center) {
     if (err?.name === 'AbortError') return;
     state.loading = false;
     console.error('[Walkie] loadStops failed', err);
-    showToast('שגיאה בטעינת תחנות');
+    showToast(t('שגיאה בטעינת תחנות'));
     render();
   }
 }
@@ -464,14 +490,14 @@ function handleSheetAction(action, data) {
     if (stop) {
       const on = toggleStop(stop);
       if (on === null) return;
-      showToast(on ? 'התחנה נשמרה – היציאות שלה יופיעו כאן ⭐' : 'התחנה הוסרה מהמועדפים');
+      showToast(on ? t('התחנה נשמרה – היציאות שלה יופיעו כאן ⭐') : t('התחנה הוסרה מהמועדפים'));
     }
     return;
   }
 
   if (action === 'fav-stop-walk') {
     const s = getFavorites().stops.find((x) => x.code === data.code);
-    if (s) openDirectionsTo({ id: s.id ?? `stop:${s.code}`, kind: 'stop', name: s.name, subtitle: `תחנה ${s.code}`, lat: s.lat, lng: s.lng });
+    if (s) openDirectionsTo({ id: s.id ?? `stop:${s.code}`, kind: 'stop', name: s.name, subtitle: t('תחנה {code}', { code: s.code }), lat: s.lat, lng: s.lng });
     return;
   }
 
@@ -499,7 +525,7 @@ function handleSheetAction(action, data) {
         id: stop.id,
         kind: 'stop',
         name: stop.name,
-        subtitle: stop.code ? `תחנה ${stop.code}` : null,
+        subtitle: stop.code ? t('תחנה {code}', { code: stop.code }) : null,
         lat: stop.lat,
         lng: stop.lng
       },
@@ -527,6 +553,7 @@ function onTabChange(tab, prev, { reselect = false } = {}) {
   }
 
   stopsLayer.setVisible(tab === 'home' && getSettings().showStops);
+  if (tab !== 'home') vehiclesLayer.clear();
   search.close();
 
   switch (tab) {
@@ -590,10 +617,10 @@ function recenter() {
     }
   } else if (state.locationDenied) {
     showToast(globalThis.Capacitor?.isNativePlatform?.()
-      ? 'יש לאפשר גישה למיקום: הגדרות הטלפון ← אפליקציות ← Walkie ← הרשאות'
-      : 'יש לאפשר גישה למיקום בהגדרות הדפדפן');
+      ? t('יש לאפשר גישה למיקום: הגדרות הטלפון ← אפליקציות ← Walkie ← הרשאות')
+      : t('יש לאפשר גישה למיקום בהגדרות הדפדפן'));
   } else {
-    showToast('מחפש את המיקום שלך…');
+    showToast(t('מחפש את המיקום שלך…'));
     tracker.restart();
   }
 }
@@ -604,7 +631,7 @@ document.getElementById('btn-search').addEventListener('click', () => search.ope
 // שיתוף המיקום הנוכחי בוואטסאפ
 document.getElementById('btn-share').addEventListener('click', () => {
   if (!state.user) {
-    showToast(state.locationDenied ? 'יש לאפשר גישה למיקום כדי לשתף' : 'מחפש את המיקום שלך…');
+    showToast(state.locationDenied ? t('יש לאפשר גישה למיקום כדי לשתף') : t('מחפש את המיקום שלך…'));
     return;
   }
   shareMyLocation(state.user);
@@ -615,7 +642,7 @@ function shareCurrentTrip() {
   if (routes.isNavigating && routes.session?.state) {
     shareTrip({
       position: state.user,
-      destName: routes.dest?.name ?? 'היעד',
+      destName: routes.dest?.name ?? t('היעד'),
       arrival: Date.now() + routes.session.state.remainingSeconds * 1000,
       mode: 'walk'
     });
@@ -626,10 +653,10 @@ function shareCurrentTrip() {
     const line = [st.leg, st.next].find((l) => l && l.mode !== 'walk');
     shareTrip({
       position: state.user,
-      destName: transit.request?.dest?.name ?? 'היעד',
+      destName: transit.request?.dest?.name ?? t('היעד'),
       arrival: st.arrival,
       mode: 'transit',
-      lineText: line ? (line.mode === 'rail' ? 'רכבת' : `קו ${line.line}`) : null
+      lineText: line ? (line.mode === 'rail' ? t('רכבת') : t('קו {line}', { line: line.line })) : null
     });
     return;
   }
@@ -707,7 +734,7 @@ function onLocationError(err) {
   }
   if (!gpsWarned && !state.user) {
     gpsWarned = true;
-    showToast('מחפש אות GPS…');
+    showToast(t('מחפש אות GPS…'));
   }
 }
 
@@ -723,7 +750,7 @@ function tick() {
 
 function startTicker() {
   stopTicker();
-  tickTimer = setInterval(tick, Math.min(ETA_TICK_MS, refreshInterval()));
+  tickTimer = setInterval(tick, Math.min(NOW_TICK_MS, ETA_TICK_MS, refreshInterval()));
 }
 
 function stopTicker() {
@@ -801,7 +828,7 @@ function showAnnouncement(a) {
   el.setAttribute('role', 'status');
   el.innerHTML = `
     <div class="announce-text">${a.title ? `<strong>${escapeHtml(a.title)}</strong>` : ''}${escapeHtml(a.text)}</div>
-    <button class="icon-btn" type="button" aria-label="סגירה">✕</button>`;
+    <button class="icon-btn" type="button" aria-label="${t('סגירה')}">✕</button>`;
   el.querySelector('button').addEventListener('click', () => {
     el.remove();
     try {

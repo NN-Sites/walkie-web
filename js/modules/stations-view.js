@@ -3,10 +3,14 @@
 import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js';
 import { escapeHtml } from './ui.js';
 import { formatDistance, walkMinutes } from './geo.js';
-import { fmtTime, minutesUntil, lineBadge, icon, modeIcon } from './transit-ui.js';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js';
 import { toggleStop, isStopSaved } from './favorites.js';
 import { starButton } from './favorites-ui.js';
 import { showToast } from './ui.js';
+import { vehiclesFromArrivals } from './arrivals.js';
+import { getSettings } from './settings.js';
+import { t } from './i18n.js';
+import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js';
 
 const FILTERS = [
   { id: 'all', label: 'הכל' },
@@ -16,13 +20,15 @@ const FILTERS = [
 ];
 
 const MODE_NAMES = { bus: 'אוטובוס', rail: 'רכבת', lightrail: 'רכבת קלה' };
+const modeName = (mode) => (MODE_NAMES[mode] ? t(MODE_NAMES[mode]) : '');
 const REFRESH_MS = 30000;
 const SEARCH_DEBOUNCE_MS = 350;
 
 export class StationsView {
-  constructor({ sheet, layer, map, getNear, getOcclusion, onNavigateTo }) {
+  constructor({ sheet, layer, vehicles = null, map, getNear, getOcclusion, onNavigateTo }) {
     this.sheet = sheet;
     this.layer = layer;
+    this.vehicles = vehicles;   // אוטובוסים בדרך לתחנה הפתוחה
     this.map = map;
     this.getNear = getNear;
     this.getOcclusion = getOcclusion;
@@ -54,6 +60,7 @@ export class StationsView {
     clearInterval(this.timer);
     this.timer = null;
     this.layer.setVisible(false);
+    this.vehicles?.clear();
   }
 
   /** לחיצה על סמן תחנה במפה */
@@ -96,7 +103,7 @@ export class StationsView {
         if (this.station?.code) {
           const on = toggleStop({ ...this.station, mode: this.station.primaryMode });
           if (on === null) return true;
-          showToast(on ? 'התחנה נשמרה – תופיע במסך הבית ⭐' : 'התחנה הוסרה מהמועדפים');
+          showToast(on ? t('התחנה נשמרה – תופיע במסך הבית ⭐') : t('התחנה הוסרה מהמועדפים'));
           this.#renderStation();
         }
         return true;
@@ -120,16 +127,17 @@ export class StationsView {
     this.station = null;
     clearInterval(this.timer);
     this.timer = null;
+    this.vehicles?.clear();
 
     // הכותרת ושדה החיפוש מצוירים פעם אחת – כדי שההקלדה לא תאבד פוקוס כשהתוצאות מתעדכנות
     this.sheet.renderCustom(`
       <div class="tab-head">
-        <h2 class="tab-title">תחנות</h2>
+        <h2 class="tab-title">${t('תחנות')}</h2>
         <div class="tab-search">
           ${icon('search', 18)}
           <input id="stations-input" class="tab-search-input" type="search" inputmode="search" autocomplete="off"
-                 placeholder="שם תחנה, עיר או קוד תחנה" value="${escapeHtml(this.query)}">
-          ${this.query ? `<button class="tab-search-clear" type="button" data-action="station-search-clear" aria-label="ניקוי החיפוש">✕</button>` : ''}
+                 placeholder="${t('שם תחנה, עיר או קוד תחנה')}" value="${escapeHtml(this.query)}">
+          ${this.query ? `<button class="tab-search-clear" type="button" data-action="station-search-clear" aria-label="${t('ניקוי החיפוש')}">✕</button>` : ''}
         </div>
       </div>
       <div id="stations-body"></div>`, 'stations-list');
@@ -161,7 +169,7 @@ export class StationsView {
   #toggleClear(show) {
     const box = this.sheet.content.querySelector('.tab-search');
     const btn = box?.querySelector('.tab-search-clear');
-    if (show && !btn) box?.insertAdjacentHTML('beforeend', '<button class="tab-search-clear" type="button" data-action="station-search-clear" aria-label="ניקוי החיפוש">✕</button>');
+    if (show && !btn) box?.insertAdjacentHTML('beforeend', `<button class="tab-search-clear" type="button" data-action="station-search-clear" aria-label="${t('ניקוי החיפוש')}">✕</button>`);
     if (!show) btn?.remove();
   }
 
@@ -175,7 +183,7 @@ export class StationsView {
   async #search() {
     const query = this.query;
     if (query.length < 2) {
-      this.#body('<div class="empty">הקלידו לפחות 2 תווים, או קוד תחנה.</div>');
+      this.#body(`<div class="empty">${t('הקלידו לפחות 2 תווים, או קוד תחנה.')}</div>`);
       return;
     }
     this.sheet.setSnap('full');
@@ -190,14 +198,14 @@ export class StationsView {
       this.#renderSearch(this.searchResults);
     } catch (err) {
       if (err?.name === 'AbortError') return;
-      this.#body('<div class="state-box"><span>החיפוש לא זמין כרגע. נסו שוב.</span></div>');
+      this.#body(`<div class="state-box"><span>${t('החיפוש לא זמין כרגע. נסו שוב.')}</span></div>`);
     }
   }
 
   #renderSearch(results) {
     this.#body(results.length
       ? `<ul class="nearby">${results.map((s) => this.#row(s)).join('')}</ul>`
-      : `<div class="empty">לא נמצאה תחנה בשם "${escapeHtml(this.query)}".</div>`);
+      : `<div class="empty">${t('לא נמצאה תחנה בשם "{q}".', { q: escapeHtml(this.query) })}</div>`);
     this.layer.render(results.map((s) => ({ ...s, mode: s.primaryMode })), null, null);
   }
 
@@ -229,17 +237,17 @@ export class StationsView {
   #renderList(results, failed = false) {
     const chips = FILTERS.map((f) => `
       <button class="filter-chip${f.id === this.filter ? ' is-active' : ''}" type="button" data-action="station-filter" data-filter="${f.id}">
-        ${f.id === 'all' ? '' : modeIcon(f.id, 15)}${f.label}
+        ${f.id === 'all' ? '' : modeIcon(f.id, 15)}${t(f.label)}
       </button>`).join('');
 
     let body;
     if (failed) {
-      body = `<div class="state-box"><span>לא הצלחנו לטעון תחנות.</span></div>
-        <button class="btn-secondary" type="button" data-action="station-retry" style="margin-top:10px">לנסות שוב</button>`;
+      body = `<div class="state-box"><span>${t('לא הצלחנו לטעון תחנות.')}</span></div>
+        <button class="btn-secondary" type="button" data-action="station-retry" style="margin-top:10px">${t('לנסות שוב')}</button>`;
     } else if (!results) {
       body = '<div class="skeleton" style="margin-top:8px"><div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div></div>';
     } else if (results.length === 0) {
-      body = `<div class="empty">לא נמצאו תחנות ${this.filter === 'all' ? '' : escapeHtml(MODE_NAMES[this.filter])} באזור.</div>`;
+      body = `<div class="empty">${this.filter === 'all' ? t('לא נמצאו תחנות באזור.') : t('לא נמצאו תחנות {mode} באזור.', { mode: escapeHtml(modeName(this.filter)) })}</div>`;
     } else {
       body = `<ul class="nearby">${results.map((s) => this.#row(s)).join('')}</ul>`;
     }
@@ -257,16 +265,16 @@ export class StationsView {
   }
 
   #row(s) {
-    const modes = s.modes.map((m) => `<span class="mode-tag mode-${m}">${modeIcon(m, 12)}${MODE_NAMES[m]}</span>`).join('');
+    const modes = s.modes.map((m) => `<span class="mode-tag mode-${m}">${modeIcon(m, 12)}${modeName(m)}</span>`).join('');
     return `
       <li>
         <button class="nearby-item" type="button" data-action="station-open" data-id="${escapeHtml(s.id)}">
           <span class="nearby-icon mode-${s.primaryMode}">${modeIcon(s.primaryMode, 18)}</span>
           <span class="nearby-text">
             <span class="nearby-name">${escapeHtml(s.name)}</span>
-            <span class="nearby-sub">${modes}${s.city ? ` · ${escapeHtml(s.city)}` : ''}${s.code ? ` · קוד ${escapeHtml(s.code)}` : ''}</span>
+            <span class="nearby-sub">${modes}${s.city ? ` · ${escapeHtml(s.city)}` : ''}${s.code ? ` · ${t('קוד {code}', { code: escapeHtml(s.code) })}` : ''}</span>
           </span>
-          ${s.distance == null ? '' : `<span class="nearby-dist">${formatDistance(s.distance)}${s.distance <= 3000 ? `<small>${walkMinutes(s.distance)} דק' הליכה</small>` : ''}</span>`}
+          ${s.distance == null ? '' : `<span class="nearby-dist">${formatDistance(s.distance)}${s.distance <= 3000 ? `<small>${t('{n} דק\' הליכה', { n: walkMinutes(s.distance) })}</small>` : ''}</span>`}
         </button>
       </li>`;
   }
@@ -304,9 +312,17 @@ export class StationsView {
     }
     await this.#loadBoard();
     clearInterval(this.timer);
+    let lastLoad = Date.now();
+    // כל 10 שניות: מעדכן דקות ו"עכשיו" מקומית; טעינה מהשרת רק כל 30 שניות
     this.timer = setInterval(() => {
-      if (document.visibilityState === 'visible' && this.active && this.mode === 'detail') this.#loadBoard();
-    }, REFRESH_MS);
+      if (document.visibilityState !== 'visible' || !this.active || this.mode !== 'detail') return;
+      if (Date.now() - lastLoad >= REFRESH_MS - 1000) {
+        lastLoad = Date.now();
+        this.#loadBoard();
+      } else if (this.board?.departures.length) {
+        this.#renderStation();
+      }
+    }, NOW_TICK_MS);
   }
 
   async #loadBoard() {
@@ -331,20 +347,20 @@ export class StationsView {
 
   #renderStation() {
     const s = this.station;
-    const modes = s.modes.map((m) => `<span class="mode-tag mode-${m}">${modeIcon(m, 12)}${MODE_NAMES[m]}</span>`).join('');
+    const modes = s.modes.map((m) => `<span class="mode-tag mode-${m}">${modeIcon(m, 12)}${modeName(m)}</span>`).join('');
 
     let board;
     if (!this.board) {
       board = '<div class="skeleton"><div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div></div>';
-    } else if (this.board.departures.length === 0) {
-      board = `<div class="state-box"><span>${this.board.failed ? 'לוח היציאות לא זמין כרגע.' : 'אין יציאות בשעה הקרובה.'}</span></div>`;
+    } else if (!this.#upcoming().length) {
+      board = `<div class="state-box"><span>${this.board.failed ? t('לוח היציאות לא זמין כרגע.') : t('אין יציאות בשעה הקרובה.')}</span></div>`;
     } else {
-      board = `<ul class="arrivals">${this.board.departures.slice(0, 20).map((d) => this.#depRow(d)).join('')}</ul>`;
+      board = `<ul class="arrivals">${this.#upcoming().slice(0, 20).map((d) => this.#depRow(d)).join('')}</ul>`;
     }
     const anyLive = this.board?.departures.some((d) => d.live);
 
     this.sheet.renderCustom(`
-      <button class="btn-secondary btn-back" type="button" data-action="station-back">${icon('back', 16)} תחנות</button>
+      <button class="btn-secondary btn-back" type="button" data-action="station-back">${icon('back', 16)} ${t('תחנות')}</button>
       <div class="stop-head" style="margin-top:10px">
         <div class="stop-head-icon mode-${s.primaryMode}">${modeIcon(s.primaryMode, 22)}</div>
         <div class="stop-head-text">
@@ -354,41 +370,56 @@ export class StationsView {
       </div>
       <div class="stop-meta">
         ${s.distance == null ? '' : s.distance <= 3000
-          ? `<span class="meta-pill">${icon('walk', 15)}<strong>${walkMinutes(s.distance)} דק'</strong> · ${formatDistance(s.distance)}</span>`
-          : `<span class="meta-pill">${formatDistance(s.distance)} ממך</span>`}
+          ? `<span class="meta-pill">${icon('walk', 15)}<strong>${t('{n} דק\'', { n: walkMinutes(s.distance) })}</strong> · ${formatDistance(s.distance)}</span>`
+          : `<span class="meta-pill">${t('{dist} ממך', { dist: formatDistance(s.distance) })}</span>`}
         ${s.city ? `<span class="meta-pill">${escapeHtml(s.city)}</span>` : ''}
-        ${s.code ? `<span class="meta-pill">קוד ${escapeHtml(s.code)}</span>` : ''}
+        ${s.code ? `<span class="meta-pill">${t('קוד {code}', { code: escapeHtml(s.code) })}</span>` : ''}
       </div>
       <div class="stop-actions">
-        <button class="btn-secondary btn-walk" type="button" data-action="station-walk">${icon('walk', 15)} מסלול לתחנה</button>
-        ${s.code ? starButton({ on: isStopSaved(s), action: 'station-fav', label: 'שמירת התחנה' }) : ''}
+        <button class="btn-secondary btn-walk" type="button" data-action="station-walk">${icon('walk', 15)} ${t('מסלול לתחנה')}</button>
+        ${s.code ? starButton({ on: isStopSaved(s), action: 'station-fav', label: t('שמירת התחנה') }) : ''}
       </div>
-      <h3 class="section-title"><span>יציאות קרובות</span>${anyLive ? '<span class="chip chip-live"><span class="live-dot"></span>זמן אמת</span>' : ''}</h3>
+      <h3 class="section-title"><span>${t('יציאות קרובות')}</span>${anyLive ? `<span class="chip chip-live"><span class="live-dot"></span>${t('זמן אמת')}</span>` : ''}</h3>
       ${board}
-      <p class="attribution">לוחות זמנים: משרד התחבורה (GTFS) · זמן אמת לאוטובוסים: SIRI</p>`,
+      <p class="attribution">${t('לוחות זמנים: משרד התחבורה (GTFS) · זמן אמת לאוטובוסים: SIRI')}</p>`,
       `station:${s.id}`);
+    this.#renderVehicles();
+  }
+
+  /** אוטובוסים בדרך לתחנה (מלוח היציאות, עם מיקום GPS) */
+  #renderVehicles() {
+    if (!this.vehicles) return;
+    const deps = getSettings().showBuses && this.mode === 'detail' ? this.board?.departures ?? [] : [];
+    const arrivals = deps.map((d) => ({ ...d, vehicle: d.live?.vehicle ?? null, recordedAt: d.live?.recordedAt ?? null, destination: d.headsign }));
+    this.vehicles.render(vehiclesFromArrivals(arrivals, legColor, { stop: this.station }));
+  }
+
+  /** יציאות שעוד לא עברו (יציאה נעלמת חצי דקה אחרי "עכשיו") */
+  #upcoming() {
+    const cutoff = Date.now() - ARRIVAL_GONE_MS;
+    return (this.board?.departures ?? []).filter((d) => !(Date.parse(d.eta) < cutoff));
   }
 
   #depRow(d) {
     const m = minutesUntil(d.eta);
     const eta = m <= 0
-      ? '<div class="arrival-eta is-now"><span class="eta-num">עכשיו</span></div>'
+      ? `<div class="arrival-eta is-now"><span class="eta-num">${t('עכשיו')}</span></div>`
       : m < 60
-        ? `<div class="arrival-eta${d.live ? ' is-live' : ''}"><span class="eta-num">${m}</span><span class="eta-unit">דק'</span></div>`
+        ? `<div class="arrival-eta${d.live ? ' is-live' : ''}"><span class="eta-num">${m}</span><span class="eta-unit">${t('דק\'')}</span></div>`
         : `<div class="arrival-eta"><span class="eta-num eta-clock">${fmtTime(d.eta)}</span></div>`;
     const sub = [
-      d.trainNumber ? `רכבת ${escapeHtml(d.trainNumber)}` : '',
+      d.trainNumber ? t('רכבת {n}', { n: escapeHtml(d.trainNumber) }) : '',
       d.agency ? escapeHtml(d.agency) : '',
       d.live
-        ? (d.live.delayMin >= 2 ? `איחור ${d.live.delayMin} דק'` : 'בזמן')
-        : `${fmtTime(d.scheduled)} לפי לוח זמנים`
+        ? (d.live.delayMin >= 2 ? t('איחור {n} דק\'', { n: d.live.delayMin }) : t('בזמן'))
+        : t('{time} לפי לוח זמנים', { time: fmtTime(d.scheduled) })
     ].filter(Boolean).join(' · ');
 
     return `
       <li class="arrival">
         ${lineBadge(d)}
         <div class="arrival-body">
-          <div class="arrival-dest">${d.headsign ? `לכיוון ${escapeHtml(d.headsign)}` : escapeHtml(MODE_NAMES[d.mode] ?? '')}</div>
+          <div class="arrival-dest">${d.headsign ? t('לכיוון {dest}', { dest: escapeHtml(d.headsign) }) : escapeHtml(modeName(d.mode))}</div>
           <div class="arrival-sub">${sub}</div>
         </div>
         ${eta}
