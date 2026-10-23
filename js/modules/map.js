@@ -1,8 +1,8 @@
 // שכבת המפה: Leaflet + אריחים (MapTiler אם יש מפתח, אחרת OSM), סמן משתמש ותחנות.
 /* global L */
 
-import { MAPTILER_KEY, STOPS_DETAIL_ZOOM } from '../config.js?v=1.5.0-mvktlup2';
-import { createMotion } from './vehicle-motion.js?v=1.5.0-mvktlup2';
+import { MAPTILER_KEY, STOPS_DETAIL_ZOOM } from '../config.js?v=1.5.0-mvktq49d';
+import { createMotion } from './vehicle-motion.js?v=1.5.0-mvktq49d';
 
 const BUS_SVG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .9.4 1.7 1 2.2V20c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h8v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6v10Zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM18 11H6V6h12v5Z"/></svg>';

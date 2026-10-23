@@ -3,15 +3,15 @@
 // עם קאש ב-IndexedDB במקום בדיסק. קריאות לשירותים החיצוניים עוברות ב-fetch הנייטיבי
 // של Capacitor (CapacitorHttp), כך שאין מגבלות CORS.
 
-import { createApi } from './server/api.js?v=1.5.0-mvktlup2';
-import { StopsIndex } from './server/stops-index.js?v=1.5.0-mvktlup2';
-import { ArrivalsService } from './server/arrivals.js?v=1.5.0-mvktlup2';
-import { WalkRouter } from './server/walk-router.js?v=1.5.0-mvktlup2';
-import { Geocoder } from './server/geocoder.js?v=1.5.0-mvktlup2';
-import { TransitPlanner } from './server/transit-planner.js?v=1.5.0-mvktlup2';
-import { EducationIndex } from './server/education-index.js?v=1.5.0-mvktlup2';
-import { StationsService } from './server/stations.js?v=1.5.0-mvktlup2';
-import { LinesService } from './server/lines.js?v=1.5.0-mvktlup2';
+import { createApi } from './server/api.js?v=1.5.0-mvktq49d';
+import { StopsIndex } from './server/stops-index.js?v=1.5.0-mvktq49d';
+import { ArrivalsService } from './server/arrivals.js?v=1.5.0-mvktq49d';
+import { WalkRouter } from './server/walk-router.js?v=1.5.0-mvktq49d';
+import { Geocoder } from './server/geocoder.js?v=1.5.0-mvktq49d';
+import { TransitPlanner } from './server/transit-planner.js?v=1.5.0-mvktq49d';
+import { EducationIndex } from './server/education-index.js?v=1.5.0-mvktq49d';
+import { StationsService } from './server/stations.js?v=1.5.0-mvktq49d';
+import { LinesService } from './server/lines.js?v=1.5.0-mvktq49d';
 
 const DB_NAME = 'walkie-cache';
 const STORE = 'kv';

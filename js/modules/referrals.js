@@ -8,12 +8,12 @@
 // זה לא חסין מפני משתמש טכני שמזייף את המכשיר שלו, אבל Premium אמיתי (Google Play) נשאר מוגן.
 // "נרשם" = התחבר עם Google. כל חבר נספר פעם אחת בלבד.
 
-import { SHARE_BASE, PLAY_URL } from '../config.js?v=1.5.0-mvktlup2';
-import { t } from './i18n.js?v=1.5.0-mvktlup2';
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvktlup2';
-import { setReferralGrant } from './premium.js?v=1.5.0-mvktlup2';
-import { openWhatsApp } from './share.js?v=1.5.0-mvktlup2';
-import { track } from './analytics.js?v=1.5.0-mvktlup2';
+import { SHARE_BASE, PLAY_URL } from '../config.js?v=1.5.0-mvktq49d';
+import { t } from './i18n.js?v=1.5.0-mvktq49d';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvktq49d';
+import { setReferralGrant } from './premium.js?v=1.5.0-mvktq49d';
+import { openWhatsApp } from './share.js?v=1.5.0-mvktq49d';
+import { track } from './analytics.js?v=1.5.0-mvktq49d';
 
 export const INVITEE_DAYS = 1;
 export const REFERRAL_TIERS = Object.freeze([

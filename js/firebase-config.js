@@ -36,6 +36,13 @@ function restoreNativeXhr() {
     if (saved[k]) proto[k] = saved[k];
   }
   globalThis.XMLHttpRequest = saved.fullObject;
+  // גם fetch לשירותי Google (Firebase) עובר דרך ה-fetch המקורי של ה-WebView, לא דרך CapacitorHttp
+  const original = globalThis.CapacitorWebFetch;
+  const patched = globalThis.fetch;
+  if (original && patched) {
+    const google = /^https:\/\/([a-z0-9-]+\.)*(googleapis|gstatic|firebaseio|firebaseapp)\.com\//i;
+    globalThis.fetch = (input, init) => (google.test(typeof input === 'string' ? input : input?.url ?? String(input)) ? original : patched).call(globalThis, input, init);
+  }
 }
 
 export function getFirebase() {
