@@ -5,13 +5,13 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvktq49d';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvktq49d';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvktq49d';
-import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.5.0-mvktq49d';
-import { showToast } from './ui.js?v=1.5.0-mvktq49d';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvktq49d';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvktq49d';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkudy41';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvkudy41';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkudy41';
+import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.5.0-mvkudy41';
+import { showToast } from './ui.js?v=1.5.0-mvkudy41';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkudy41';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkudy41';
 
 let session = null;
 
@@ -39,6 +39,12 @@ function authTypeOf(user) {
   if (ids.includes('google.com')) return 'google';
   if (ids.includes('password')) return 'email';
   return 'anonymous';
+}
+
+/** פרטי חשבון Google (שם, אימייל, תמונה) – מוצגים בדף הניהול */
+function profileOf(user) {
+  const g = user?.providerData?.find((p) => p.providerId === 'google.com');
+  return g ? { name: g.displayName ?? user.displayName ?? '', email: g.email ?? user.email ?? '', photo: g.photoURL ?? null } : null;
 }
 
 function premiumReport() {
@@ -100,6 +106,7 @@ export async function initSession({ onAnnouncement } = {}) {
         donations: getDonations(),
         refCode,
         authType: authTypeOf(user),
+        profile: profileOf(user),
         attribution: { source: attribution.source, medium: attribution.medium, campaign: attribution.campaign, ref: attribution.ref },
         sessions: 1
       });
@@ -118,6 +125,7 @@ export async function initSession({ onAnnouncement } = {}) {
         premium: premiumReport(),
         donations: getDonations(),
         authType: authTypeOf(user),
+        profile: profileOf(user),
         ...(refCode ? {} : { refCode: (refCode = newRefCode()) }),
         sessions: increment(1)
       });

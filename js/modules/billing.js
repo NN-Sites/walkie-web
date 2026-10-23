@@ -4,9 +4,9 @@
 // המוצרים מוגדרים ב-Play Console עם המזהים שב-pricing.js. ההגדרות מפורטות ב-docs/PREMIUM.md.
 // בדפדפן ב-localhost אין Play: "רכישה" מפעילה מצב בדיקה (premium.js).
 
-import { TIPS } from './pricing.js?v=1.5.0-mvktq49d';
-import { t } from './i18n.js?v=1.5.0-mvktq49d';
-import { getPricing, setPlayActive, setTestPremium, canUseTestPurchase, recordDonation } from './premium.js?v=1.5.0-mvktq49d';
+import { TIPS } from './pricing.js?v=1.5.0-mvkudy41';
+import { t } from './i18n.js?v=1.5.0-mvkudy41';
+import { getPricing, setPlayActive, setTestPremium, canUseTestPurchase, recordDonation } from './premium.js?v=1.5.0-mvkudy41';
 
 let store = null;
 let platform = null;
