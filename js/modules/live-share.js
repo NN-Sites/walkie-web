@@ -4,12 +4,12 @@
 // נכתב מסמך liveShares/{מזהה אקראי} שמתעדכן כל כמה שניות מהמיקום האחרון. הקישור הוא ההרשאה לצפות;
 // השיתוף נגמר כשהנסיעה נגמרת, כשלוחצים "הפסק שיתוף", או כשהאפליקציה נסגרת (הדף מציג "השיתוף הסתיים").
 
-import { SHARE_BASE } from '../config.js?v=1.5.0-mvkql3bc';
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkql3bc';
-import { getReferral } from './referrals.js?v=1.5.0-mvkql3bc';
-import { openWhatsApp } from './share.js?v=1.5.0-mvkql3bc';
-import { track } from './analytics.js?v=1.5.0-mvkql3bc';
-import { t } from './i18n.js?v=1.5.0-mvkql3bc';
+import { SHARE_BASE } from '../config.js?v=1.5.0-mvkr2mw5';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkr2mw5';
+import { getReferral } from './referrals.js?v=1.5.0-mvkr2mw5';
+import { openWhatsApp } from './share.js?v=1.5.0-mvkr2mw5';
+import { track } from './analytics.js?v=1.5.0-mvkr2mw5';
+import { t } from './i18n.js?v=1.5.0-mvkr2mw5';
 
 const UPDATE_MS = 8000;
 const MAX_PATH_POINTS = 160;

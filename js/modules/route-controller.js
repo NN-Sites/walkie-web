@@ -1,15 +1,15 @@
 // מנהל את זרימת המסלול: חישוב -> תצוגה מקדימה -> ניווט חי -> הגעה.
 // מצבים: idle | loading | error | preview | navigating | arrived
 
-import { NAV_ZOOM, NAV_USER_SCREEN_OFFSET } from '../config.js?v=1.5.0-mvkql3bc';
-import { fetchWalkRoute } from './api.js?v=1.5.0-mvkql3bc';
-import { buildRouteModel, NavigationSession, RouteSimulator } from './navigation.js?v=1.5.0-mvkql3bc';
-import { HeadingSource } from './compass.js?v=1.5.0-mvkql3bc';
-import { focusPoint } from './map.js?v=1.5.0-mvkql3bc';
-import { showToast } from './ui.js?v=1.5.0-mvkql3bc';
-import { t } from './i18n.js?v=1.5.0-mvkql3bc';
-import { vibrate } from './settings.js?v=1.5.0-mvkql3bc';
-import * as tpl from './route-ui.js?v=1.5.0-mvkql3bc';
+import { NAV_ZOOM, NAV_USER_SCREEN_OFFSET } from '../config.js?v=1.5.0-mvkr2mw5';
+import { fetchWalkRoute } from './api.js?v=1.5.0-mvkr2mw5';
+import { buildRouteModel, NavigationSession, RouteSimulator } from './navigation.js?v=1.5.0-mvkr2mw5';
+import { HeadingSource } from './compass.js?v=1.5.0-mvkr2mw5';
+import { focusPoint } from './map.js?v=1.5.0-mvkr2mw5';
+import { showToast } from './ui.js?v=1.5.0-mvkr2mw5';
+import { t } from './i18n.js?v=1.5.0-mvkr2mw5';
+import { vibrate } from './settings.js?v=1.5.0-mvkr2mw5';
+import * as tpl from './route-ui.js?v=1.5.0-mvkr2mw5';
 
 export class RouteController {
   constructor({ map, sheet, routeLayer, rotator, userLayer, banner, compassBtn, getOrigin, getOcclusion, onModeChange, onSimPosition, onPlanned, simulate = false }) {

@@ -3,12 +3,12 @@
 // אבל פעולה – תכנון מסלול, שמירת מועדפים, שיתוף – פותחת בקשה להתחבר, וממשיכה לבד אחרי ההתחברות.
 // אם השרת לא זמין (Firebase לא מוגדר / לא עונה) לא נועלים את האפליקציה.
 
-import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvkql3bc';
-import { isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkql3bc';
-import { setFavoritesGuard } from './favorites.js?v=1.5.0-mvkql3bc';
-import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkql3bc';
-import { t } from './i18n.js?v=1.5.0-mvkql3bc';
-import { track, trackOnce } from './analytics.js?v=1.5.0-mvkql3bc';
+import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvkr2mw5';
+import { isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkr2mw5';
+import { setFavoritesGuard } from './favorites.js?v=1.5.0-mvkr2mw5';
+import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkr2mw5';
+import { t } from './i18n.js?v=1.5.0-mvkr2mw5';
+import { track, trackOnce } from './analytics.js?v=1.5.0-mvkr2mw5';
 
 const FLAG = 'walkie:google';   // מחובר עם Google במכשיר הזה (ידוע מיד בפתיחה, לפני ש-Firebase נטען)
 

@@ -1,15 +1,15 @@
 // זרימת תחבורה ציבורית: חיפוש מסלולים -> רשימה -> פירוט -> ליווי נסיעה -> הגעה.
 // מצבים: idle | loading | error | list | detail | trip | arrived
 
-import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.5.0-mvkql3bc';
-import { RouteSimulator } from './navigation.js?v=1.5.0-mvkql3bc';
-import { buildTripModel, TripSession } from './transit-trip.js?v=1.5.0-mvkql3bc';
-import { focusPoint } from './map.js?v=1.5.0-mvkql3bc';
-import { showToast } from './ui.js?v=1.5.0-mvkql3bc';
-import { vibrate, transitPrefsParams } from './settings.js?v=1.5.0-mvkql3bc';
-import * as tpl from './transit-ui.js?v=1.5.0-mvkql3bc';
-import { t } from './i18n.js?v=1.5.0-mvkql3bc';
-import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.5.0-mvkql3bc';
+import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.5.0-mvkr2mw5';
+import { RouteSimulator } from './navigation.js?v=1.5.0-mvkr2mw5';
+import { buildTripModel, TripSession } from './transit-trip.js?v=1.5.0-mvkr2mw5';
+import { focusPoint } from './map.js?v=1.5.0-mvkr2mw5';
+import { showToast } from './ui.js?v=1.5.0-mvkr2mw5';
+import { vibrate, transitPrefsParams } from './settings.js?v=1.5.0-mvkr2mw5';
+import * as tpl from './transit-ui.js?v=1.5.0-mvkr2mw5';
+import { t } from './i18n.js?v=1.5.0-mvkr2mw5';
+import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.5.0-mvkr2mw5';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה

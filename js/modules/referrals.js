@@ -4,12 +4,12 @@
 // כאן: מצב מקומי (מה הושג), יצירת הקישור, ושליחת קוד שנקלט להפעלה.
 // "נרשם" = התחבר עם Google. כל חבר נספר פעם אחת בלבד.
 
-import { SHARE_BASE, PLAY_URL, COMMUNITY_API } from '../config.js?v=1.5.0-mvkql3bc';
-import { t } from './i18n.js?v=1.5.0-mvkql3bc';
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkql3bc';
-import { setAdminGrant } from './premium.js?v=1.5.0-mvkql3bc';
-import { openWhatsApp } from './share.js?v=1.5.0-mvkql3bc';
-import { track } from './analytics.js?v=1.5.0-mvkql3bc';
+import { SHARE_BASE, PLAY_URL, COMMUNITY_API } from '../config.js?v=1.5.0-mvkr2mw5';
+import { t } from './i18n.js?v=1.5.0-mvkr2mw5';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkr2mw5';
+import { setAdminGrant } from './premium.js?v=1.5.0-mvkr2mw5';
+import { openWhatsApp } from './share.js?v=1.5.0-mvkr2mw5';
+import { track } from './analytics.js?v=1.5.0-mvkr2mw5';
 
 // משוכפל ב-functions/lib/community.js – לעדכן בשני המקומות יחד
 export const INVITEE_DAYS = 1;

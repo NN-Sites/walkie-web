@@ -1,6 +1,6 @@
 // סרגל ניווט תחתון: בית | קווים | תחנות | הגדרות
 
-import { vibrate } from './settings.js?v=1.5.0-mvkql3bc';
+import { vibrate } from './settings.js?v=1.5.0-mvkr2mw5';
 
 export class TabBar {
   constructor(root, { onChange }) {
