@@ -5,10 +5,10 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkspsmp';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvkspsmp';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvkspsmp';
-import { t } from './i18n.js?v=1.5.0-mvkspsmp';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkstayg';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvkstayg';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvkstayg';
+import { t } from './i18n.js?v=1.5.0-mvkstayg';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -37,6 +37,12 @@ function describe(user) {
   return google
     ? { linked: true, name: google.displayName ?? user.displayName ?? '', email: google.email ?? user.email ?? '', photo: google.photoURL ?? null }
     : { linked: false, name: '', email: '', photo: null };
+}
+
+/** המשתמש מחובר, אבל בניית הסשן נכשלה (למשל שגיאת הרשאות בשרת). נשארים מחוברים ומציגים את השגיאה */
+export function markSessionFailed(user) {
+  current = { ...describe(user), sessionError: true };
+  emit();
 }
 
 /** לא מחובר (עדיין לא נכנס עם Google) */

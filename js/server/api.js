@@ -16,12 +16,12 @@
 // GET /api/lines/nearby?lat=..&lng=..
 // GET /api/lines/:lineRef?lat=..&lng=..
 
-import { STOP_CODE_RE, UpstreamError } from './arrivals.js?v=1.5.0-mvkspsmp';
-import { RoutingError } from './walk-router.js?v=1.5.0-mvkspsmp';
-import { TransitError } from './transit-planner.js?v=1.5.0-mvkspsmp';
-import { LinesError } from './lines.js?v=1.5.0-mvkspsmp';
-import { stopMode } from './stops-index.js?v=1.5.0-mvkspsmp';
-import { distanceMeters } from './geo.js?v=1.5.0-mvkspsmp';
+import { STOP_CODE_RE, UpstreamError } from './arrivals.js?v=1.5.0-mvkstayg';
+import { RoutingError } from './walk-router.js?v=1.5.0-mvkstayg';
+import { TransitError } from './transit-planner.js?v=1.5.0-mvkstayg';
+import { LinesError } from './lines.js?v=1.5.0-mvkstayg';
+import { stopMode } from './stops-index.js?v=1.5.0-mvkstayg';
+import { distanceMeters } from './geo.js?v=1.5.0-mvkstayg';
 
 // CORS פתוח לקריאה – האפליקציה לאנדרואיד (Capacitor) רצה ממקור אחר
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' };

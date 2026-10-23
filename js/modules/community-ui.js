@@ -1,19 +1,19 @@
 // מסכים של הקהילה: הזמנת חברים, דיווח על אוטובוס, שיתוף נסיעה בלייב, סקרים, הודעות מהמנהל ומסך חסימה.
 
-import { t, tn } from './i18n.js?v=1.5.0-mvkspsmp';
-import { escapeHtml, showToast } from './ui.js?v=1.5.0-mvkspsmp';
-import { icon } from './transit-ui.js?v=1.5.0-mvkspsmp';
-import { celebrate } from './fx.js?v=1.5.0-mvkspsmp';
-import { track } from './analytics.js?v=1.5.0-mvkspsmp';
+import { t, tn } from './i18n.js?v=1.5.0-mvkstayg';
+import { escapeHtml, showToast } from './ui.js?v=1.5.0-mvkstayg';
+import { icon } from './transit-ui.js?v=1.5.0-mvkstayg';
+import { celebrate } from './fx.js?v=1.5.0-mvkstayg';
+import { track } from './analytics.js?v=1.5.0-mvkstayg';
 import {
   getReferral, REFERRAL_TIERS, INVITEE_DAYS, nextTier, inviteLink, shareInvite, redeemCode, onReferralChange,
   refreshReferral, isInfluencer
-} from './referrals.js?v=1.5.0-mvkspsmp';
-import { REPORT_TYPES } from './report-types.js?v=1.5.0-mvkspsmp';
-import { submitReport, markBroadcastSeen, answerSurvey, markSurveyDone } from './community.js?v=1.5.0-mvkspsmp';
+} from './referrals.js?v=1.5.0-mvkstayg';
+import { REPORT_TYPES } from './report-types.js?v=1.5.0-mvkstayg';
+import { submitReport, markBroadcastSeen, answerSurvey, markSurveyDone } from './community.js?v=1.5.0-mvkstayg';
 
-export { lineUsersText, lineUsersHtml } from './community.js?v=1.5.0-mvkspsmp';
-import { requireSignIn } from './auth-gate.js?v=1.5.0-mvkspsmp';
+export { lineUsersText, lineUsersHtml } from './community.js?v=1.5.0-mvkstayg';
+import { requireSignIn } from './auth-gate.js?v=1.5.0-mvkstayg';
 
 // ---------- עזרים ----------
 

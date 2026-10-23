@@ -12,8 +12,8 @@ import {
   NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
-} from './config.js?v=1.5.0-mvkspsmp';
-import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.5.0-mvkspsmp';
+} from './config.js?v=1.5.0-mvkstayg';
+import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.5.0-mvkstayg';
 import {
   createMap,
   focusPoint,
@@ -24,38 +24,38 @@ import {
   TransitLayer,
   VehiclesLayer,
   MapRotator
-} from './modules/map.js?v=1.5.0-mvkspsmp';
-import { fetchNearbyStops } from './modules/stops.js?v=1.5.0-mvkspsmp';
-import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.5.0-mvkspsmp';
-import { Sheet, showToast } from './modules/ui.js?v=1.5.0-mvkspsmp';
-import { SearchOverlay } from './modules/search.js?v=1.5.0-mvkspsmp';
-import { RouteController } from './modules/route-controller.js?v=1.5.0-mvkspsmp';
-import { TransitController } from './modules/transit-controller.js?v=1.5.0-mvkspsmp';
-import { DirectionsController } from './modules/directions.js?v=1.5.0-mvkspsmp';
-import { initSessionWhenIdle } from './modules/session.js?v=1.5.0-mvkspsmp';
-import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.5.0-mvkspsmp';
-import { TabBar } from './modules/tabs.js?v=1.5.0-mvkspsmp';
-import { LinesView } from './modules/lines-view.js?v=1.5.0-mvkspsmp';
-import { StationsView } from './modules/stations-view.js?v=1.5.0-mvkspsmp';
-import { SettingsView } from './modules/settings-view.js?v=1.5.0-mvkspsmp';
-import { getSettings, onSettingsChange } from './modules/settings.js?v=1.5.0-mvkspsmp';
-import { shareMyLocation, shareTrip } from './modules/share.js?v=1.5.0-mvkspsmp';
-import { QuickBar } from './modules/favorites-ui.js?v=1.5.0-mvkspsmp';
-import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.5.0-mvkspsmp';
-import { loadDepartures } from './modules/arrivals.js?v=1.5.0-mvkspsmp';
-import { PremiumScreen } from './modules/premium-ui.js?v=1.5.0-mvkspsmp';
-import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.5.0-mvkspsmp';
+} from './modules/map.js?v=1.5.0-mvkstayg';
+import { fetchNearbyStops } from './modules/stops.js?v=1.5.0-mvkstayg';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.5.0-mvkstayg';
+import { Sheet, showToast } from './modules/ui.js?v=1.5.0-mvkstayg';
+import { SearchOverlay } from './modules/search.js?v=1.5.0-mvkstayg';
+import { RouteController } from './modules/route-controller.js?v=1.5.0-mvkstayg';
+import { TransitController } from './modules/transit-controller.js?v=1.5.0-mvkstayg';
+import { DirectionsController } from './modules/directions.js?v=1.5.0-mvkstayg';
+import { initSessionWhenIdle } from './modules/session.js?v=1.5.0-mvkstayg';
+import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.5.0-mvkstayg';
+import { TabBar } from './modules/tabs.js?v=1.5.0-mvkstayg';
+import { LinesView } from './modules/lines-view.js?v=1.5.0-mvkstayg';
+import { StationsView } from './modules/stations-view.js?v=1.5.0-mvkstayg';
+import { SettingsView } from './modules/settings-view.js?v=1.5.0-mvkstayg';
+import { getSettings, onSettingsChange } from './modules/settings.js?v=1.5.0-mvkstayg';
+import { shareMyLocation, shareTrip } from './modules/share.js?v=1.5.0-mvkstayg';
+import { QuickBar } from './modules/favorites-ui.js?v=1.5.0-mvkstayg';
+import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.5.0-mvkstayg';
+import { loadDepartures } from './modules/arrivals.js?v=1.5.0-mvkstayg';
+import { PremiumScreen } from './modules/premium-ui.js?v=1.5.0-mvkstayg';
+import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.5.0-mvkstayg';
 import {
   captureAttribution, trackOnce, trackPerf, trackRegion, trackFeature, notePaywall, noteSubscriptionState
-} from './modules/analytics.js?v=1.5.0-mvkspsmp';
-import { CommunityController } from './modules/community-controller.js?v=1.5.0-mvkspsmp';
-import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.5.0-mvkspsmp';
-import { initBilling } from './modules/billing.js?v=1.5.0-mvkspsmp';
-import { supportId } from './modules/session.js?v=1.5.0-mvkspsmp';
-import { escapeHtml } from './modules/ui.js?v=1.5.0-mvkspsmp';
-import { t, translateDom } from './modules/i18n.js?v=1.5.0-mvkspsmp';
-import { initTheme } from './modules/theme.js?v=1.5.0-mvkspsmp';
-import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.5.0-mvkspsmp';
+} from './modules/analytics.js?v=1.5.0-mvkstayg';
+import { CommunityController } from './modules/community-controller.js?v=1.5.0-mvkstayg';
+import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.5.0-mvkstayg';
+import { initBilling } from './modules/billing.js?v=1.5.0-mvkstayg';
+import { supportId } from './modules/session.js?v=1.5.0-mvkstayg';
+import { escapeHtml } from './modules/ui.js?v=1.5.0-mvkstayg';
+import { t, translateDom } from './modules/i18n.js?v=1.5.0-mvkstayg';
+import { initTheme } from './modules/theme.js?v=1.5.0-mvkstayg';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.5.0-mvkstayg';
 
 // טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
 translateDom();

@@ -5,12 +5,13 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkspsmp';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkspsmp';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkspsmp';
-import { initAccount, markAccountUnavailable, markSignedOut, onAccountChange } from './account.js?v=1.5.0-mvkspsmp';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkspsmp';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkspsmp';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkstayg';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvkstayg';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkstayg';
+import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.5.0-mvkstayg';
+import { showToast } from './ui.js?v=1.5.0-mvkstayg';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkstayg';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkstayg';
 
 let session = null;
 
@@ -141,6 +142,13 @@ export async function initSession({ onAnnouncement } = {}) {
       return null;
     }
     console.warn('[Walkie] session init failed', err);
+    // מחוברים עם Google אבל הסשן נכשל: לא "מתנתקים", מציגים את השגיאה כדי שאפשר יהיה לתקן
+    const { auth } = await getFirebase().catch(() => ({}));
+    if (auth?.currentUser && !auth.currentUser.isAnonymous) {
+      markSessionFailed(auth.currentUser);
+      showToast(`${err?.code ?? err?.name ?? 'error'}: ${String(err?.message ?? '').slice(0, 90)}`, 9000);
+      return null;
+    }
     markAccountUnavailable();
     return null;
   }
