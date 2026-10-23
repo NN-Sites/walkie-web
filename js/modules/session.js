@@ -5,13 +5,13 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkunw6c';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkunw6c';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkunw6c';
-import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.5.0-mvkunw6c';
-import { showToast } from './ui.js?v=1.5.0-mvkunw6c';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkunw6c';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkunw6c';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkuvyst';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvkuvyst';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkuvyst';
+import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.5.0-mvkuvyst';
+import { showToast } from './ui.js?v=1.5.0-mvkuvyst';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkuvyst';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkuvyst';
 
 let session = null;
 
@@ -152,6 +152,13 @@ export async function initSession({ onAnnouncement } = {}) {
       track('auth.google_linked');
       redeem();
     });
+
+    // דופק: lastSeenAt מתעדכן כל כמה דקות כל עוד האפליקציה פתוחה, כדי שהאדמין יראה "מחוברים עכשיו"
+    const beat = () => {
+      if (document.visibilityState === 'visible') updateDoc(ref, { lastSeenAt: serverTimestamp() }).catch(() => {});
+    };
+    setInterval(beat, 150000);
+    document.addEventListener('visibilitychange', beat);
 
     // כשמצב המנוי משתנה (רכישה / ביטול) – מעדכנים את המנהל
     onPremiumChange(() => {
