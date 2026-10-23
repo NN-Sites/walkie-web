@@ -23,6 +23,21 @@ export function isFirebaseConfigured() {
   return !firebaseConfig.apiKey.startsWith('YOUR_');
 }
 
+/**
+ * באפליקציה (Capacitor) הבקשות (fetch ו-XHR) עוברות דרך CapacitorHttp. Firestore משתמש ב-XHR עם סטרימינג,
+ * שזה לא תומך בו, ולכן הוא נכשל עם "client is offline". מחזירים ל-XHR את המימוש המקורי של ה-WebView.
+ * fetch נשאר מנוטרל-CORS (ה-API של Walkie לשירותים החיצוניים תלוי בו), ו-Firebase Auth עובד איתו.
+ */
+function restoreNativeXhr() {
+  const saved = globalThis.CapacitorWebXMLHttpRequest;
+  if (!globalThis.Capacitor?.isNativePlatform?.() || !saved?.fullObject) return;
+  const proto = saved.prototype;
+  for (const k of ['abort', 'getAllResponseHeaders', 'getResponseHeader', 'open', 'send', 'setRequestHeader']) {
+    if (saved[k]) proto[k] = saved[k];
+  }
+  globalThis.XMLHttpRequest = saved.fullObject;
+}
+
 export function getFirebase() {
   if (!isFirebaseConfigured()) {
     return Promise.reject(new Error('Firebase עדיין לא הוגדר – יש למלא את js/firebase-config.js'));
@@ -30,6 +45,7 @@ export function getFirebase() {
 
   if (!firebasePromise) {
     firebasePromise = (async () => {
+      restoreNativeXhr();
       const hasRtdb = !!firebaseConfig.databaseURL;
       const [appMod, authMod, firestoreMod, databaseMod] = await Promise.all([
         import(`${SDK_BASE}/firebase-app.js`),

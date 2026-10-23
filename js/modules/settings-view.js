@@ -1,24 +1,24 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.5.0-mvktfm7l';
-import { t, LANG, setLanguage } from './i18n.js?v=1.5.0-mvktfm7l';
-import { showToast } from './ui.js?v=1.5.0-mvktfm7l';
-import { modeIcon, icon } from './transit-ui.js?v=1.5.0-mvktfm7l';
-import { escapeHtml } from './ui.js?v=1.5.0-mvktfm7l';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvktfm7l';
-import { sessionStatus } from './session.js?v=1.5.0-mvktfm7l';
-import { premiumCardHtml } from './premium-ui.js?v=1.5.0-mvktfm7l';
-import { onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvktfm7l';
-import { TIPS } from './pricing.js?v=1.5.0-mvktfm7l';
-import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.5.0-mvktfm7l';
-import { celebrate, stagger } from './fx.js?v=1.5.0-mvktfm7l';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvktfm7l';
-import { isSupporter } from './premium.js?v=1.5.0-mvktfm7l';
-import { isInfluencer, onReferralChange, REFERRAL_TIERS } from './referrals.js?v=1.5.0-mvktfm7l';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.5.0-mvktlup2';
+import { t, LANG, setLanguage } from './i18n.js?v=1.5.0-mvktlup2';
+import { showToast } from './ui.js?v=1.5.0-mvktlup2';
+import { modeIcon, icon } from './transit-ui.js?v=1.5.0-mvktlup2';
+import { escapeHtml } from './ui.js?v=1.5.0-mvktlup2';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvktlup2';
+import { sessionStatus } from './session.js?v=1.5.0-mvktlup2';
+import { premiumCardHtml } from './premium-ui.js?v=1.5.0-mvktlup2';
+import { onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvktlup2';
+import { TIPS } from './pricing.js?v=1.5.0-mvktlup2';
+import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.5.0-mvktlup2';
+import { celebrate, stagger } from './fx.js?v=1.5.0-mvktlup2';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvktlup2';
+import { isSupporter } from './premium.js?v=1.5.0-mvktlup2';
+import { isInfluencer, onReferralChange, REFERRAL_TIERS } from './referrals.js?v=1.5.0-mvktlup2';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.5.0-mvktfm7l';
+} from './favorites.js?v=1.5.0-mvktlup2';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
