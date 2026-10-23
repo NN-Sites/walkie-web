@@ -1,17 +1,17 @@
 // לשונית "קווים": קווים באזור, חיפוש קו (מספר או יעד), ופרטי קו עם כל התחנות והמסלול על המפה.
 
-import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.5.0-mvkstayg';
-import { escapeHtml } from './ui.js?v=1.5.0-mvkstayg';
-import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.5.0-mvkstayg';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.5.0-mvkstayg';
-import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.5.0-mvkstayg';
-import { starButton } from './favorites-ui.js?v=1.5.0-mvkstayg';
-import { showToast } from './ui.js?v=1.5.0-mvkstayg';
-import { getSettings } from './settings.js?v=1.5.0-mvkstayg';
-import { t, LANG } from './i18n.js?v=1.5.0-mvkstayg';
-import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml } from './community.js?v=1.5.0-mvkstayg';
-import { openReportSheet } from './community-ui.js?v=1.5.0-mvkstayg';
-import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.5.0-mvkstayg';
+import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.5.0-mvkt9a3e';
+import { escapeHtml } from './ui.js?v=1.5.0-mvkt9a3e';
+import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.5.0-mvkt9a3e';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.5.0-mvkt9a3e';
+import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.5.0-mvkt9a3e';
+import { starButton } from './favorites-ui.js?v=1.5.0-mvkt9a3e';
+import { showToast } from './ui.js?v=1.5.0-mvkt9a3e';
+import { getSettings } from './settings.js?v=1.5.0-mvkt9a3e';
+import { t, LANG } from './i18n.js?v=1.5.0-mvkt9a3e';
+import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml } from './community.js?v=1.5.0-mvkt9a3e';
+import { openReportSheet } from './community-ui.js?v=1.5.0-mvkt9a3e';
+import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.5.0-mvkt9a3e';
 
 const SEARCH_DEBOUNCE_MS = 400;
 const DETAIL_REFRESH_MS = 30000;   // פרטי קו פתוחים: זמן אמת + מיקומי האוטובוסים

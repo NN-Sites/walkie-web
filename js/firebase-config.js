@@ -39,11 +39,23 @@ export function getFirebase() {
       ]);
 
       const app = appMod.initializeApp(firebaseConfig);
+      const auth = authMod.getAuth(app);
+      // באפליקציה (Capacitor) הבקשות עוברות דרך CapacitorHttp, שלא תומך ב-WebChannel של Firestore (סטרימינג):
+      // עוברים ל-Long Polling, אחרת הכתיבה והקריאה ל-Firestore נתקעות או נכשלות
+      const native = !!globalThis.Capacitor?.isNativePlatform?.();
+      const firestore = native
+        ? firestoreMod.initializeFirestore(app, { experimentalForceLongPolling: true })
+        : firestoreMod.getFirestore(app);
+      // בדיקות מקומיות מול אמולטורים: http://localhost:5173/?emu=1 (רק ב-localhost)
+      if (location.hostname === 'localhost' && new URLSearchParams(location.search).has('emu')) {
+        authMod.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+        firestoreMod.connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
+      }
 
       return {
         app,
-        auth: authMod.getAuth(app),
-        firestore: firestoreMod.getFirestore(app),
+        auth,
+        firestore,
         rtdb: hasRtdb ? databaseMod.getDatabase(app) : null,
         modules: {
           auth: authMod,
