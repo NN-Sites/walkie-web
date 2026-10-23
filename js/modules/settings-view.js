@@ -1,23 +1,23 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.5.0-mvkr2mw5';
-import { t, LANG, setLanguage } from './i18n.js?v=1.5.0-mvkr2mw5';
-import { showToast } from './ui.js?v=1.5.0-mvkr2mw5';
-import { modeIcon, icon } from './transit-ui.js?v=1.5.0-mvkr2mw5';
-import { escapeHtml } from './ui.js?v=1.5.0-mvkr2mw5';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkr2mw5';
-import { premiumCardHtml } from './premium-ui.js?v=1.5.0-mvkr2mw5';
-import { onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkr2mw5';
-import { TIPS } from './pricing.js?v=1.5.0-mvkr2mw5';
-import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.5.0-mvkr2mw5';
-import { celebrate, stagger } from './fx.js?v=1.5.0-mvkr2mw5';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvkr2mw5';
-import { isSupporter } from './premium.js?v=1.5.0-mvkr2mw5';
-import { isInfluencer, onReferralChange, REFERRAL_TIERS } from './referrals.js?v=1.5.0-mvkr2mw5';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.5.0-mvkrdzky';
+import { t, LANG, setLanguage } from './i18n.js?v=1.5.0-mvkrdzky';
+import { showToast } from './ui.js?v=1.5.0-mvkrdzky';
+import { modeIcon, icon } from './transit-ui.js?v=1.5.0-mvkrdzky';
+import { escapeHtml } from './ui.js?v=1.5.0-mvkrdzky';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvkrdzky';
+import { premiumCardHtml } from './premium-ui.js?v=1.5.0-mvkrdzky';
+import { onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkrdzky';
+import { TIPS } from './pricing.js?v=1.5.0-mvkrdzky';
+import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.5.0-mvkrdzky';
+import { celebrate, stagger } from './fx.js?v=1.5.0-mvkrdzky';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvkrdzky';
+import { isSupporter } from './premium.js?v=1.5.0-mvkrdzky';
+import { isInfluencer, onReferralChange, REFERRAL_TIERS } from './referrals.js?v=1.5.0-mvkrdzky';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.5.0-mvkr2mw5';
+} from './favorites.js?v=1.5.0-mvkrdzky';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [

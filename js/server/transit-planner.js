@@ -11,9 +11,9 @@
 //
 // להחלפת מנוע (למשל MOTIS/OTP עצמאי עם אותו GTFS) – מחליפים רק את #fetchPlan.
 
-import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.5.0-mvkr2mw5';
-import { decodePolyline } from './polyline.js?v=1.5.0-mvkr2mw5';
-import { computeFare } from './fares.js?v=1.5.0-mvkr2mw5';
+import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.5.0-mvkrdzky';
+import { decodePolyline } from './polyline.js?v=1.5.0-mvkrdzky';
+import { computeFare } from './fares.js?v=1.5.0-mvkrdzky';
 
 const TRANSITOUS_BASE = 'https://api.transitous.org/api/v1/plan';
 const USER_AGENT = 'Walkie/0.4 (pedestrian & public transport navigation; contact: walkie-app)';

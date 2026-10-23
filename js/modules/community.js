@@ -1,11 +1,10 @@
 // קהילה: כמה משתמשי Walkie על כל קו, דיווחים על אוטובוסים, חסימות, הודעות מהמנהל וסקרים.
 // כל הפונקציות שקטות: אם השרת לא זמין האפליקציה ממשיכה לעבוד כרגיל.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkr2mw5';
-import { COMMUNITY_API } from '../config.js?v=1.5.0-mvkr2mw5';
-import { track, safeKey } from './analytics.js?v=1.5.0-mvkr2mw5';
-import { isPremium } from './premium.js?v=1.5.0-mvkr2mw5';
-import { t } from './i18n.js?v=1.5.0-mvkr2mw5';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkrdzky';
+import { track, safeKey } from './analytics.js?v=1.5.0-mvkrdzky';
+import { isPremium } from './premium.js?v=1.5.0-mvkrdzky';
+import { t } from './i18n.js?v=1.5.0-mvkrdzky';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -26,7 +25,7 @@ export function lineUsersHtml(n) {
 }
 
 
-export { lineKeyOf } from './keys.js?v=1.5.0-mvkr2mw5';
+export { lineKeyOf } from './keys.js?v=1.5.0-mvkrdzky';
 
 const presenceSources = { view: null, trip: null };
 let presenceTimer = null;
@@ -104,7 +103,7 @@ export async function fetchLineUsers(lineKey) {
 
 // ---------- דיווחים ----------
 
-export { REPORT_TYPES } from './report-types.js?v=1.5.0-mvkr2mw5';
+export { REPORT_TYPES } from './report-types.js?v=1.5.0-mvkrdzky';
 
 const REPORT_COOLDOWN_MS = 60000;
 let lastReportAt = 0;
@@ -138,24 +137,15 @@ export async function submitReport({ lineKey, line, lineLabel, type, note }) {
 
 // ---------- חסימה (באן) ----------
 
-/** { banned, reason }. בודק את החשבון (Firestore) ואת כתובת ה-IP (פונקציה בשרת) */
+/** { banned, reason } לפי מסמך bans/{uid} */
 export async function checkBan() {
   if (!isFirebaseConfigured()) return { banned: false };
   try {
     const user = await ensureSignedIn();
-    const { firestore, modules, auth } = await getFirebase();
+    const { firestore, modules } = await getFirebase();
     const { doc, getDoc } = modules.firestore;
     const own = await getDoc(doc(firestore, 'bans', user.uid)).catch(() => null);
     if (own?.exists() && own.data().active !== false) return { banned: true, reason: own.data().reason ?? null };
-    const token = await (auth.currentUser ?? user).getIdToken();
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 5000);
-    try {
-      const res = await fetch(`${COMMUNITY_API}/ban-check`, { headers: { Authorization: `Bearer ${token}` }, signal: ctrl.signal });
-      if (res.ok) return await res.json();
-    } finally {
-      clearTimeout(timer);
-    }
   } catch {
     // לא חוסמים בגלל תקלת רשת
   }

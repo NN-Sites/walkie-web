@@ -1,19 +1,19 @@
 // מסכים של הקהילה: הזמנת חברים, דיווח על אוטובוס, שיתוף נסיעה בלייב, סקרים, הודעות מהמנהל ומסך חסימה.
 
-import { t, tn } from './i18n.js?v=1.5.0-mvkr2mw5';
-import { escapeHtml, showToast } from './ui.js?v=1.5.0-mvkr2mw5';
-import { icon } from './transit-ui.js?v=1.5.0-mvkr2mw5';
-import { celebrate } from './fx.js?v=1.5.0-mvkr2mw5';
-import { track } from './analytics.js?v=1.5.0-mvkr2mw5';
+import { t, tn } from './i18n.js?v=1.5.0-mvkrdzky';
+import { escapeHtml, showToast } from './ui.js?v=1.5.0-mvkrdzky';
+import { icon } from './transit-ui.js?v=1.5.0-mvkrdzky';
+import { celebrate } from './fx.js?v=1.5.0-mvkrdzky';
+import { track } from './analytics.js?v=1.5.0-mvkrdzky';
 import {
   getReferral, REFERRAL_TIERS, INVITEE_DAYS, nextTier, inviteLink, shareInvite, redeemCode, onReferralChange,
   refreshReferral, isInfluencer
-} from './referrals.js?v=1.5.0-mvkr2mw5';
-import { REPORT_TYPES } from './report-types.js?v=1.5.0-mvkr2mw5';
-import { submitReport, markBroadcastSeen, answerSurvey, markSurveyDone } from './community.js?v=1.5.0-mvkr2mw5';
+} from './referrals.js?v=1.5.0-mvkrdzky';
+import { REPORT_TYPES } from './report-types.js?v=1.5.0-mvkrdzky';
+import { submitReport, markBroadcastSeen, answerSurvey, markSurveyDone } from './community.js?v=1.5.0-mvkrdzky';
 
-export { lineUsersText, lineUsersHtml } from './community.js?v=1.5.0-mvkr2mw5';
-import { requireSignIn } from './auth-gate.js?v=1.5.0-mvkr2mw5';
+export { lineUsersText, lineUsersHtml } from './community.js?v=1.5.0-mvkrdzky';
+import { requireSignIn } from './auth-gate.js?v=1.5.0-mvkrdzky';
 
 // ---------- עזרים ----------
 

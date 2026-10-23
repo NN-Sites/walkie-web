@@ -1,17 +1,20 @@
 // הזמנת חברים: קוד הזמנה אישי, קישור שיתוף, מימוש קוד, ופרסים לפי מספר הנרשמים.
 //
-// הפרסים מוענקים בשרת (functions/lib/community.js), כי הלקוח לא יכול להעניק לעצמו Premium.
-// כאן: מצב מקומי (מה הושג), יצירת הקישור, ושליחת קוד שנקלט להפעלה.
+// הכול רץ על Firestore ו-Hosting (בלי שרת / Cloud Functions, כדי להישאר בתוכנית החינמית):
+//   refCodes/{קוד}                  קוד -> uid של המזמין (נוצר פעם אחת, אי אפשר לשנות)
+//   referralRedemptions/{uidנרשם}   מי הזמין אותי (נוצר פעם אחת ע"י הנרשם, אחרי התחברות עם Google)
+//   referralEmails/{hash}           מונע לממש פעמיים עם אותו אימייל
+// המזמין סופר את הרישומים שלו בעצמו, והפרס (ימי Premium + תג) מחושב במכשיר מזמני הרישום.
+// זה לא חסין מפני משתמש טכני שמזייף את המכשיר שלו, אבל Premium אמיתי (Google Play) נשאר מוגן.
 // "נרשם" = התחבר עם Google. כל חבר נספר פעם אחת בלבד.
 
-import { SHARE_BASE, PLAY_URL, COMMUNITY_API } from '../config.js?v=1.5.0-mvkr2mw5';
-import { t } from './i18n.js?v=1.5.0-mvkr2mw5';
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkr2mw5';
-import { setAdminGrant } from './premium.js?v=1.5.0-mvkr2mw5';
-import { openWhatsApp } from './share.js?v=1.5.0-mvkr2mw5';
-import { track } from './analytics.js?v=1.5.0-mvkr2mw5';
+import { SHARE_BASE, PLAY_URL } from '../config.js?v=1.5.0-mvkrdzky';
+import { t } from './i18n.js?v=1.5.0-mvkrdzky';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkrdzky';
+import { setReferralGrant } from './premium.js?v=1.5.0-mvkrdzky';
+import { openWhatsApp } from './share.js?v=1.5.0-mvkrdzky';
+import { track } from './analytics.js?v=1.5.0-mvkrdzky';
 
-// משוכפל ב-functions/lib/community.js – לעדכן בשני המקומות יחד
 export const INVITEE_DAYS = 1;
 export const REFERRAL_TIERS = Object.freeze([
   { n: 5, days: 3, badge: true, title: '3 ימי Premium + תג "משפיען כיתתי"' },
@@ -19,6 +22,7 @@ export const REFERRAL_TIERS = Object.freeze([
   { n: 20, days: 30, title: 'חודש Premium חינם' }
 ]);
 
+const DAY = 86400000;
 const KEY = 'walkie:referral';
 const PENDING = 'walkie:pendingRef';
 const DONE = 'walkie:referral:done';
@@ -53,44 +57,74 @@ export const onReferralChange = (fn) => {
 export const getReferral = () => state;
 export const isInfluencer = () => !!state.badge;
 
-/** קוד הזמנה חדש (6 תווים). הייחודיות נבדקת בשרת בעת המימוש */
+/** קוד הזמנה חדש (6 תווים) */
 export function newRefCode() {
   const bytes = crypto.getRandomValues(new Uint8Array(6));
   return Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join('');
 }
 
-/** קורא את מסמך המשתמש מהשרת: ספירת הנרשמים, הפרסים והתג, וימי ה-Premium שהוענקו */
-export async function refreshReferral() {
-  const user = await ensureSignedIn();
-  const { firestore, modules } = await getFirebase();
-  const { doc, getDoc } = modules.firestore;
-  const snap = await getDoc(doc(firestore, 'users', user.uid));
-  if (!snap.exists()) return;
-  const data = snap.data();
-  applyUserDoc(data);
-  setAdminGrant(data.plan === 'pro' ? data.premiumUntil ?? 'forever' : null);
-}
-
-/** מסמך המשתמש שנקרא מהשרת (session.js / רענון בדף ההזמנות) */
-export function applyUserDoc(data) {
-  if (!data) return;
-  const r = data.referral ?? {};
-  state = {
-    ...state,
-    code: data.refCode ?? state.code,
-    count: r.count ?? 0,
-    awarded: r.awarded ?? [],
-    badge: !!r.badge,
-    referredBy: r.referredBy ?? null
-  };
-  save();
-}
-
+/** שומר את הקוד של המשתמש (מסמך users) */
 export function setCode(code) {
   if (code && code !== state.code) {
     state = { ...state, code };
     save();
   }
+}
+
+/** רושם קוד -> uid כדי שחברים יוכלו למצוא את המזמין. נכתב פעם אחת, ואחר כך כללי Firestore חוסמים שינוי */
+export async function registerCode(code) {
+  if (!code) return;
+  try {
+    const user = await ensureSignedIn();
+    const { firestore, modules } = await getFirebase();
+    const { doc, getDoc, setDoc } = modules.firestore;
+    const ref = doc(firestore, 'refCodes', code);
+    if (!(await getDoc(ref)).exists()) await setDoc(ref, { uid: user.uid });
+  } catch {
+    // ננסה שוב בפתיחה הבאה
+  }
+}
+
+/** מצטבר ימי Premium לפי אירועים בזמנים שונים: כל פרס מתחיל כשהקודם נגמר */
+function grantUntil(events) {
+  let cursor = 0;
+  for (const e of [...events].sort((a, b) => a.t - b.t)) {
+    cursor = Math.max(e.t, cursor) + e.days * DAY;
+  }
+  return cursor || null;
+}
+
+/** קורא מהשרת מי נרשם דרכי ומי הזמין אותי, ומחשב ספירה, תג וימי Premium */
+export async function refreshReferral() {
+  const user = await ensureSignedIn();
+  const { firestore, modules } = await getFirebase();
+  const { collection, query, where, getDocs, doc, getDoc } = modules.firestore;
+  const [mine, theirs] = await Promise.all([
+    getDoc(doc(firestore, 'referralRedemptions', user.uid)),
+    getDocs(query(collection(firestore, 'referralRedemptions'), where('inviterUid', '==', user.uid)))
+  ]);
+  const times = theirs.docs.map((d) => d.data().at ?? 0).sort((a, b) => a - b);
+  const count = times.length;
+  const reached = REFERRAL_TIERS.filter((x) => count >= x.n);
+  const events = reached.map((x) => ({ t: times[x.n - 1], days: x.days }));
+  if (mine.exists()) events.push({ t: mine.data().at ?? 0, days: INVITEE_DAYS });
+  const until = grantUntil(events);
+  setReferralGrant(until && until > Date.now() ? until : null);
+  state = {
+    ...state,
+    count,
+    awarded: reached.map((x) => x.n),
+    badge: reached.some((x) => x.badge),
+    referredBy: mine.exists() ? mine.data().code : null
+  };
+  if (mine.exists()) {
+    try {
+      localStorage.setItem(DONE, '1');
+    } catch {
+      // ignore
+    }
+  }
+  save();
 }
 
 export function nextTier(count = state.count) {
@@ -136,14 +170,6 @@ export function pendingCode() {
   }
 }
 
-export function setPendingCode(code) {
-  try {
-    localStorage.setItem(PENDING, code);
-  } catch {
-    // ignore
-  }
-}
-
 const ERRORS = {
   invalid_code: 'הקוד לא נמצא. בדקו שהעתקתם אותו נכון.',
   self: 'אי אפשר להשתמש בקוד של עצמך.',
@@ -159,39 +185,47 @@ export class ReferralError extends Error {
   }
 }
 
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 40);
+}
+
 /** מממש קוד הזמנה של חבר: הנרשם מקבל יום Premium, והמזמין מתקדם לפרס הבא */
 export async function redeemCode(raw) {
   const code = String(raw ?? '').trim().toUpperCase();
   if (!CODE_RE.test(code)) throw new ReferralError('invalid_code');
   const user = await ensureSignedIn();
-  const { auth } = await getFirebase();
-  const token = await (auth.currentUser ?? user).getIdToken(true);
-  let res;
+  const { firestore, modules, auth } = await getFirebase();
+  const { doc, getDoc, setDoc } = modules.firestore;
+  const current = auth.currentUser ?? user;
+  if (!current.providerData?.some((p) => p.providerId === 'google.com') || !current.email) throw new ReferralError('not_registered');
+  await current.getIdToken(true); // כדי שהאימייל המאומת יופיע בטוקן אחרי ההתחברות
+
+  let inviterUid;
   try {
-    res = await fetch(`${COMMUNITY_API}/referral/redeem`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ code })
-    });
-  } catch {
-    throw new ReferralError('network');
+    const snap = await getDoc(doc(firestore, 'refCodes', code));
+    if (!snap.exists()) throw new ReferralError('invalid_code');
+    inviterUid = snap.data().uid;
+  } catch (err) {
+    throw err instanceof ReferralError ? err : new ReferralError('network');
   }
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    if (body.error === 'already') localStorage.setItem(DONE, '1');
-    throw new ReferralError(body.error ?? 'server');
+  if (inviterUid === user.uid) throw new ReferralError('self');
+
+  try {
+    await setDoc(doc(firestore, 'referralEmails', await sha256(current.email.toLowerCase())), { uid: user.uid, at: Date.now() });
+    await setDoc(doc(firestore, 'referralRedemptions', user.uid), { inviterUid, code, at: Date.now() });
+  } catch (err) {
+    throw new ReferralError(err?.code === 'permission-denied' ? 'already' : 'network');
   }
   try {
-    localStorage.setItem(DONE, '1');
     localStorage.removeItem(PENDING);
+    localStorage.setItem(DONE, '1');
   } catch {
     // ignore
   }
-  state = { ...state, referredBy: code };
-  save();
-  if (body.premiumUntil) setAdminGrant(body.premiumUntil);
   track('invite.redeemed');
-  return body;
+  await refreshReferral().catch(() => {});
+  return { ok: true };
 }
 
 /** אחרי התחברות עם Google: אם נקלט קוד מקישור – מממשים אותו בשקט. מחזיר את התשובה או null */

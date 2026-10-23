@@ -5,12 +5,12 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkr2mw5';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkr2mw5';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkr2mw5';
-import { initAccount, markAccountUnavailable, onAccountChange } from './account.js?v=1.5.0-mvkr2mw5';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkr2mw5';
-import { newRefCode, applyUserDoc, setCode, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkr2mw5';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkrdzky';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvkrdzky';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkrdzky';
+import { initAccount, markAccountUnavailable, onAccountChange } from './account.js?v=1.5.0-mvkrdzky';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkrdzky';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkrdzky';
 
 let session = null;
 
@@ -98,8 +98,9 @@ export async function initSession({ onAnnouncement } = {}) {
         ...(refCode ? {} : { refCode: (refCode = newRefCode()) }),
         sessions: increment(1)
       });
-      applyUserDoc({ ...data, refCode });
+      setCode(refCode);
     }
+    registerCode(refCode).then(() => refreshReferral()).catch(() => {});
     trackDeviceSession(deviceInfo().platform);
 
     // חשבון Google (לא חובה): פרטי החשבון וסנכרון מועדפים
@@ -109,6 +110,7 @@ export async function initSession({ onAnnouncement } = {}) {
     const redeem = async () => {
       const r = await redeemPendingIfAny(true);
       if (r) window.dispatchEvent(new CustomEvent('walkie:referral-redeemed', { detail: r }));
+      else refreshReferral().catch(() => {});
     };
     if (user.providerData?.some((p) => p.providerId === 'google.com')) redeem();
     onAccountChange((a) => {

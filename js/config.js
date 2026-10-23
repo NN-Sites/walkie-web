@@ -16,9 +16,7 @@ export const USER_ZOOM = 17;
 // ה-API שלנו (Firebase Hosting מפנה /api ל-Cloud Function; בפיתוח – server/dev-server.js)
 // באפליקציה (Capacitor) – כתובת מלאה של השרת מ-runtime-config.js; בדפדפן – אותו דומיין
 export const API_BASE = globalThis.WALKIE_CONFIG?.apiBase || '/api';
-// שירותי קהילה (הזמנת חברים, בדיקת חסימה) רצים ב-Cloud Functions, גם מתוך האפליקציה העצמאית – לכן כתובת מלאה
 export const SHARE_BASE = 'https://walkie-4a743.web.app';
-export const COMMUNITY_API = `${SHARE_BASE}/api/community`;
 export const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.walkie.app';
 
 export const API_NEARBY_TIMEOUT_MS = 15000;   // בקשה ראשונה עשויה לחכות לטעינת האינדקס

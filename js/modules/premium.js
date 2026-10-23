@@ -6,7 +6,7 @@
 //   test  – מצב בדיקה בדפדפן בפיתוח בלבד (localhost)
 // המצב נשמר במכשיר, כדי שהפרימיום יעבוד גם בלי רשת.
 
-import { PRICING, FREE_LIMITS, REFRESH_MS, mergePricing, priceAt } from './pricing.js?v=1.5.0-mvkr2mw5';
+import { PRICING, FREE_LIMITS, REFRESH_MS, mergePricing, priceAt } from './pricing.js?v=1.5.0-mvkrdzky';
 
 const KEY = 'walkie:premium';
 const STATS_KEY = 'walkie:stats';
@@ -20,9 +20,9 @@ let openPaywall = null;
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || '{}');
-    return { play: !!s.play, adminUntil: s.adminUntil ?? null, test: !!s.test, since: s.since ?? null };
+    return { play: !!s.play, adminUntil: s.adminUntil ?? null, refUntil: s.refUntil ?? null, test: !!s.test, since: s.since ?? null };
   } catch {
-    return { play: false, adminUntil: null, test: false, since: null };
+    return { play: false, adminUntil: null, refUntil: null, test: false, since: null };
   }
 }
 
@@ -40,20 +40,26 @@ function adminActive() {
   return state.adminUntil === 'forever' || Date.parse(state.adminUntil) > Date.now();
 }
 
+/** ימי Premium מהזמנת חברים (נחשבים מרישומי ההזמנות ב-Firestore, ראו referrals.js) */
+function refActive() {
+  return Number(state.refUntil) > Date.now();
+}
+
 export function isPremium() {
-  return state.play || state.test || adminActive();
+  return state.play || state.test || adminActive() || refActive();
 }
 
 /** 'play' | 'admin' | 'test' | null */
 export function premiumSource() {
   if (state.play) return 'play';
   if (adminActive()) return 'admin';
+  if (refActive()) return 'referral';
   if (state.test) return 'test';
   return null;
 }
 
 export function premiumInfo() {
-  return { active: isPremium(), source: premiumSource(), adminUntil: state.adminUntil, since: state.since };
+  return { active: isPremium(), source: premiumSource(), adminUntil: state.adminUntil, refUntil: state.refUntil, since: state.since };
 }
 
 export function onPremiumChange(fn) {
@@ -76,6 +82,12 @@ export function setPlayActive(active) {
 /** מתנה מהמנהל: תאריך ISO, 'forever', או null לביטול */
 export function setAdminGrant(until) {
   if (state.adminUntil !== (until ?? null)) update({ adminUntil: until ?? null });
+}
+
+/** תוקף Premium שהושג בהזמנת חברים (ms), או null */
+export function setReferralGrant(untilMs) {
+  const v = untilMs ?? null;
+  if (state.refUntil !== v) update({ refUntil: v });
 }
 
 export const canUseTestPurchase = () =>

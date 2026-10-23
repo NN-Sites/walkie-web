@@ -2,13 +2,13 @@
 
 import {
   isPremium, premiumInfo, currentPrice, getPricing, getStats, co2SavedKg, freeLimit, onPremiumChange
-} from './premium.js?v=1.5.0-mvkr2mw5';
-import { PREMIUM_FEATURES, FREE_LIMITS, formatPrice, formatLaunchEnd } from './pricing.js?v=1.5.0-mvkr2mw5';
-import { purchase, restore, manageSubscription, storePriceLabel, billingAvailable } from './billing.js?v=1.5.0-mvkr2mw5';
-import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkr2mw5';
-import { icon } from './transit-ui.js?v=1.5.0-mvkr2mw5';
-import { celebrate } from './fx.js?v=1.5.0-mvkr2mw5';
-import { t, LOCALE } from './i18n.js?v=1.5.0-mvkr2mw5';
+} from './premium.js?v=1.5.0-mvkrdzky';
+import { PREMIUM_FEATURES, FREE_LIMITS, formatPrice, formatLaunchEnd } from './pricing.js?v=1.5.0-mvkrdzky';
+import { purchase, restore, manageSubscription, storePriceLabel, billingAvailable } from './billing.js?v=1.5.0-mvkrdzky';
+import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkrdzky';
+import { icon } from './transit-ui.js?v=1.5.0-mvkrdzky';
+import { celebrate } from './fx.js?v=1.5.0-mvkrdzky';
+import { t, LOCALE } from './i18n.js?v=1.5.0-mvkrdzky';
 
 const REASONS = {
   stops: (n) => t('בחשבון החינמי אפשר לשמור עד {n} תחנות.', { n }),
@@ -17,7 +17,7 @@ const REASONS = {
   stats: () => t('הסטטיסטיקה האישית היא חלק מ-Premium.')
 };
 
-const SOURCE_LABEL = { play: 'מנוי Google Play', admin: 'מתנה מצוות Walkie', test: 'מצב בדיקה (פיתוח)' };
+const SOURCE_LABEL = { play: 'מנוי Google Play', admin: 'מתנה מצוות Walkie', referral: 'הזמנת חברים', test: 'מצב בדיקה (פיתוח)' };
 
 const LOGO = `<svg viewBox="60 110 400 290" width="34" height="25" aria-hidden="true"><path d="M112 168 L182 352 L256 224 L330 352 L400 168" fill="none" stroke="#fff" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/><circle cx="400" cy="168" r="46" fill="#f97316" stroke="#fff" stroke-width="16"/></svg>`;
 
@@ -97,7 +97,7 @@ export class PremiumScreen {
     const km = (s.walkMeters / 1000).toFixed(1);
     const until = info.source === 'admin'
       ? (info.adminUntil === 'forever' ? t('ללא הגבלת זמן') : t('עד {date}', { date: new Date(info.adminUntil).toLocaleDateString(LOCALE) }))
-      : '';
+      : info.source === 'referral' ? t('עד {date}', { date: new Date(info.refUntil).toLocaleDateString(LOCALE) }) : '';
     const supportId = this.getSupportId?.();
     return `
       <div class="pm-status">
@@ -114,7 +114,7 @@ export class PremiumScreen {
         </div>
         ${s.since ? `<p class="pm-note">${t('מאז {date}', { date: new Date(s.since).toLocaleDateString(LOCALE) })}</p>` : `<p class="pm-note">${t('הנתונים יתחילו להצטבר בהליכה ובנסיעה הבאה.')}</p>`}
       </section>
-      ${info.source === 'admin' ? '' : `<button class="btn-secondary pm-manage" type="button" data-pm="manage">${info.source === 'test' ? t('ביטול מצב בדיקה') : t('ניהול המנוי ב-Google Play')}</button>`}
+      ${info.source === 'admin' || info.source === 'referral' ? '' : `<button class="btn-secondary pm-manage" type="button" data-pm="manage">${info.source === 'test' ? t('ביטול מצב בדיקה') : t('ניהול המנוי ב-Google Play')}</button>`}
       ${supportId ? `<p class="pm-note">${t('מזהה תמיכה:')} <bdi>${escapeHtml(supportId)}</bdi></p>` : ''}`;
   }
 
