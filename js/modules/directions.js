@@ -1,11 +1,11 @@
 // כותרת "מסלול": מוצא -> יעד, לשוניות (תחבורה ציבורית / הליכה), זמן יציאה/הגעה, החלפת כיוון.
 // מתזמר בין RouteController (הליכה) ל-TransitController (תחבורה ציבורית).
 
-import { distanceMeters } from './geo.js?v=1.5.0-mvkuvyst';
-import { showToast } from './ui.js?v=1.5.0-mvkuvyst';
-import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js?v=1.5.0-mvkuvyst';
-import { STAR_ON, STAR_OFF } from './favorites-ui.js?v=1.5.0-mvkuvyst';
-import { t as tr, LOCALE } from './i18n.js?v=1.5.0-mvkuvyst';
+import { distanceMeters } from './geo.js?v=1.5.0-mvkwm5k0';
+import { showToast } from './ui.js?v=1.5.0-mvkwm5k0';
+import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js?v=1.5.0-mvkwm5k0';
+import { STAR_ON, STAR_OFF } from './favorites-ui.js?v=1.5.0-mvkwm5k0';
+import { t as tr, LOCALE } from './i18n.js?v=1.5.0-mvkwm5k0';
 
 export const MY_LOCATION = Object.freeze({ id: 'my-location', kind: 'mylocation', name: tr('המיקום שלי') });
 

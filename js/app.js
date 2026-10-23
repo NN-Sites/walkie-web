@@ -12,8 +12,8 @@ import {
   NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
-} from './config.js?v=1.5.0-mvkuvyst';
-import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.5.0-mvkuvyst';
+} from './config.js?v=1.5.0-mvkwm5k0';
+import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.5.0-mvkwm5k0';
 import {
   createMap,
   focusPoint,
@@ -24,38 +24,38 @@ import {
   TransitLayer,
   VehiclesLayer,
   MapRotator
-} from './modules/map.js?v=1.5.0-mvkuvyst';
-import { fetchNearbyStops } from './modules/stops.js?v=1.5.0-mvkuvyst';
-import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.5.0-mvkuvyst';
-import { Sheet, showToast } from './modules/ui.js?v=1.5.0-mvkuvyst';
-import { SearchOverlay } from './modules/search.js?v=1.5.0-mvkuvyst';
-import { RouteController } from './modules/route-controller.js?v=1.5.0-mvkuvyst';
-import { TransitController } from './modules/transit-controller.js?v=1.5.0-mvkuvyst';
-import { DirectionsController } from './modules/directions.js?v=1.5.0-mvkuvyst';
-import { initSessionWhenIdle } from './modules/session.js?v=1.5.0-mvkuvyst';
-import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.5.0-mvkuvyst';
-import { TabBar } from './modules/tabs.js?v=1.5.0-mvkuvyst';
-import { LinesView } from './modules/lines-view.js?v=1.5.0-mvkuvyst';
-import { StationsView } from './modules/stations-view.js?v=1.5.0-mvkuvyst';
-import { SettingsView } from './modules/settings-view.js?v=1.5.0-mvkuvyst';
-import { getSettings, onSettingsChange } from './modules/settings.js?v=1.5.0-mvkuvyst';
-import { shareMyLocation, shareTrip } from './modules/share.js?v=1.5.0-mvkuvyst';
-import { QuickBar } from './modules/favorites-ui.js?v=1.5.0-mvkuvyst';
-import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.5.0-mvkuvyst';
-import { loadDepartures } from './modules/arrivals.js?v=1.5.0-mvkuvyst';
-import { PremiumScreen } from './modules/premium-ui.js?v=1.5.0-mvkuvyst';
-import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.5.0-mvkuvyst';
+} from './modules/map.js?v=1.5.0-mvkwm5k0';
+import { fetchNearbyStops } from './modules/stops.js?v=1.5.0-mvkwm5k0';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.5.0-mvkwm5k0';
+import { Sheet, showToast } from './modules/ui.js?v=1.5.0-mvkwm5k0';
+import { SearchOverlay } from './modules/search.js?v=1.5.0-mvkwm5k0';
+import { RouteController } from './modules/route-controller.js?v=1.5.0-mvkwm5k0';
+import { TransitController } from './modules/transit-controller.js?v=1.5.0-mvkwm5k0';
+import { DirectionsController } from './modules/directions.js?v=1.5.0-mvkwm5k0';
+import { initSessionWhenIdle } from './modules/session.js?v=1.5.0-mvkwm5k0';
+import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.5.0-mvkwm5k0';
+import { TabBar } from './modules/tabs.js?v=1.5.0-mvkwm5k0';
+import { LinesView } from './modules/lines-view.js?v=1.5.0-mvkwm5k0';
+import { StationsView } from './modules/stations-view.js?v=1.5.0-mvkwm5k0';
+import { SettingsView } from './modules/settings-view.js?v=1.5.0-mvkwm5k0';
+import { getSettings, onSettingsChange } from './modules/settings.js?v=1.5.0-mvkwm5k0';
+import { shareMyLocation, shareTrip } from './modules/share.js?v=1.5.0-mvkwm5k0';
+import { QuickBar } from './modules/favorites-ui.js?v=1.5.0-mvkwm5k0';
+import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.5.0-mvkwm5k0';
+import { loadDepartures } from './modules/arrivals.js?v=1.5.0-mvkwm5k0';
+import { PremiumScreen } from './modules/premium-ui.js?v=1.5.0-mvkwm5k0';
+import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.5.0-mvkwm5k0';
 import {
   captureAttribution, trackOnce, trackPerf, trackRegion, trackFeature, notePaywall, noteSubscriptionState
-} from './modules/analytics.js?v=1.5.0-mvkuvyst';
-import { CommunityController } from './modules/community-controller.js?v=1.5.0-mvkuvyst';
-import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.5.0-mvkuvyst';
-import { initBilling } from './modules/billing.js?v=1.5.0-mvkuvyst';
-import { supportId } from './modules/session.js?v=1.5.0-mvkuvyst';
-import { escapeHtml } from './modules/ui.js?v=1.5.0-mvkuvyst';
-import { t, translateDom } from './modules/i18n.js?v=1.5.0-mvkuvyst';
-import { initTheme } from './modules/theme.js?v=1.5.0-mvkuvyst';
-import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.5.0-mvkuvyst';
+} from './modules/analytics.js?v=1.5.0-mvkwm5k0';
+import { CommunityController } from './modules/community-controller.js?v=1.5.0-mvkwm5k0';
+import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.5.0-mvkwm5k0';
+import { initBilling } from './modules/billing.js?v=1.5.0-mvkwm5k0';
+import { supportId } from './modules/session.js?v=1.5.0-mvkwm5k0';
+import { escapeHtml } from './modules/ui.js?v=1.5.0-mvkwm5k0';
+import { t, translateDom } from './modules/i18n.js?v=1.5.0-mvkwm5k0';
+import { initTheme } from './modules/theme.js?v=1.5.0-mvkwm5k0';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.5.0-mvkwm5k0';
 
 // טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
 translateDom();
@@ -370,10 +370,9 @@ tabbar = new TabBar(document.getElementById('tabbar'), {
 sheet.refreshLayout();
 
 onSettingsChange((s) => {
-  stopsLayer.setVisible(tabbar.active === 'home' && s.showStops);
   render(); // אוטובוסים בזמן אמת הופעלו / כובו
 });
-stopsLayer.setVisible(getSettings().showStops);
+stopsLayer.setVisible(false); // אייקוני תחנות מוצגים רק בלשונית "תחנות"
 
 const tracker = new LocationTracker({
   onUpdate: onLocation,
@@ -424,13 +423,11 @@ function render() {
   stopsLayer.render(ranked, nearest?.id, focused?.id);
 
   // בזמן תכנון מסלול / ניווט, או בלשונית אחרת – הלוח שייך למסך אחר
-  if (directions.isActive || tabbar.active !== 'home') {
-    vehiclesLayer.clear();
-    return;
-  }
+  // אוטובוסים בזמן אמת לא מוצגים במפת הבית – רק בלשונית "קווים"
+  vehiclesLayer.clear();
+  if (directions.isActive || tabbar.active !== 'home') return;
 
   const arrivalsState = focused ? arrivalsStore.get(focused) : null;
-  vehiclesLayer.render(getSettings().showBuses && !arrivalsState?.demo ? vehiclesFromArrivals(arrivalsState?.arrivals, arrivalColor, { stop: focused }) : []);
 
   // מעבר לתחנה חדשה -> טעינת זמני הגעה
   if (focused && focused.id !== state.focusedId) {
@@ -606,8 +603,8 @@ function onTabChange(tab, prev, { reselect = false } = {}) {
     if (prev === 'settings') settingsView.hide();
   }
 
-  stopsLayer.setVisible(tab === 'home' && getSettings().showStops);
-  if (tab !== 'home') vehiclesLayer.clear();
+  stopsLayer.setVisible(false);
+  vehiclesLayer.clear();
   search.close();
 
   switch (tab) {
