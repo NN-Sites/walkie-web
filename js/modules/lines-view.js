@@ -1,14 +1,17 @@
 // לשונית "קווים": קווים באזור, חיפוש קו (מספר או יעד), ופרטי קו עם כל התחנות והמסלול על המפה.
 
-import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.5.0-mvjqsjqk';
-import { escapeHtml } from './ui.js?v=1.5.0-mvjqsjqk';
-import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.5.0-mvjqsjqk';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.5.0-mvjqsjqk';
-import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.5.0-mvjqsjqk';
-import { starButton } from './favorites-ui.js?v=1.5.0-mvjqsjqk';
-import { showToast } from './ui.js?v=1.5.0-mvjqsjqk';
-import { getSettings } from './settings.js?v=1.5.0-mvjqsjqk';
-import { t, LANG } from './i18n.js?v=1.5.0-mvjqsjqk';
+import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.5.0-mvkql3bc';
+import { escapeHtml } from './ui.js?v=1.5.0-mvkql3bc';
+import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.5.0-mvkql3bc';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.5.0-mvkql3bc';
+import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.5.0-mvkql3bc';
+import { starButton } from './favorites-ui.js?v=1.5.0-mvkql3bc';
+import { showToast } from './ui.js?v=1.5.0-mvkql3bc';
+import { getSettings } from './settings.js?v=1.5.0-mvkql3bc';
+import { t, LANG } from './i18n.js?v=1.5.0-mvkql3bc';
+import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml } from './community.js?v=1.5.0-mvkql3bc';
+import { openReportSheet } from './community-ui.js?v=1.5.0-mvkql3bc';
+import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.5.0-mvkql3bc';
 
 const SEARCH_DEBOUNCE_MS = 400;
 const DETAIL_REFRESH_MS = 30000;   // פרטי קו פתוחים: זמן אמת + מיקומי האוטובוסים
@@ -65,6 +68,7 @@ export class LinesView {
     this.controller = null;
     this.timer = null;
     this.refreshTimer = null;
+    this.users = null;       // כמה משתמשי Walkie על הקו שנפתח
   }
 
   activate({ reset = false } = {}) {
@@ -85,6 +89,7 @@ export class LinesView {
     this.#stopRefresh();
     this.layer.clear();
     this.vehicles?.clear();
+    setPresence('view', null);
   }
 
   handleAction(action, data) {
@@ -95,6 +100,11 @@ export class LinesView {
       case 'line-back':
         this.#showList();
         return true;
+      case 'line-report': {
+        const d = this.detail;
+        if (d) openReportSheet({ lineKey: this.#lineKey(d), line: d.line, lineLabel: `${d.mode === 'rail' ? t('רכבת') : t('קו {line}', { line: d.line })} ${t('לכיוון {dest}', { dest: endName(d.to) })}` });
+        return true;
+      }
       case 'line-direction':
         this.open(data.lineRef);
         return true;
@@ -124,9 +134,31 @@ export class LinesView {
 
   // ---------- רשימה + חיפוש ----------
 
+  #lineKey(d) {
+    return lineKeyOf({ mode: d.mode, line: d.line, agency: d.agency ?? '' });
+  }
+
+  /** נוכחות על הקו (כדי שאחרים יראו שיש כאן משתמש) + כמה משתמשי Walkie על הקו עכשיו */
+  async #refreshUsers(d = this.detail) {
+    if (!d) return;
+    const key = this.#lineKey(d);
+    setPresence('view', { lineKey: key, line: d.line });
+    const n = await fetchLineUsers(key);
+    if (this.detail && this.#lineKey(this.detail) === key && n != null) {
+      this.users = n;
+      const el = document.querySelector('[data-line-users]');
+      if (el) {
+        el.classList.remove('is-empty');
+        el.replaceWith(Object.assign(document.createElement('div'), { innerHTML: lineUsersHtml(n) }).firstElementChild);
+      }
+    }
+  }
+
   #showList() {
     this.mode = 'list';
     this.detail = null;
+    this.users = null;
+    setPresence('view', null);
     this.#stopRefresh();
     this.layer.clear();
     this.vehicles?.clear();
@@ -241,6 +273,7 @@ export class LinesView {
       this.results = data.results ?? [];
       if (!this.active || this.mode !== 'list') return;
       if (this.results.length === 0) {
+        trackFailedSearch(this.query, 'line');
         this.#body(`<div class="empty">${t('לא נמצא קו "{q}" היום.', { q: escapeHtml(this.query) })}<br>${t('נסו מספר קו (26) או יעד (רכבת חיפה).')}</div>`);
         return;
       }
@@ -301,9 +334,15 @@ export class LinesView {
       const d = await fetchLineDetails(lineRef, this.getNear(), controller.signal);
       if (controller.signal.aborted || !this.active) return;
       this.detail = d;
+      this.users = null;
       this.#renderDetail();
       this.#drawLine();
       this.#startRefresh();
+      trackFeature('line_detail');
+      track(`lines.${this.#lineKey(d)}`);
+      trackName(this.#lineKey(d), `${d.mode === 'rail' ? t('רכבת') : d.line} · ${d.agency ?? ''}`);
+      this.#refreshUsers(d);
+      window.dispatchEvent(new CustomEvent('walkie:line-open', { detail: { lineKey: this.#lineKey(d) } }));
     } catch (err) {
       if (err?.name === 'AbortError') return;
       this.sheet.renderCustom(`
@@ -373,6 +412,11 @@ export class LinesView {
         </div>
       </div>
       <div class="stop-actions">${starButton({ on: isLineSaved(d.lineRef), action: 'line-fav', label: t('שמירת הקו') })}</div>
+      ${lineUsersHtml(this.users)}
+      <div class="line-actions">
+        <button class="btn-secondary" type="button" data-action="line-report">⚠️ ${t('דיווח על הקו')}</button>
+        ${d.mode === 'bus' && getSettings().showBuses ? `<span class="gps-legend"><span class="ok"><i></i>${t('GPS מאומת')}</span><span class="partial"><i></i>${t('חלקי')}</span></span>` : ''}
+      </div>
       ${other ? `<div class="dir-chips">${other}</div>` : ''}
       ${nearestBox}
       <h3 class="section-title">${t('יציאות הבאות מתחנת המוצא')}</h3>
@@ -462,6 +506,7 @@ export class LinesView {
       this.detail = d;
       this.#renderDetail();
       this.#drawVehicles();
+      this.#refreshUsers(d);
     } catch {
       // נשארים עם הנתון הקודם
     }

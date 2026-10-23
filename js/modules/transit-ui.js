@@ -1,11 +1,12 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.5.0-mvjqsjqk';
-import { lineColor, operatorColor } from './stops.js?v=1.5.0-mvjqsjqk';
-import { formatNavDistance } from './route-ui.js?v=1.5.0-mvjqsjqk';
-import { WHATSAPP_ICON } from './share.js?v=1.5.0-mvjqsjqk';
-import { t, tn, LOCALE } from './i18n.js?v=1.5.0-mvjqsjqk';
-import { serviceNoticeHtml } from './ui.js?v=1.5.0-mvjqsjqk';
+import { escapeHtml } from './ui.js?v=1.5.0-mvkql3bc';
+import { lineColor, operatorColor } from './stops.js?v=1.5.0-mvkql3bc';
+import { formatNavDistance } from './route-ui.js?v=1.5.0-mvkql3bc';
+import { WHATSAPP_ICON } from './share.js?v=1.5.0-mvkql3bc';
+import { t, tn, LOCALE } from './i18n.js?v=1.5.0-mvkql3bc';
+import { serviceNoticeHtml } from './ui.js?v=1.5.0-mvkql3bc';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.5.0-mvkql3bc';
 
 const TZ = 'Asia/Jerusalem';
 
@@ -392,6 +393,47 @@ function lineBadgeText(leg) {
   return t('קו {line}', { line: leg.line });
 }
 
+// כמה משתמשי Walkie על הקו שנוסעים בו (נטען ע"י community-controller; מוצג בפאנל)
+let tripUsers = null;
+export function setTripUsers(n) {
+  tripUsers = n;
+}
+
+/** באיזו תחנה אני עכשיו, מה הבאה, וכמה מהדרך עברנו (כמו במוביט / גוגל מפות) */
+function tripHereHtml(state) {
+  if (state.phase === 'waiting') {
+    const b = state.boardLeg ?? state.leg;
+    return `
+      <div class="trip-here">
+        <div class="trip-here-now"><span class="trip-here-dot"></span><span>${t('עכשיו בתחנה')} <b>${escapeHtml(b.from?.name ?? '')}</b></span></div>
+      </div>`;
+  }
+  if (state.phase !== 'riding' || !state.currentStop) return '';
+  const total = state.stopTotal ?? 0;
+  const here = state.stopIndex ?? 0;
+  const dots = Array.from({ length: Math.min(total + 1, 24) }, (_, i) => `<i class="${i < here ? 'is-done' : i === here ? 'is-now' : ''}"></i>`).join('');
+  const next = state.nextStop && state.nextStop.name !== state.currentStop.name
+    ? `<div class="trip-here-next">${t('הבאה: {stop}', { stop: escapeHtml(state.nextStop.name) })}</div>` : '';
+  return `
+    <div class="trip-here">
+      <div class="trip-here-now"><span class="trip-here-dot"></span><span>${t('עכשיו ליד')} <b>${escapeHtml(state.currentStop.name)}</b></span></div>
+      ${next}
+      <div class="trip-here-prog" aria-hidden="true">${dots}</div>
+    </div>`;
+}
+
+function tripToolsHtml(state) {
+  const ride = [state.leg, state.next].find((l) => l && l.mode !== 'walk');
+  if (!ride) return '';
+  const key = lineKeyOf({ mode: ride.mode, line: ride.line, agency: ride.agency ?? '' });
+  const label = ride.mode === 'rail' ? t('רכבת') : t('קו {line}', { line: ride.line });
+  return `
+    ${tripUsers ? lineUsersHtml(tripUsers) : ''}
+    <div class="trip-tools">
+      <button type="button" data-action="report-line" data-line-key="${escapeHtml(key)}" data-line="${escapeHtml(String(ride.line ?? ''))}" data-label="${escapeHtml(label)}">⚠️ ${t('דיווח על האוטובוס')}</button>
+    </div>`;
+}
+
 export function tripPanelHtml(state, it) {
   const transitCount = it.legs.filter((l) => l.mode !== 'walk').length;
   const doneTransit = it.legs.slice(0, state.legIndex).filter((l) => l.mode !== 'walk').length;
@@ -401,9 +443,11 @@ export function tripPanelHtml(state, it) {
         <div class="nav-remaining">${t('הגעה ב-{time}', { time: fmtTime(state.arrival) })}</div>
         <div class="nav-sub">${t('עוד {time}', { time: fmtMinutes(state.remainingSeconds) })}${transitCount > 1 ? ` · ${t('נסיעה {i} מתוך {n}', { i: Math.min(transitCount, doneTransit + 1), n: transitCount })}` : ''}</div>
       </div>
-      <button class="btn-share-trip" type="button" data-action="share-trip" aria-label="${t('שיתוף זמן ההגעה בוואטסאפ')}">${WHATSAPP_ICON}</button>
+      <button class="btn-share-trip" type="button" data-action="share-trip" aria-label="${t('שיתוף הנסיעה')}">${WHATSAPP_ICON}</button>
       <button class="btn-end" type="button" data-action="transit-end">${t('סיום')}</button>
     </div>
+    ${tripHereHtml(state)}
+    ${tripToolsHtml(state)}
     ${legChips(it, state.legIndex)}`;
 }
 

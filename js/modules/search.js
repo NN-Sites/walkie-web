@@ -5,11 +5,12 @@ import {
   SEARCH_MIN_CHARS,
   RECENT_SEARCHES_MAX,
   STORAGE_KEYS
-} from '../config.js?v=1.5.0-mvjqsjqk';
-import { fetchSearch } from './api.js?v=1.5.0-mvjqsjqk';
-import { formatDistance } from './geo.js?v=1.5.0-mvjqsjqk';
-import { escapeHtml } from './ui.js?v=1.5.0-mvjqsjqk';
-import { t, IS_EN } from './i18n.js?v=1.5.0-mvjqsjqk';
+} from '../config.js?v=1.5.0-mvkql3bc';
+import { fetchSearch } from './api.js?v=1.5.0-mvkql3bc';
+import { formatDistance } from './geo.js?v=1.5.0-mvkql3bc';
+import { escapeHtml } from './ui.js?v=1.5.0-mvkql3bc';
+import { t, IS_EN } from './i18n.js?v=1.5.0-mvkql3bc';
+import { trackFailedSearch } from './analytics.js?v=1.5.0-mvkql3bc';
 
 /** כותרת משנה מהשרת ("תחנה 1234 · תל אביב", "מסעדה · חיפה") – מתרגמים את מה שאפשר, שמות נשארים */
 function localizeSubtitle(sub) {
@@ -193,6 +194,7 @@ export class SearchOverlay {
 
       const isCategory = json.mode === 'category' && json.category;
       if (this.items.length === 0) {
+        if (!isCategory) trackFailedSearch(q, 'place');
         this.results.innerHTML = isCategory
           ? `<div class="search-hint">${t('לא מצאנו {what} באזור.', { what: escapeHtml(t(json.category.label)) })}</div>`
           : `<div class="search-hint">${t('לא נמצאו תוצאות עבור "{q}".', { q: escapeHtml(q) })}<br>${t('נסו כתובת, שם מקום או מספר תחנה.')}</div>`;

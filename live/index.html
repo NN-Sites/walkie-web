@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0d9488">
+  <title>Walkie – נסיעה משותפת</title>
+  <meta property="og:title" content="עוקבים אחרי הנסיעה ב-Walkie">
+  <meta property="og:description" content="רואים בלייב איפה החבר שלך ומתי הוא מגיע.">
+  <link rel="icon" type="image/svg+xml" href="../icon.svg">
+  <link rel="stylesheet" href="../vendor/heebo/heebo.css">
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+  <style>
+    :root {
+      --brand: #0d9488; --brand-700: #115e59; --bg: #f6f7f9; --surface: #fff; --text: #0b1324;
+      --muted: #6b778c; --border: #e6e9ef; --live: #16a34a; --warn: #d97706;
+      font-family: "Heebo", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0e141b; --surface: #17202b; --text: #e8edf3; --muted: #93a1b5; --border: #263241; }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+    body { display: flex; flex-direction: column; }
+    header {
+      display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 10px;
+      background: var(--brand); color: #fff;
+    }
+    header img { width: 30px; height: 30px; border-radius: 8px; }
+    header strong { font-size: 18px; }
+    header span { opacity: .85; font-size: 13px; margin-inline-start: auto; }
+    #map { flex: 1; min-height: 0; }
+    .sheet {
+      background: var(--surface); border-radius: 22px 22px 0 0; margin-top: -22px; position: relative; z-index: 500;
+      padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 16px); box-shadow: 0 -8px 30px rgba(11,19,36,.18);
+    }
+    .row { display: flex; align-items: center; gap: 12px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--live); flex: none; box-shadow: 0 0 0 0 rgba(22,163,74,.6); animation: pulse 1.8s infinite; }
+    .dot.off { background: var(--muted); animation: none; }
+    .dot.warn { background: var(--warn); animation: none; }
+    @keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
+    h1 { margin: 0; font-size: 19px; line-height: 1.25; }
+    .sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
+    .eta { margin-inline-start: auto; text-align: center; padding: 6px 12px; border-radius: 12px; background: rgba(13,148,136,.12); color: var(--brand-700); font-weight: 800; font-size: 20px; line-height: 1.1; }
+    @media (prefers-color-scheme: dark) { .eta { color: #5eead4; } }
+    .eta small { display: block; font-size: 11px; font-weight: 600; opacity: .8; }
+    .cta { margin-top: 14px; padding: 14px; border-radius: 16px; background: linear-gradient(135deg, #14b8a6, var(--brand-700)); color: #fff; }
+    .cta p { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+    .cta .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cta a { flex: 1 1 140px; text-align: center; text-decoration: none; padding: 11px 12px; border-radius: 12px; font-weight: 800; font-size: 15px; }
+    .cta a.primary { background: #fff; color: var(--brand-700); }
+    .cta a.ghost { background: rgba(255,255,255,.18); color: #fff; }
+    .center { margin: auto; text-align: center; padding: 30px 24px; max-width: 360px; }
+    .center h1 { margin-bottom: 8px; }
+    .pin { width: 22px; height: 22px; border-radius: 50%; background: var(--live); border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); position: relative; }
+    .pin::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 3px solid var(--live); opacity: 0; animation: ring 2s ease-out infinite; }
+    @keyframes ring { 0% { transform: scale(.5); opacity: .8; } 100% { transform: scale(1.4); opacity: 0; } }
+    .dest-pin { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="../icon.svg" alt="">
+    <strong>Walkie</strong>
+    <span>נסיעה משותפת</span>
+  </header>
+
+  <div id="loading" class="center"><h1>טוענים את הנסיעה…</h1></div>
+  <div id="missing" class="center" hidden>
+    <h1>הקישור לא תקין</h1>
+    <p class="sub">בקשו מהחבר לשלוח את הקישור מחדש.</p>
+  </div>
+
+  <div id="map" hidden></div>
+  <section class="sheet" id="sheet" hidden>
+    <div class="row">
+      <span id="status-dot" class="dot"></span>
+      <div>
+        <h1 id="title">בדרך ל…</h1>
+        <div id="sub" class="sub"></div>
+      </div>
+      <div id="eta" class="eta" hidden></div>
+    </div>
+    <div class="cta">
+      <p>רוצים לתכנן מסלול כזה בעצמכם? Walkie היא ניווט ותחבורה ציבורית בזמן אמת, בלי פרסומות.</p>
+      <div class="btns">
+        <a id="cta-play" class="primary" rel="noopener">הורדה ל-Android</a>
+        <a id="cta-web" class="ghost" rel="noopener">פתיחה בדפדפן</a>
+      </div>
+    </div>
+  </section>
+
+  <script src="../vendor/leaflet/leaflet.js"></script>
+  <script type="module">
+    import { firebaseConfig } from '../js/firebase-config.js';
+
+    const SDK = 'https://www.gstatic.com/firebasejs/10.12.2';
+    const PLAY = 'https://play.google.com/store/apps/details?id=com.walkie.app';
+    const $ = (id) => document.getElementById(id);
+
+    const params = new URLSearchParams(location.search);
+    const shareId = (location.pathname.match(/\/t\/([a-z0-9]+)/i) || [])[1] || params.get('s');
+    const ref = (params.get('ref') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+
+    // קישורי ההורדה נושאים את קוד ההזמנה של השולח – כך ההרשמה נספרת כהזמנה, ומקור ההגעה הוא "שיתוף נסיעה"
+    const q = `utm_source=trip_share&utm_medium=live_link${ref ? `&ref=${ref}` : ''}`;
+    $('cta-web').href = `${location.origin}/?${q}`;
+    $('cta-play').href = `${PLAY}&referrer=${encodeURIComponent(q)}`;
+
+    const show = (id) => { for (const x of ['loading', 'missing']) $(x).hidden = x !== id; };
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    if (!shareId) { show('missing'); throw new Error('no share id'); }
+
+    const [appMod, authMod, fs] = await Promise.all([
+      import(`${SDK}/firebase-app.js`), import(`${SDK}/firebase-auth.js`), import(`${SDK}/firebase-firestore.js`)
+    ]);
+    const app = appMod.initializeApp(firebaseConfig, 'live');
+    const db = fs.getFirestore(app);
+
+    // ספירת צפיות לדף הניהול (המרה: צפיות -> הורדות). כישלון לא פוגע בדף
+    const count = async (path) => {
+      try {
+        const auth = authMod.getAuth(app);
+        if (!auth.currentUser) await authMod.signInAnonymously(auth);
+        const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date());
+        const shard = Math.floor(Math.random() * 10);
+        await fs.setDoc(fs.doc(db, 'analytics', `${date}_${shard}`), { date, shard, share: { [path]: fs.increment(1) } }, { merge: true });
+      } catch { /* ignore */ }
+    };
+    count('views');
+    for (const [id, key] of [['cta-play', 'cta_play'], ['cta-web', 'cta_web']]) $(id).addEventListener('click', () => count(key));
+
+    let map, me, dest, line, fitted = false, last = null;
+
+    function ensureMap(data) {
+      if (map) return;
+      $('loading').hidden = true;
+      $('map').hidden = false;
+      $('sheet').hidden = false;
+      map = L.map('map', { zoomControl: false, attributionControl: true }).setView([data.pos?.lat ?? 32.07, data.pos?.lng ?? 34.78], 15);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+      L.control.zoom({ position: 'bottomleft' }).addTo(map);
+    }
+
+    function render(data) {
+      ensureMap(data);
+      const age = Date.now() - (data.updatedAt || 0);
+      const ended = data.active === false || age > 15 * 60000;
+      const stale = !ended && age > 90000;
+
+      $('title').textContent = `בדרך ל${data.destName || 'יעד'}`;
+      const how = data.mode === 'transit' ? `🚌 בתחבורה ציבורית${data.lineText ? ` (${data.lineText})` : ''}` : '🚶 בהליכה';
+      $('sub').textContent = ended ? 'השיתוף הסתיים' : stale ? `${how} · המיקום לא התעדכן ${Math.round(age / 60000)} דק'` : how;
+      $('status-dot').className = `dot${ended ? ' off' : stale ? ' warn' : ''}`;
+
+      if (data.arrival && !ended) {
+        $('eta').hidden = false;
+        $('eta').innerHTML = `${new Date(data.arrival).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' })}<small>הגעה משוערת</small>`;
+      } else {
+        $('eta').hidden = true;
+      }
+
+      if (data.path?.length && !line) {
+        const pts = [];
+        for (let i = 0; i + 1 < data.path.length; i += 2) pts.push([data.path[i], data.path[i + 1]]);
+        line = L.polyline(pts, { color: '#0d9488', weight: 5, opacity: 0.75 }).addTo(map);
+      }
+      if (data.dest && !dest) {
+        dest = L.marker([data.dest.lat, data.dest.lng], { icon: L.divIcon({ className: '', html: '<div class="dest-pin">📍</div>', iconSize: [26, 26], iconAnchor: [13, 26] }) }).addTo(map);
+      }
+      if (data.pos) {
+        const ll = [data.pos.lat, data.pos.lng];
+        if (!me) me = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="pin"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }), zIndexOffset: 1000 }).addTo(map);
+        else me.setLatLng(ll);
+        if (!fitted) {
+          fitted = true;
+          const bounds = L.latLngBounds([ll]);
+          if (data.dest) bounds.extend([data.dest.lat, data.dest.lng]);
+          map.fitBounds(bounds.pad(0.35), { maxZoom: 16 });
+        } else if (!ended && !map.getBounds().pad(-0.1).contains(ll)) {
+          map.panTo(ll);
+        }
+      }
+      last = data;
+    }
+
+    fs.onSnapshot(fs.doc(db, 'liveShares', shareId), (snap) => {
+      if (!snap.exists()) return show('missing');
+      render(snap.data());
+    }, () => show('missing'));
+
+    // "לפני X דק'" ממשיך לרוץ גם בלי עדכון חדש
+    setInterval(() => last && render(last), 30000);
+  </script>
+</body>
+</html>

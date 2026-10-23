@@ -5,10 +5,12 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvjqsjqk';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvjqsjqk';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvjqsjqk';
-import { initAccount, markAccountUnavailable } from './account.js?v=1.5.0-mvjqsjqk';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkql3bc';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvkql3bc';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkql3bc';
+import { initAccount, markAccountUnavailable, onAccountChange } from './account.js?v=1.5.0-mvkql3bc';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkql3bc';
+import { newRefCode, applyUserDoc, setCode, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkql3bc';
 
 let session = null;
 
@@ -30,6 +32,14 @@ function deviceInfo() {
   };
 }
 
+/** איך המשתמש נרשם: google | email | anonymous (לדף הניהול) */
+function authTypeOf(user) {
+  const ids = user?.providerData?.map((p) => p.providerId) ?? [];
+  if (ids.includes('google.com')) return 'google';
+  if (ids.includes('password')) return 'email';
+  return 'anonymous';
+}
+
 function premiumReport() {
   const p = premiumInfo();
   return { active: p.active, source: p.source, since: p.since };
@@ -49,7 +59,11 @@ export async function initSession({ onAnnouncement } = {}) {
     const ref = doc(firestore, 'users', user.uid);
     const snap = await getDoc(ref);
 
+    let refCode = snap.exists() ? snap.data().refCode : null;
+
     if (!snap.exists()) {
+      refCode = newRefCode();
+      const attribution = getAttribution();
       // ה-plan תמיד 'free' ביצירה – כללי Firestore אוכפים את זה. Premium נקבע רק ע"י המנהל או החנות.
       await setDoc(ref, {
         createdAt: serverTimestamp(),
@@ -61,8 +75,15 @@ export async function initSession({ onAnnouncement } = {}) {
         stats: getStats(),
         premium: premiumReport(),
         donations: getDonations(),
+        refCode,
+        authType: authTypeOf(user),
+        attribution: { source: attribution.source, medium: attribution.medium, campaign: attribution.campaign, ref: attribution.ref },
         sessions: 1
       });
+      setCode(refCode);
+      // נספר רק אחרי שהחשבון נוצר בפועל (ניסיון שנכשל יחזור בפתיחה הבאה)
+      track(`acq.${attribution.source}`);
+      track('funnel.account_created');
     } else {
       const data = snap.data();
       // מתנה מהמנהל
@@ -73,12 +94,29 @@ export async function initSession({ onAnnouncement } = {}) {
         stats: getStats(),
         premium: premiumReport(),
         donations: getDonations(),
+        authType: authTypeOf(user),
+        ...(refCode ? {} : { refCode: (refCode = newRefCode()) }),
         sessions: increment(1)
       });
+      applyUserDoc({ ...data, refCode });
     }
+    trackDeviceSession(deviceInfo().platform);
 
     // חשבון Google (לא חובה): פרטי החשבון וסנכרון מועדפים
     await initAccount({ user, docRef: ref, data: snap.exists() ? snap.data() : null }).catch((err) => console.warn('[Walkie] account init failed', err));
+
+    // הזמנת חברים: קוד שנקלט מקישור ממומש ברגע שיש חשבון Google (עכשיו, או אחרי שיתחבר)
+    const redeem = async () => {
+      const r = await redeemPendingIfAny(true);
+      if (r) window.dispatchEvent(new CustomEvent('walkie:referral-redeemed', { detail: r }));
+    };
+    if (user.providerData?.some((p) => p.providerId === 'google.com')) redeem();
+    onAccountChange((a) => {
+      if (!a?.linked) return;
+      updateDoc(ref, { authType: 'google' }).catch(() => {});
+      track('auth.google_linked');
+      redeem();
+    });
 
     // כשמצב המנוי משתנה (רכישה / ביטול) – מעדכנים את המנהל
     onPremiumChange(() => {

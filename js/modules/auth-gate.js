@@ -3,11 +3,12 @@
 // אבל פעולה – תכנון מסלול, שמירת מועדפים, שיתוף – פותחת בקשה להתחבר, וממשיכה לבד אחרי ההתחברות.
 // אם השרת לא זמין (Firebase לא מוגדר / לא עונה) לא נועלים את האפליקציה.
 
-import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvjqsjqk';
-import { isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvjqsjqk';
-import { setFavoritesGuard } from './favorites.js?v=1.5.0-mvjqsjqk';
-import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvjqsjqk';
-import { t } from './i18n.js?v=1.5.0-mvjqsjqk';
+import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvkql3bc';
+import { isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkql3bc';
+import { setFavoritesGuard } from './favorites.js?v=1.5.0-mvkql3bc';
+import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkql3bc';
+import { t } from './i18n.js?v=1.5.0-mvkql3bc';
+import { track, trackOnce } from './analytics.js?v=1.5.0-mvkql3bc';
 
 const FLAG = 'walkie:google';   // מחובר עם Google במכשיר הזה (ידוע מיד בפתיחה, לפני ש-Firebase נטען)
 
@@ -66,6 +67,7 @@ function open(mode, action = '') {
   // טוענים את Firebase כבר עכשיו – כדי שחלון ההתחברות של Google ייפתח מיד בלחיצה (ולא ייחסם)
   ensureSignedIn().catch(() => {});
   const welcome = mode === 'welcome';
+  if (welcome) trackOnce('funnel:welcome', 'funnel.welcome_shown');
   dialog = document.createElement('div');
   dialog.className = `auth-gate is-${mode}`;
   dialog.setAttribute('role', 'dialog');
@@ -101,6 +103,8 @@ function open(mode, action = '') {
 function close(dropPending = true) {
   if (dropPending) pending = null;
   if (!dialog) return;
+  // סגירת מסך הפתיחה (דילוג או התחברות) = המשתמש הגיע למפה
+  if (dialog.classList.contains('is-welcome')) trackOnce('funnel:map', 'funnel.map_reached');
   const el = dialog;
   dialog = null;
   el.classList.remove('is-open');
@@ -110,9 +114,11 @@ function close(dropPending = true) {
 
 async function signIn(btn) {
   btn.disabled = true;
+  track('funnel.signin_tap');
   try {
     const info = await signInWithGoogle();
     if (!info?.linked) return;
+    trackOnce('funnel:signed', 'funnel.signed_in');
     writeFlag(true);
     const next = pending;
     close();

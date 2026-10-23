@@ -1,16 +1,17 @@
 // לשונית "תחנות": תחנות אוטובוס, רכבת ישראל ורכבת קלה סביבך, עם לוח יציאות חי לכל תחנה.
 
-import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js?v=1.5.0-mvjqsjqk';
-import { escapeHtml } from './ui.js?v=1.5.0-mvjqsjqk';
-import { formatDistance, walkMinutes } from './geo.js?v=1.5.0-mvjqsjqk';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js?v=1.5.0-mvjqsjqk';
-import { toggleStop, isStopSaved } from './favorites.js?v=1.5.0-mvjqsjqk';
-import { starButton } from './favorites-ui.js?v=1.5.0-mvjqsjqk';
-import { showToast } from './ui.js?v=1.5.0-mvjqsjqk';
-import { vehiclesFromArrivals } from './arrivals.js?v=1.5.0-mvjqsjqk';
-import { getSettings } from './settings.js?v=1.5.0-mvjqsjqk';
-import { t } from './i18n.js?v=1.5.0-mvjqsjqk';
-import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js?v=1.5.0-mvjqsjqk';
+import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js?v=1.5.0-mvkql3bc';
+import { escapeHtml } from './ui.js?v=1.5.0-mvkql3bc';
+import { formatDistance, walkMinutes } from './geo.js?v=1.5.0-mvkql3bc';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js?v=1.5.0-mvkql3bc';
+import { toggleStop, isStopSaved } from './favorites.js?v=1.5.0-mvkql3bc';
+import { starButton } from './favorites-ui.js?v=1.5.0-mvkql3bc';
+import { showToast } from './ui.js?v=1.5.0-mvkql3bc';
+import { vehiclesFromArrivals } from './arrivals.js?v=1.5.0-mvkql3bc';
+import { getSettings } from './settings.js?v=1.5.0-mvkql3bc';
+import { t } from './i18n.js?v=1.5.0-mvkql3bc';
+import { track, trackName, trackFeature, trackFailedSearch, safeKey } from './analytics.js?v=1.5.0-mvkql3bc';
+import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js?v=1.5.0-mvkql3bc';
 
 const FILTERS = [
   { id: 'all', label: 'הכל' },
@@ -203,6 +204,7 @@ export class StationsView {
   }
 
   #renderSearch(results) {
+    if (!results.length) trackFailedSearch(this.query, 'station');
     this.#body(results.length
       ? `<ul class="nearby">${results.map((s) => this.#row(s)).join('')}</ul>`
       : `<div class="empty">${t('לא נמצאה תחנה בשם "{q}".', { q: escapeHtml(this.query) })}</div>`);
@@ -285,6 +287,13 @@ export class StationsView {
     this.mode = 'detail';
     this.station = station;
     this.board = keepView ? this.board : null;
+    if (!keepView) {
+      trackFeature('station_detail');
+      if (station.code) {
+        track(`stations.${safeKey(station.code)}`);
+        trackName(station.code, station.name);
+      }
+    }
     this.#renderStation();
     this.layer.render([{ ...station, mode: station.primaryMode }], null, station.id);
     if (!keepView) this.sheet.setSnap('half');

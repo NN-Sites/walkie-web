@@ -1,8 +1,8 @@
 // שכבת המפה: Leaflet + אריחים (MapTiler אם יש מפתח, אחרת OSM), סמן משתמש ותחנות.
 /* global L */
 
-import { MAPTILER_KEY, STOPS_DETAIL_ZOOM } from '../config.js?v=1.5.0-mvjqsjqk';
-import { createMotion } from './vehicle-motion.js?v=1.5.0-mvjqsjqk';
+import { MAPTILER_KEY, STOPS_DETAIL_ZOOM } from '../config.js?v=1.5.0-mvkql3bc';
+import { createMotion } from './vehicle-motion.js?v=1.5.0-mvkql3bc';
 
 const BUS_SVG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .9.4 1.7 1 2.2V20c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h8v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6v10Zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM18 11H6V6h12v5Z"/></svg>';
@@ -13,7 +13,7 @@ const LIGHTRAIL_SVG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M19 16.9V8a5 5 0 0 0-4.5-5l.8-1.5-1.3-.5L13 3h-2L9.9 1l-1.3.5.8 1.5A5 5 0 0 0 5 8v8.9A3 3 0 0 0 7 22h10a3 3 0 0 0 2-5.1ZM8 19.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm8 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM17 13H7V8h10v5Z"/></svg>';
 const MODE_SVG = { bus: BUS_SVG, rail: RAIL_SVG, lightrail: LIGHTRAIL_SVG };
 
-export function createMap(elementId, center, zoom) {
+export function createMap(elementId, center, zoom, { onTilesReady = null } = {}) {
   const map = L.map(elementId, {
     zoomControl: false,
     preferCanvas: true,        // וקטורים (עיגול דיוק) על Canvas – זול יותר
@@ -44,12 +44,13 @@ export function createMap(elementId, center, zoom) {
         '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
   } else {
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const layer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       ...common,
       maxZoom: 19,
       className: 'tiles-soft',
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
+    if (onTilesReady) layer.once('load', onTilesReady);
   }
 
   map.attributionControl.setPrefix(false);
@@ -445,6 +446,14 @@ const VEHICLE_JUMP_M = 1500;        // פער גדול מזה (אוטובוס א
  * vehicles = [{ id, lat, lng, recordedAt, line, color, mode, highlight,
  *               motion: { path, stops, holdUntil } | { target: { lat, lng, at } } }]
  */
+// מיקום GPS מאומת = דגימה עדכנית מ-SIRI. ישן יותר (או בלי חותמת זמן) = חלקי: האוטובוס מוערך לפי לוח הזמנים
+const GPS_VERIFIED_MS = 90 * 1000;
+
+export function gpsStatus(v, now = Date.now()) {
+  const at = v.recordedAt ? Date.parse(v.recordedAt) : NaN;
+  return Number.isFinite(at) && now - at <= GPS_VERIFIED_MS ? 'ok' : 'partial';
+}
+
 export class VehiclesLayer {
   constructor(map, { onSelect = null } = {}) {
     this.map = map;
@@ -457,10 +466,11 @@ export class VehiclesLayer {
   render(vehicles) {
     const now = Date.now();
     const seen = new Set();
-    for (const v of vehicles ?? []) {
-      if (!Number.isFinite(v.lat) || !Number.isFinite(v.lng)) continue;
+    for (const raw of vehicles ?? []) {
+      if (!Number.isFinite(raw.lat) || !Number.isFinite(raw.lng)) continue;
+      const v = { ...raw, gps: gpsStatus(raw, now) };
       seen.add(v.id);
-      const key = `${v.line}|${v.color}|${v.mode}|${v.highlight ? 1 : 0}`;
+      const key = `${v.line}|${v.color}|${v.mode}|${v.highlight ? 1 : 0}|${v.gps}`;
       const fixAt = v.recordedAt ? Date.parse(v.recordedAt) : now;
       const model = createMotion({ fix: { lat: v.lat, lng: v.lng, at: fixAt }, ...(v.motion ?? {}) });
       const [lat, lng] = model.positionAt(now);
@@ -549,7 +559,7 @@ export class VehiclesLayer {
     // iconSize: null – הגודל לפי התוכן; המרכוז ב-CSS (translate -50%)
     return L.divIcon({
       className: 'vehicle-marker',
-      html: `<div class="vehicle-pin${v.highlight ? ' is-highlight' : ''}" style="--c:${color}">${MODE_SVG[v.mode] ?? BUS_SVG}<b>${label}</b></div>`,
+      html: `<div class="vehicle-pin${v.highlight ? ' is-highlight' : ''} gps-${v.gps}" style="--c:${color}">${MODE_SVG[v.mode] ?? BUS_SVG}<b>${label}</b></div>`,
       iconSize: null,
       iconAnchor: [0, 0]
     });
@@ -565,6 +575,8 @@ export class VehiclesLayer {
  * ואז מסובבים אותה ב-CSS (על ה-GPU, זול בסוללה). כך הפינות לעולם לא נחשפות.
  * במצב הזה גרירה וזום בתנועות מושבתים – המפה עוקבת אחרי המשתמש.
  */
+const USER_ROTATE_START_DEG = 14;   // כמה צריך לסובב באצבעות לפני שהמפה עוברת למצב מסובב
+
 export class MapRotator {
   constructor(map) {
     this.map = map;
@@ -572,10 +584,19 @@ export class MapRotator {
     this.active = false;
     this.angle = 0;    // הזווית המוצגת (מצטברת, כדי שהסיבוב תמיד ילך בדרך הקצרה)
     this.heading = 0;
+    this.manual = false; // true = המשתמש סובב ידנית (ולא כיוון ההליכה)
+    this.onUserRotate = null;
     this.onResize = () => this.#layout();
   }
 
   enable() {
+    if (this.active && this.manual) {
+      // ניווט התחיל בזמן שהמשתמש סובב ידנית: הסיבוב עובר לכיוון ההליכה
+      this.manual = false;
+      this.#setInteractions(false);
+      this.onUserRotate?.(this.angle);
+      return;
+    }
     if (this.active) return;
     this.active = true;
     document.body.classList.add('map-rotating');
@@ -587,6 +608,7 @@ export class MapRotator {
   disable() {
     if (!this.active) return;
     this.active = false;
+    this.manual = false;
     window.removeEventListener('resize', this.onResize);
     document.body.classList.remove('map-rotating');
     Object.assign(this.el.style, { width: '', height: '', left: '', top: '', transform: '' });
@@ -594,6 +616,157 @@ export class MapRotator {
     this.heading = 0;
     this.map.invalidateSize({ pan: false });
     this.#setInteractions(true);
+    this.onUserRotate?.(0);
+  }
+
+  // ---------- סיבוב ידני (שתי אצבעות) ----------
+
+  /**
+   * המשתמש מסובב את המפה באצבעות. כל עוד לא סובבו – Leaflet מטפל בגרירה ובזום כרגיל.
+   * ברגע שהסיבוב עובר סף קטן עוברים למצב מסובב: המפה מוגדלת לאלכסון המסך (כמו בניווט),
+   * ואת הגרירה והזום עושה הקוד כאן, כי Leaflet לא מכיר מכולה מסובבת.
+   */
+  enableUserRotate(onChange) {
+    this.onUserRotate = onChange;
+    const el = this.el;
+    const g = { pts: new Map(), last: null };
+
+    const pt = (t) => ({ x: t.clientX, y: t.clientY });
+    const pair = () => {
+      const [a, b] = [...g.pts.values()];
+      return { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, dist: Math.hypot(b.x - a.x, b.y - a.y), ang: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI };
+    };
+    const norm = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
+
+    // וקטור מסך -> וקטור במכולה המסובבת
+    const toLocal = (dx, dy) => {
+      const r = (this.angle * Math.PI) / 180;
+      return [dx * Math.cos(r) + dy * Math.sin(r), -dx * Math.sin(r) + dy * Math.cos(r)];
+    };
+
+    const panScreen = (dx, dy) => {
+      const [x, y] = toLocal(dx, dy);
+      this.map.panBy([-x, -y], { animate: false });
+    };
+
+    const begin = () => {
+      g.last = g.pts.size === 2 ? pair() : null;
+      g.start = g.last ? { ...g.last } : null;
+    };
+
+    el.addEventListener('touchstart', (e) => {
+      for (const t of e.changedTouches) g.pts.set(t.identifier, pt(t));
+      if (g.pts.size > 2) for (const k of [...g.pts.keys()].slice(2)) g.pts.delete(k);
+      begin();
+    }, { passive: true });
+
+    el.addEventListener('touchmove', (e) => {
+      const prev = new Map(g.pts);
+      for (const t of e.changedTouches) if (g.pts.has(t.identifier)) g.pts.set(t.identifier, pt(t));
+
+      if (g.pts.size === 2 && g.last) {
+        const now = pair();
+        let dAng = norm(now.ang - g.last.ang);
+        if (!this.active && Math.abs(norm(now.ang - g.start.ang)) > USER_ROTATE_START_DEG) {
+          this.#startManual();
+          dAng = norm(now.ang - g.start.ang); // כל מה שסובב עד עכשיו, בלי "לאבד" את הסף
+        }
+        if (this.active && this.manual) {
+          e.preventDefault();
+          document.body.classList.add('map-gesture');
+          this.setAngle(this.angle + dAng); // האצבעות מסתובבות עם כיוון השעון -> המפה מסתובבת איתן
+          panScreen(g.last.cx - now.cx, g.last.cy - now.cy);
+          if (g.last.dist > 10 && now.dist > 10) {
+            const z = this.map.getZoom() + Math.log2(now.dist / g.last.dist);
+            this.map.setZoom(Math.max(this.map.getMinZoom(), Math.min(this.map.getMaxZoom(), z)), { animate: false });
+          }
+        }
+        g.last = now;
+      } else if (g.pts.size === 1 && this.active && this.manual) {
+        const [id, p] = [...g.pts.entries()][0];
+        const before = prev.get(id);
+        if (before) {
+          e.preventDefault();
+          document.body.classList.add('map-gesture');
+          panScreen(before.x - p.x, before.y - p.y);
+        }
+      }
+    }, { passive: false });
+
+    const end = (e) => {
+      for (const t of e.changedTouches) g.pts.delete(t.identifier);
+      begin();
+      if (g.pts.size === 0) document.body.classList.remove('map-gesture');
+    };
+    el.addEventListener('touchend', end, { passive: true });
+    el.addEventListener('touchcancel', end, { passive: true });
+
+    // מחשב / עכבר: Shift + גרירה מסובב. בגרירה רגילה במצב מסובב – הזזה
+    let mouse = null;
+    el.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      if (e.shiftKey && !this.active) this.#startManual();
+      if (this.active && this.manual) {
+        mouse = { x: e.clientX, y: e.clientY, rotate: e.shiftKey, cx: window.innerWidth / 2, cy: window.innerHeight / 2 };
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, true);
+    window.addEventListener('mousemove', (e) => {
+      if (!mouse) return;
+      if (mouse.rotate) {
+        const a0 = Math.atan2(mouse.y - mouse.cy, mouse.x - mouse.cx);
+        const a1 = Math.atan2(e.clientY - mouse.cy, e.clientX - mouse.cx);
+        this.setAngle(this.angle + norm(((a1 - a0) * 180) / Math.PI));
+      } else {
+        panScreen(mouse.x - e.clientX, mouse.y - e.clientY);
+      }
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    window.addEventListener('mouseup', () => {
+      mouse = null;
+    });
+    el.addEventListener('wheel', (e) => {
+      if (!(this.active && this.manual)) return;
+      e.preventDefault();
+      this.map.setZoom(this.map.getZoom() - Math.sign(e.deltaY) * 0.5);
+    }, { passive: false });
+  }
+
+  #startManual() {
+    if (this.active) return;
+    this.active = true;
+    this.manual = true;
+    document.body.classList.add('map-rotating');
+    this.#layout();
+    this.#setInteractions(false);
+    window.addEventListener('resize', this.onResize);
+  }
+
+  /** זווית סיבוב המפה בפועל (מעלות, בכיוון השעון). 0 = צפון למעלה */
+  setAngle(deg) {
+    this.angle = deg;
+    this.heading = -deg;
+    this.el.style.transform = `rotate(${deg}deg)`;
+    this.onUserRotate?.(deg);
+  }
+
+  /** חזרה לצפון למעלה (כפתור המצפן). הסיבוב מונפש והמפה חוזרת למצב רגיל */
+  resetNorth() {
+    if (!this.active || !this.manual) return;
+    document.body.classList.remove('map-gesture');
+    // מנרמלים ל-(-180,180] בלי אנימציה, כדי שהחזרה תהיה בדרך הקצרה ולא "סיבוב מלא"
+    const short = ((((this.angle + 180) % 360) + 360) % 360) - 180;
+    this.el.style.transition = 'none';
+    this.angle = short;
+    this.el.style.transform = `rotate(${short}deg)`;
+    void this.el.offsetWidth;
+    this.el.style.transition = '';
+    this.setAngle(0);
+    setTimeout(() => {
+      if (this.manual && this.angle === 0) this.disable();
+    }, 400);
   }
 
   setHeading(deg) {

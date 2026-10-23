@@ -4,8 +4,8 @@
 // הרעיון: כל רגלי הנסיעה מחוברות לקו גיאומטרי אחד, וכל מיקום GPS "מוצמד" אליו (כמו בניווט הרגלי).
 // גבולות הרגליים ומיקומי התחנות מחושבים פעם אחת כמרחק לאורך הקו.
 
-import { buildRouteModel, snapToRoute } from './navigation.js?v=1.5.0-mvjqsjqk';
-import { distanceMeters } from './geo.js?v=1.5.0-mvjqsjqk';
+import { buildRouteModel, snapToRoute } from './navigation.js?v=1.5.0-mvkql3bc';
+import { distanceMeters } from './geo.js?v=1.5.0-mvkql3bc';
 
 const WAIT_RADIUS_M = 40;        // קרוב לתחנה = ממתינים
 const LEFT_STOP_M = 70;          // התרחקנו מתחנת העלייה לאורך הקו = עלינו
@@ -112,6 +112,9 @@ export class TripSession {
     let phase;
     let stopsLeft = null;
     let nextStop = null;
+    let currentStop = null;   // התחנה האחרונה שעברנו (או תחנת העלייה)
+    let stopIndex = null;     // כמה תחנות עברנו מאז שעלינו
+    let stopTotal = null;     // כמה תחנות יש עד הירידה
 
     if (leg.mode === 'walk') {
       const toLegEnd = leg.endAlong - along;
@@ -131,6 +134,9 @@ export class TripSession {
         stopsLeft = remaining.length;
         const idx = leg.stopAlongs.length - remaining.length;
         nextStop = idx < leg.stops.length ? leg.stops[idx] : leg.to;
+        currentStop = idx === 0 ? leg.from : (leg.stops[idx - 1] ?? leg.to);
+        stopIndex = idx;
+        stopTotal = leg.stopAlongs.length;
 
         if (stopsLeft <= 1 && !this.alerted.has(legIndex)) {
           this.alerted.add(legIndex);
@@ -168,6 +174,9 @@ export class TripSession {
       distToLegEnd: Math.max(0, leg.endAlong - along),
       stopsLeft,
       nextStop,
+      currentStop,
+      stopIndex,
+      stopTotal,
       arrival: new Date(arrivalMs).toISOString(),
       remainingSeconds: Math.max(0, Math.round((arrivalMs - now) / 1000)),
       offRoute: this.offCount >= OFF_ROUTE_FIXES

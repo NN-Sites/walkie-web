@@ -1,7 +1,7 @@
 // אינדקס תחנות ארצי מ-GTFS של משרד התחבורה (דרך Stride API של הסדנא לידע ציבורי).
 // נטען פעם ביום לזיכרון, עם קאש (דיסק בשרת / IndexedDB באפליקציה), ומאונדקס ברשת (Grid) לחיפוש מהיר לפי מיקום.
 
-import { distanceMeters, israelDate, fetchWithTimeout } from './geo.js?v=1.5.0-mvjqsjqk';
+import { distanceMeters, israelDate, fetchWithTimeout } from './geo.js?v=1.5.0-mvkql3bc';
 
 const STRIDE_BASE = 'https://open-bus-stride-api.hasadna.org.il';
 const PAGE_SIZE = 15000;          // המקסימום שה-API מאפשר לבקשה

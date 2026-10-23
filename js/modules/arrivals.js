@@ -1,9 +1,10 @@
 // זמני הגעה בצד הלקוח: קאש קצר לכל תחנה, ביטול בקשות ישנות, וקיבוץ לפי קו.
 
-import { ARRIVALS_CLIENT_TTL_MS, ARRIVALS_GROUP_LIMIT, ARRIVALS_MAX_AHEAD_MIN, ARRIVAL_GONE_MS } from '../config.js?v=1.5.0-mvjqsjqk';
-import { fetchArrivals, fetchDepartures } from './api.js?v=1.5.0-mvjqsjqk';
-import { demoArrivals, lineColor } from './stops.js?v=1.5.0-mvjqsjqk';
-import { t } from './i18n.js?v=1.5.0-mvjqsjqk';
+import { ARRIVALS_CLIENT_TTL_MS, ARRIVALS_GROUP_LIMIT, ARRIVALS_MAX_AHEAD_MIN, ARRIVAL_GONE_MS } from '../config.js?v=1.5.0-mvkql3bc';
+import { fetchArrivals, fetchDepartures } from './api.js?v=1.5.0-mvkql3bc';
+import { demoArrivals, lineColor } from './stops.js?v=1.5.0-mvkql3bc';
+import { t } from './i18n.js?v=1.5.0-mvkql3bc';
+import { trackPerf } from './analytics.js?v=1.5.0-mvkql3bc';
 
 /**
  * מצב לכל תחנה:
@@ -52,8 +53,10 @@ export class ArrivalsStore {
     });
     this.onChange(stop.id);
 
+    const startedAt = performance.now();
     try {
       const { arrivals, live } = await this.#load(stop, controller.signal);
+      trackPerf('arrivals', performance.now() - startedAt);
       this.#entries.set(stop.id, {
         status: 'ok',
         arrivals,
@@ -130,6 +133,7 @@ export function vehicleSummary(v, now = Date.now()) {
     const sec = Math.max(0, Math.round((now - Date.parse(v.recordedAt)) / 1000));
     parts.push(sec < 60 ? t('מיקום מלפני {n} שנ\'', { n: sec }) : t('מיקום מלפני {n} דק\'', { n: Math.round(sec / 60) }));
   }
+  if (v.gps) parts.push(v.gps === 'ok' ? t('GPS מאומת 🟢') : t('GPS חלקי 🟡'));
   return parts.join(' · ');
 }
 
