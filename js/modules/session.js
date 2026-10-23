@@ -5,13 +5,13 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkt9a3e';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkt9a3e';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkt9a3e';
-import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.5.0-mvkt9a3e';
-import { showToast } from './ui.js?v=1.5.0-mvkt9a3e';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkt9a3e';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkt9a3e';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvktfm7l';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvktfm7l';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvktfm7l';
+import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.5.0-mvktfm7l';
+import { showToast } from './ui.js?v=1.5.0-mvktfm7l';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvktfm7l';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvktfm7l';
 
 let session = null;
 
@@ -46,19 +46,41 @@ function premiumReport() {
   return { active: p.active, source: p.source, since: p.since };
 }
 
+/** מצב הסשן האחרון (מוצג בהגדרות, כדי לאבחן תקלות בטלפון בלי כלי פיתוח) */
+export function sessionStatus() {
+  try {
+    return localStorage.getItem('walkie:sessionStatus') || '';
+  } catch {
+    return '';
+  }
+}
+
+function setStatus(text) {
+  try {
+    localStorage.setItem('walkie:sessionStatus', text);
+  } catch {
+    // ignore
+  }
+}
+
 export async function initSession({ onAnnouncement } = {}) {
+  let step = 'start';
   if (!isFirebaseConfigured()) {
     console.info('[Walkie] Firebase not configured yet – running without account');
     return null;
   }
 
   try {
+    step = 'sign-in';
     const user = await ensureSignedIn();
+    step = 'firebase';
     const { firestore, modules } = await getFirebase();
     const { doc, getDoc, setDoc, updateDoc, serverTimestamp, increment } = modules.firestore;
 
     const ref = doc(firestore, 'users', user.uid);
+    step = 'read-user';
     const snap = await getDoc(ref);
+    step = snap.exists() ? 'update-user' : 'create-user';
 
     let refCode = snap.exists() ? snap.data().refCode : null;
 
@@ -102,6 +124,8 @@ export async function initSession({ onAnnouncement } = {}) {
       setCode(refCode);
     }
     registerCode(refCode).then(() => refreshReferral()).catch(() => {});
+    step = 'account';
+    setStatus('ok');
     trackDeviceSession(deviceInfo().platform);
 
     // חשבון Google (לא חובה): פרטי החשבון וסנכרון מועדפים
@@ -142,6 +166,7 @@ export async function initSession({ onAnnouncement } = {}) {
       return null;
     }
     console.warn('[Walkie] session init failed', err);
+    setStatus(`${step}: ${err?.code ?? err?.name ?? ''} ${String(err?.message ?? '').slice(0, 120)}`);
     // מחוברים עם Google אבל הסשן נכשל: לא "מתנתקים", מציגים את השגיאה כדי שאפשר יהיה לתקן
     const { auth } = await getFirebase().catch(() => ({}));
     if (auth?.currentUser && !auth.currentUser.isAnonymous) {

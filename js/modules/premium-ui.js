@@ -2,13 +2,13 @@
 
 import {
   isPremium, premiumInfo, currentPrice, getPricing, getStats, co2SavedKg, freeLimit, onPremiumChange
-} from './premium.js?v=1.5.0-mvkt9a3e';
-import { PREMIUM_FEATURES, FREE_LIMITS, formatPrice, formatLaunchEnd } from './pricing.js?v=1.5.0-mvkt9a3e';
-import { purchase, restore, manageSubscription, storePriceLabel, billingAvailable } from './billing.js?v=1.5.0-mvkt9a3e';
-import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkt9a3e';
-import { icon } from './transit-ui.js?v=1.5.0-mvkt9a3e';
-import { celebrate } from './fx.js?v=1.5.0-mvkt9a3e';
-import { t, LOCALE } from './i18n.js?v=1.5.0-mvkt9a3e';
+} from './premium.js?v=1.5.0-mvktfm7l';
+import { PREMIUM_FEATURES, FREE_LIMITS, formatPrice, formatLaunchEnd } from './pricing.js?v=1.5.0-mvktfm7l';
+import { purchase, restore, manageSubscription, storePriceLabel, billingAvailable } from './billing.js?v=1.5.0-mvktfm7l';
+import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvktfm7l';
+import { icon } from './transit-ui.js?v=1.5.0-mvktfm7l';
+import { celebrate } from './fx.js?v=1.5.0-mvktfm7l';
+import { t, LOCALE } from './i18n.js?v=1.5.0-mvktfm7l';
 
 const REASONS = {
   stops: (n) => t('בחשבון החינמי אפשר לשמור עד {n} תחנות.', { n }),

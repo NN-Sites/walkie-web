@@ -1,23 +1,24 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.5.0-mvkt9a3e';
-import { t, LANG, setLanguage } from './i18n.js?v=1.5.0-mvkt9a3e';
-import { showToast } from './ui.js?v=1.5.0-mvkt9a3e';
-import { modeIcon, icon } from './transit-ui.js?v=1.5.0-mvkt9a3e';
-import { escapeHtml } from './ui.js?v=1.5.0-mvkt9a3e';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkt9a3e';
-import { premiumCardHtml } from './premium-ui.js?v=1.5.0-mvkt9a3e';
-import { onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkt9a3e';
-import { TIPS } from './pricing.js?v=1.5.0-mvkt9a3e';
-import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.5.0-mvkt9a3e';
-import { celebrate, stagger } from './fx.js?v=1.5.0-mvkt9a3e';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvkt9a3e';
-import { isSupporter } from './premium.js?v=1.5.0-mvkt9a3e';
-import { isInfluencer, onReferralChange, REFERRAL_TIERS } from './referrals.js?v=1.5.0-mvkt9a3e';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.5.0-mvktfm7l';
+import { t, LANG, setLanguage } from './i18n.js?v=1.5.0-mvktfm7l';
+import { showToast } from './ui.js?v=1.5.0-mvktfm7l';
+import { modeIcon, icon } from './transit-ui.js?v=1.5.0-mvktfm7l';
+import { escapeHtml } from './ui.js?v=1.5.0-mvktfm7l';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvktfm7l';
+import { sessionStatus } from './session.js?v=1.5.0-mvktfm7l';
+import { premiumCardHtml } from './premium-ui.js?v=1.5.0-mvktfm7l';
+import { onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvktfm7l';
+import { TIPS } from './pricing.js?v=1.5.0-mvktfm7l';
+import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.5.0-mvktfm7l';
+import { celebrate, stagger } from './fx.js?v=1.5.0-mvktfm7l';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvktfm7l';
+import { isSupporter } from './premium.js?v=1.5.0-mvktfm7l';
+import { isInfluencer, onReferralChange, REFERRAL_TIERS } from './referrals.js?v=1.5.0-mvktfm7l';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.5.0-mvkt9a3e';
+} from './favorites.js?v=1.5.0-mvktfm7l';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -385,6 +386,7 @@ export class SettingsView {
           <div class="set-brand"><img src="icon.svg" alt="" width="36" height="36"> Walkie <span class="set-version">${APP_VERSION}</span></div>
           <p>${t('ניווט רגלי ותחבורה ציבורית, בלי פרסומות.')}</p>
           <p class="set-note">${t('לוחות זמנים, קווים ותחנות: משרד התחבורה (GTFS), דרך הסדנא לידע ציבורי ו-Transitous. זמן אמת: SIRI של משרד התחבורה. מפות: © OpenStreetMap. בתי ספר: מאגר משרד החינוך (data.gov.il).')}</p>
+          ${sessionStatus() ? `<p class="set-note" dir="ltr">sync: ${escapeHtml(sessionStatus())}</p>` : ''}
           ${this.getSupportId?.() ? `<p class="set-note">${t('מזהה תמיכה:')} <bdi>${escapeHtml(this.getSupportId())}</bdi></p>` : ''}
         </div>
       </section>`;
