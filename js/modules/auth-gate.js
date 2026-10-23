@@ -1,12 +1,12 @@
 // חובת התחברות עם Google.
 // בפתיחה: מסך "ברוכים הבאים" עם התחברות עם Google, והוא חוסם את האפליקציה עד שנכנסים (אין דילוג ואין חיבור אנונימי).
 
-import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvksl4eo';
-import { isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvksl4eo';
-import { setFavoritesGuard } from './favorites.js?v=1.5.0-mvksl4eo';
-import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvksl4eo';
-import { t } from './i18n.js?v=1.5.0-mvksl4eo';
-import { track, trackOnce } from './analytics.js?v=1.5.0-mvksl4eo';
+import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvkspsmp';
+import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.5.0-mvkspsmp';
+import { setFavoritesGuard } from './favorites.js?v=1.5.0-mvkspsmp';
+import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkspsmp';
+import { t } from './i18n.js?v=1.5.0-mvkspsmp';
+import { track, trackOnce } from './analytics.js?v=1.5.0-mvkspsmp';
 
 const FLAG = 'walkie:google';   // מחובר עם Google במכשיר הזה (ידוע מיד בפתיחה, לפני ש-Firebase נטען)
 
@@ -56,8 +56,18 @@ export function requireSignIn(action, onAllowed = null) {
 }
 
 /** מסך הפתיחה – רק למי שלא מחובר */
-export function showWelcomeIfNeeded() {
-  if (gateOff() || isSignedIn()) return;
+export async function showWelcomeIfNeeded() {
+  if (gateOff()) return;
+  // מחכים שמצב ההתחברות האמיתי ייטען מהמכשיר, כדי שמשתמש מחובר לא יראה את מסך הכניסה בפתיחה
+  try {
+    const { auth } = await getFirebase();
+    await auth.authStateReady?.();
+    const signedIn = !!auth.currentUser && !auth.currentUser.isAnonymous;
+    writeFlag(signedIn);
+    if (signedIn) return;
+  } catch {
+    if (isSignedIn()) return; // אין רשת: סומכים על הדגל השמור
+  }
   open('welcome');
 }
 

@@ -2,13 +2,13 @@
 
 import {
   isPremium, premiumInfo, currentPrice, getPricing, getStats, co2SavedKg, freeLimit, onPremiumChange
-} from './premium.js?v=1.5.0-mvksl4eo';
-import { PREMIUM_FEATURES, FREE_LIMITS, formatPrice, formatLaunchEnd } from './pricing.js?v=1.5.0-mvksl4eo';
-import { purchase, restore, manageSubscription, storePriceLabel, billingAvailable } from './billing.js?v=1.5.0-mvksl4eo';
-import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvksl4eo';
-import { icon } from './transit-ui.js?v=1.5.0-mvksl4eo';
-import { celebrate } from './fx.js?v=1.5.0-mvksl4eo';
-import { t, LOCALE } from './i18n.js?v=1.5.0-mvksl4eo';
+} from './premium.js?v=1.5.0-mvkspsmp';
+import { PREMIUM_FEATURES, FREE_LIMITS, formatPrice, formatLaunchEnd } from './pricing.js?v=1.5.0-mvkspsmp';
+import { purchase, restore, manageSubscription, storePriceLabel, billingAvailable } from './billing.js?v=1.5.0-mvkspsmp';
+import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkspsmp';
+import { icon } from './transit-ui.js?v=1.5.0-mvkspsmp';
+import { celebrate } from './fx.js?v=1.5.0-mvkspsmp';
+import { t, LOCALE } from './i18n.js?v=1.5.0-mvkspsmp';
 
 const REASONS = {
   stops: (n) => t('בחשבון החינמי אפשר לשמור עד {n} תחנות.', { n }),

@@ -12,8 +12,8 @@ import {
   NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
-} from './config.js?v=1.5.0-mvksl4eo';
-import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.5.0-mvksl4eo';
+} from './config.js?v=1.5.0-mvkspsmp';
+import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.5.0-mvkspsmp';
 import {
   createMap,
   focusPoint,
@@ -24,38 +24,38 @@ import {
   TransitLayer,
   VehiclesLayer,
   MapRotator
-} from './modules/map.js?v=1.5.0-mvksl4eo';
-import { fetchNearbyStops } from './modules/stops.js?v=1.5.0-mvksl4eo';
-import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.5.0-mvksl4eo';
-import { Sheet, showToast } from './modules/ui.js?v=1.5.0-mvksl4eo';
-import { SearchOverlay } from './modules/search.js?v=1.5.0-mvksl4eo';
-import { RouteController } from './modules/route-controller.js?v=1.5.0-mvksl4eo';
-import { TransitController } from './modules/transit-controller.js?v=1.5.0-mvksl4eo';
-import { DirectionsController } from './modules/directions.js?v=1.5.0-mvksl4eo';
-import { initSessionWhenIdle } from './modules/session.js?v=1.5.0-mvksl4eo';
-import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.5.0-mvksl4eo';
-import { TabBar } from './modules/tabs.js?v=1.5.0-mvksl4eo';
-import { LinesView } from './modules/lines-view.js?v=1.5.0-mvksl4eo';
-import { StationsView } from './modules/stations-view.js?v=1.5.0-mvksl4eo';
-import { SettingsView } from './modules/settings-view.js?v=1.5.0-mvksl4eo';
-import { getSettings, onSettingsChange } from './modules/settings.js?v=1.5.0-mvksl4eo';
-import { shareMyLocation, shareTrip } from './modules/share.js?v=1.5.0-mvksl4eo';
-import { QuickBar } from './modules/favorites-ui.js?v=1.5.0-mvksl4eo';
-import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.5.0-mvksl4eo';
-import { loadDepartures } from './modules/arrivals.js?v=1.5.0-mvksl4eo';
-import { PremiumScreen } from './modules/premium-ui.js?v=1.5.0-mvksl4eo';
-import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.5.0-mvksl4eo';
+} from './modules/map.js?v=1.5.0-mvkspsmp';
+import { fetchNearbyStops } from './modules/stops.js?v=1.5.0-mvkspsmp';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.5.0-mvkspsmp';
+import { Sheet, showToast } from './modules/ui.js?v=1.5.0-mvkspsmp';
+import { SearchOverlay } from './modules/search.js?v=1.5.0-mvkspsmp';
+import { RouteController } from './modules/route-controller.js?v=1.5.0-mvkspsmp';
+import { TransitController } from './modules/transit-controller.js?v=1.5.0-mvkspsmp';
+import { DirectionsController } from './modules/directions.js?v=1.5.0-mvkspsmp';
+import { initSessionWhenIdle } from './modules/session.js?v=1.5.0-mvkspsmp';
+import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.5.0-mvkspsmp';
+import { TabBar } from './modules/tabs.js?v=1.5.0-mvkspsmp';
+import { LinesView } from './modules/lines-view.js?v=1.5.0-mvkspsmp';
+import { StationsView } from './modules/stations-view.js?v=1.5.0-mvkspsmp';
+import { SettingsView } from './modules/settings-view.js?v=1.5.0-mvkspsmp';
+import { getSettings, onSettingsChange } from './modules/settings.js?v=1.5.0-mvkspsmp';
+import { shareMyLocation, shareTrip } from './modules/share.js?v=1.5.0-mvkspsmp';
+import { QuickBar } from './modules/favorites-ui.js?v=1.5.0-mvkspsmp';
+import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.5.0-mvkspsmp';
+import { loadDepartures } from './modules/arrivals.js?v=1.5.0-mvkspsmp';
+import { PremiumScreen } from './modules/premium-ui.js?v=1.5.0-mvkspsmp';
+import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.5.0-mvkspsmp';
 import {
   captureAttribution, trackOnce, trackPerf, trackRegion, trackFeature, notePaywall, noteSubscriptionState
-} from './modules/analytics.js?v=1.5.0-mvksl4eo';
-import { CommunityController } from './modules/community-controller.js?v=1.5.0-mvksl4eo';
-import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.5.0-mvksl4eo';
-import { initBilling } from './modules/billing.js?v=1.5.0-mvksl4eo';
-import { supportId } from './modules/session.js?v=1.5.0-mvksl4eo';
-import { escapeHtml } from './modules/ui.js?v=1.5.0-mvksl4eo';
-import { t, translateDom } from './modules/i18n.js?v=1.5.0-mvksl4eo';
-import { initTheme } from './modules/theme.js?v=1.5.0-mvksl4eo';
-import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.5.0-mvksl4eo';
+} from './modules/analytics.js?v=1.5.0-mvkspsmp';
+import { CommunityController } from './modules/community-controller.js?v=1.5.0-mvkspsmp';
+import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.5.0-mvkspsmp';
+import { initBilling } from './modules/billing.js?v=1.5.0-mvkspsmp';
+import { supportId } from './modules/session.js?v=1.5.0-mvkspsmp';
+import { escapeHtml } from './modules/ui.js?v=1.5.0-mvkspsmp';
+import { t, translateDom } from './modules/i18n.js?v=1.5.0-mvkspsmp';
+import { initTheme } from './modules/theme.js?v=1.5.0-mvkspsmp';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.5.0-mvkspsmp';
 
 // טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
 translateDom();
@@ -907,14 +907,17 @@ function showAnnouncement(a) {
 }
 
 // מסך "ברוכים הבאים" (התחברות עם Google או דילוג) – אחרי אנימציית הפתיחה
-(window.walkieIntroDone ?? Promise.resolve()).then(() => {
-  showWelcomeIfNeeded();
+(window.walkieIntroDone ?? Promise.resolve()).then(async () => {
+  await showWelcomeIfNeeded();
   if (!document.querySelector('.auth-gate')) trackOnce('funnel:map', 'funnel.map_reached'); // לא היה מסך כניסה – המפה כבר מולו
 });
 
 // Firebase נטען רק אחרי שהמפה כבר על המסך
-initSessionWhenIdle((session) => {
+const bootSession = () => initSessionWhenIdle((session) => {
   console.info('[Walkie] signed in', session.uid, session.plan);
   if (!settingsView.root.hidden) settingsView.render(); // מזהה התמיכה
   community.start();
 }, { onAnnouncement: showAnnouncement });
+bootSession();
+// כניסה עם Google מתבצעת בלי להפעיל את האפליקציה מחדש: בונים את הסשן עכשיו
+window.addEventListener('walkie:signed-in', bootSession);

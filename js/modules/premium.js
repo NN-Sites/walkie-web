@@ -6,7 +6,7 @@
 //   test  – מצב בדיקה בדפדפן בפיתוח בלבד (localhost)
 // המצב נשמר במכשיר, כדי שהפרימיום יעבוד גם בלי רשת.
 
-import { PRICING, FREE_LIMITS, REFRESH_MS, mergePricing, priceAt } from './pricing.js?v=1.5.0-mvksl4eo';
+import { PRICING, FREE_LIMITS, REFRESH_MS, mergePricing, priceAt } from './pricing.js?v=1.5.0-mvkspsmp';
 
 const KEY = 'walkie:premium';
 const STATS_KEY = 'walkie:stats';

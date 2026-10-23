@@ -5,12 +5,12 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvksl4eo';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvksl4eo';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvksl4eo';
-import { initAccount, markAccountUnavailable, markSignedOut, onAccountChange } from './account.js?v=1.5.0-mvksl4eo';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvksl4eo';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvksl4eo';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkspsmp';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvkspsmp';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkspsmp';
+import { initAccount, markAccountUnavailable, markSignedOut, onAccountChange } from './account.js?v=1.5.0-mvkspsmp';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkspsmp';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkspsmp';
 
 let session = null;
 

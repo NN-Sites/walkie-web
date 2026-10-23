@@ -5,10 +5,10 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvksl4eo';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvksl4eo';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvksl4eo';
-import { t } from './i18n.js?v=1.5.0-mvksl4eo';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkspsmp';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvkspsmp';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvkspsmp';
+import { t } from './i18n.js?v=1.5.0-mvkspsmp';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -133,9 +133,9 @@ export async function signInWithGoogle() {
   }
   current = describe(auth.currentUser);
   emit();
-  // טוענים מחדש: הסשן (מסמך המשתמש, מועדפים, Premium) נבנה מההתחלה לפי החשבון המחובר
-  location.reload();
-  return new Promise(() => {});
+  // בלי הפעלה מחדש: האפליקציה בונה את הסשן (מסמך המשתמש, מועדפים, Premium) לפי החשבון שנכנס
+  window.dispatchEvent(new Event('walkie:signed-in'));
+  return current;
 }
 
 /** התנתקות: המכשיר חוזר להיות אנונימי. המועדפים נשארים במכשיר. */
