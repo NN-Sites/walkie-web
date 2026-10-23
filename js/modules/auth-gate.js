@@ -1,14 +1,12 @@
 // חובת התחברות עם Google.
-// בפתיחה: מסך "ברוכים הבאים" עם התחברות או "דלג". מי שדילג יכול להסתכל (מפה, תחנות, קווים, זמני הגעה),
-// אבל פעולה – תכנון מסלול, שמירת מועדפים, שיתוף – פותחת בקשה להתחבר, וממשיכה לבד אחרי ההתחברות.
-// אם השרת לא זמין (Firebase לא מוגדר / לא עונה) לא נועלים את האפליקציה.
+// בפתיחה: מסך "ברוכים הבאים" עם התחברות עם Google, והוא חוסם את האפליקציה עד שנכנסים (אין דילוג ואין חיבור אנונימי).
 
-import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvkscoi4';
-import { isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkscoi4';
-import { setFavoritesGuard } from './favorites.js?v=1.5.0-mvkscoi4';
-import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkscoi4';
-import { t } from './i18n.js?v=1.5.0-mvkscoi4';
-import { track, trackOnce } from './analytics.js?v=1.5.0-mvkscoi4';
+import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.5.0-mvksl4eo';
+import { isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvksl4eo';
+import { setFavoritesGuard } from './favorites.js?v=1.5.0-mvksl4eo';
+import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvksl4eo';
+import { t } from './i18n.js?v=1.5.0-mvksl4eo';
+import { track, trackOnce } from './analytics.js?v=1.5.0-mvksl4eo';
 
 const FLAG = 'walkie:google';   // מחובר עם Google במכשיר הזה (ידוע מיד בפתיחה, לפני ש-Firebase נטען)
 
@@ -34,14 +32,15 @@ function writeFlag(on) {
   }
 }
 
-/** השרת לא זמין – לא חוסמים כלום */
+/** חובה להתחבר עם Google. היחיד שמכבה את החסימה: Firebase לא מוגדר בכלל (פיתוח) */
 function gateOff() {
-  return !isFirebaseConfigured() || !!accountInfo()?.unavailable;
+  return !isFirebaseConfigured();
 }
 
 export function isSignedIn() {
   const a = accountInfo();
-  if (a && !a.unavailable) return !!a.linked;
+  if (a?.linked) return true;
+  if (a && !a.unavailable) return false;
   return readFlag();
 }
 
@@ -82,12 +81,11 @@ function open(mode, action = '') {
            <h2 class="auth-title">${t('צריך להתחבר')}</h2>
            <p class="auth-text">${escapeHtml(t('כדי {action} צריך להתחבר עם Google. זה לוקח רגע.', { action }))}</p>`}
       <button class="btn-google auth-google" type="button">${GOOGLE_ICON} ${t('התחברות עם Google')}</button>
-      <button class="auth-skip" type="button">${welcome ? t('דלג בינתיים') : t('לא עכשיו')}</button>
-      ${welcome ? `<p class="auth-fine">${t('בלי התחברות אפשר רק להסתכל על המפה, התחנות והקווים.')}</p>` : ''}
+      ${welcome ? `<p class="auth-fine">${t('ההתחברות חובה כדי להשתמש ב-Walkie.')}</p>` : `<button class="auth-skip" type="button">${t('לא עכשיו')}</button>`}
     </div>`;
 
   dialog.querySelector('.auth-google').addEventListener('click', (e) => signIn(e.currentTarget));
-  dialog.querySelector('.auth-skip').addEventListener('click', () => close());
+  dialog.querySelector('.auth-skip')?.addEventListener('click', () => close());
   if (!welcome) {
     // לחיצה מחוץ לכרטיס = "לא עכשיו"
     dialog.addEventListener('click', (e) => {
@@ -135,7 +133,7 @@ async function signIn(btn) {
 /** חלון חזרה מכפתור "אחורה" באנדרואיד: true אם סגרנו חלון */
 export function closeAuthDialog() {
   if (!dialog) return false;
-  close();
+  if (!dialog.classList.contains('is-welcome')) close(); // מסך הכניסה לא ניתן לסגירה
   return true;
 }
 
@@ -143,6 +141,7 @@ export function closeAuthDialog() {
 onAccountChange((a) => {
   if (!a || a.unavailable) return;
   writeFlag(!!a.linked);
+  if (!a.linked && !gateOff() && !dialog) open('welcome'); // מחוברים? לא. המסך חוסם עד כניסה
   if (a.linked && dialog) {
     const next = pending;
     close();

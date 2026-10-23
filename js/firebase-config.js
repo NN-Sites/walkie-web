@@ -60,18 +60,16 @@ export function getFirebase() {
   return firebasePromise;
 }
 
-// התחברות אנונימית – אפס חיכוך: המשתמש לא צריך להירשם כדי להשתתף בצ'אט/מעקב.
-// מחכים קודם שהחיבור השמור ייטען (אחרת משתמש Google מחובר נראה "ריק" בפתיחה),
-// ומשתפים את אותה בקשה – כדי שלא ייווצרו שני משתמשים אנונימיים במקביל.
+// חובה להתחבר עם Google: אין התחברות אנונימית. מחכים שהחיבור השמור ייטען (אחרת משתמש מחובר נראה "ריק" בפתיחה).
+// מי שלא מחובר (או שנשאר מחובר אנונימית מגרסה ישנה) מקבל שגיאה 'sign-in-required'.
 let signInPromise = null;
 export function ensureSignedIn() {
   if (!signInPromise) {
     signInPromise = (async () => {
-      const { auth, modules } = await getFirebase();
+      const { auth } = await getFirebase();
       await auth.authStateReady?.();
-      if (auth.currentUser) return auth.currentUser;
-      const cred = await modules.auth.signInAnonymously(auth);
-      return cred.user;
+      if (auth.currentUser && !auth.currentUser.isAnonymous) return auth.currentUser;
+      throw Object.assign(new Error('sign-in-required'), { code: 'sign-in-required' });
     })().catch((err) => {
       signInPromise = null;
       throw err;

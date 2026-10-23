@@ -5,10 +5,10 @@
 // המונים נצברים בזיכרון ונשלחים בקבוצה, ואם האפליקציה נסגרת לפני השליחה הם נשמרים במכשיר לפתיחה הבאה.
 // אפשר לכבות בהגדרות ← פרטיות.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkscoi4';
-import { getSettings } from './settings.js?v=1.5.0-mvkscoi4';
-import { nearestCity } from './cities.js?v=1.5.0-mvkscoi4';
-import { safeKey } from './keys.js?v=1.5.0-mvkscoi4';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvksl4eo';
+import { getSettings } from './settings.js?v=1.5.0-mvksl4eo';
+import { nearestCity } from './cities.js?v=1.5.0-mvksl4eo';
+import { safeKey } from './keys.js?v=1.5.0-mvksl4eo';
 
 const QUEUE_KEY = 'walkie:analytics:q';
 const ATTR_KEY = 'walkie:attr';
@@ -119,8 +119,7 @@ export async function flush() {
   if (!Object.keys(batch).length) return;
   flushing = true;
   try {
-    await ensureSignedIn();
-    const { firestore, modules } = await getFirebase();
+    const { firestore, modules } = await getFirebase(); // מונים אנונימיים: לא דורשים כניסה (גם מסך הכניסה נספר)
     const { doc, setDoc, increment } = modules.firestore;
     const date = dayKey();
     const shard = Math.floor(Math.random() * SHARDS);

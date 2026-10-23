@@ -5,12 +5,12 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkscoi4';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkscoi4';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkscoi4';
-import { initAccount, markAccountUnavailable, onAccountChange } from './account.js?v=1.5.0-mvkscoi4';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkscoi4';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkscoi4';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvksl4eo';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvksl4eo';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvksl4eo';
+import { initAccount, markAccountUnavailable, markSignedOut, onAccountChange } from './account.js?v=1.5.0-mvksl4eo';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvksl4eo';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvksl4eo';
 
 let session = null;
 
@@ -136,6 +136,10 @@ export async function initSession({ onAnnouncement } = {}) {
     session = { uid: user.uid, isAnonymous: user.isAnonymous, plan: premiumInfo().active ? 'pro' : 'free' };
     return session;
   } catch (err) {
+    if (err?.code === 'sign-in-required') {
+      markSignedOut(); // מסך הכניסה חוסם את האפליקציה עד שנכנסים עם Google
+      return null;
+    }
     console.warn('[Walkie] session init failed', err);
     markAccountUnavailable();
     return null;

@@ -5,10 +5,10 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkscoi4';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvkscoi4';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvkscoi4';
-import { t } from './i18n.js?v=1.5.0-mvkscoi4';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvksl4eo';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvksl4eo';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvksl4eo';
+import { t } from './i18n.js?v=1.5.0-mvksl4eo';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -37,6 +37,12 @@ function describe(user) {
   return google
     ? { linked: true, name: google.displayName ?? user.displayName ?? '', email: google.email ?? user.email ?? '', photo: google.photoURL ?? null }
     : { linked: false, name: '', email: '', photo: null };
+}
+
+/** לא מחובר (עדיין לא נכנס עם Google) */
+export function markSignedOut() {
+  current = { linked: false };
+  emit();
 }
 
 export const accountAvailable = () => isFirebaseConfigured() && !current?.unavailable;
@@ -105,52 +111,31 @@ async function nativeIdToken() {
   return idToken;
 }
 
-/** מחבר את המשתמש הנוכחי לחשבון Google. אם החשבון כבר שייך למשתמש אחר – עוברים אליו. */
+/** כניסה עם Google. באנדרואיד: חלון בחירת החשבון הנייטיב. בדפדפן: חלון קופץ (או מעבר לדף Google ובחזרה) */
 export async function signInWithGoogle() {
   // קודם חלון Google (חייב לקרות מיד בלחיצה); רק אחר כך מתחברים ל-Firebase
   const idToken = await nativeIdToken();
   const { auth, modules } = await getFirebase();
   const a = modules.auth;
-  const user = await ensureSignedIn().catch(() => null);
-  if (!user) throw new Error(t('אין חיבור לשרת כרגע, נסו שוב בעוד רגע'));
-  if (describe(user)?.linked) {
-    current = describe(user);
-    emit();
-    return current;
-  }
-
-  const cred = idToken ? a.GoogleAuthProvider.credential(idToken) : null;
-  try {
-    if (cred) await a.linkWithCredential(user, cred);
-    else {
-      try {
-        await a.linkWithPopup(user, new a.GoogleAuthProvider());
-      } catch (err) {
-        // אייפון ("הוספה למסך הבית") ודפדפנים שחוסמים חלונות קופצים: מעבר לדף ההתחברות וחזרה
-        if (err?.code !== 'auth/popup-blocked' && err?.code !== 'auth/operation-not-supported-in-this-environment') throw err;
-        await a.linkWithRedirect(user, new a.GoogleAuthProvider());
-        return new Promise(() => {}); // הדף עובר לגוגל
-      }
+  await auth.authStateReady?.();
+  if (idToken) {
+    await a.signInWithCredential(auth, a.GoogleAuthProvider.credential(idToken));
+  } else {
+    const provider = new a.GoogleAuthProvider();
+    try {
+      await a.signInWithPopup(auth, provider);
+    } catch (err) {
+      // אייפון ("הוספה למסך הבית") ודפדפנים שחוסמים חלונות קופצים: מעבר לדף ההתחברות וחזרה
+      if (err?.code !== 'auth/popup-blocked' && err?.code !== 'auth/operation-not-supported-in-this-environment') throw err;
+      await a.signInWithRedirect(auth, provider);
+      return new Promise(() => {}); // הדף עובר לגוגל
     }
-  } catch (err) {
-    if (err?.code !== 'auth/credential-already-in-use' && err?.code !== 'auth/email-already-in-use') throw err;
-    // החשבון כבר מחובר למשתמש קיים (למשל מטלפון קודם): נכנסים אליו.
-    // המועדפים שבמכשיר נשארים, ויתמזגו לחשבון אחרי הטעינה מחדש.
-    const existing = cred ?? a.GoogleAuthProvider.credentialFromError(err);
-    if (!existing) throw err;
-    await a.signInWithCredential(auth, existing);
-    location.reload();
-    return accountInfo();
   }
-  await auth.currentUser.reload();
   current = describe(auth.currentUser);
-  if (ref) {
-    const { updateDoc } = modules.firestore;
-    await updateDoc(ref, { profile: { name: current.name, email: current.email, photo: current.photo } }).catch(() => {});
-  }
-  await push();
   emit();
-  return current;
+  // טוענים מחדש: הסשן (מסמך המשתמש, מועדפים, Premium) נבנה מההתחלה לפי החשבון המחובר
+  location.reload();
+  return new Promise(() => {});
 }
 
 /** התנתקות: המכשיר חוזר להיות אנונימי. המועדפים נשארים במכשיר. */

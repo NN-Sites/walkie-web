@@ -123,8 +123,6 @@
     // ספירת צפיות לדף הניהול (המרה: צפיות -> הורדות). כישלון לא פוגע בדף
     const count = async (path) => {
       try {
-        const auth = authMod.getAuth(app);
-        if (!auth.currentUser) await authMod.signInAnonymously(auth);
         const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date());
         const shard = Math.floor(Math.random() * 10);
         await fs.setDoc(fs.doc(db, 'analytics', `${date}_${shard}`), { date, shard, share: { [path]: fs.increment(1) } }, { merge: true });

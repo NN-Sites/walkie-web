@@ -598,5 +598,6 @@ export const EN = {
   'חזרה לצפון': 'Back to north',
   'נתוני שימוש אנונימיים': 'Anonymous usage data',
   'מסכים שנפתחו ותקלות, בלי מיקום ובלי מזהה אישי': 'Screens opened and errors, no location and no personal ID',
-  'הקוד נוצר כשהאפליקציה מתחברת לשרת. נסו שוב בעוד רגע.': 'The code is created once the app connects to the server. Try again in a moment.'
+  'הקוד נוצר כשהאפליקציה מתחברת לשרת. נסו שוב בעוד רגע.': 'The code is created once the app connects to the server. Try again in a moment.',
+  'ההתחברות חובה כדי להשתמש ב-Walkie.': 'Signing in is required to use Walkie.'
 };
