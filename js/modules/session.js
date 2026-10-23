@@ -5,12 +5,12 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkrt633';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkrt633';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkrt633';
-import { initAccount, markAccountUnavailable, onAccountChange } from './account.js?v=1.5.0-mvkrt633';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkrt633';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkrt633';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvks4yx4';
+import { APP_VERSION } from '../config.js?v=1.5.0-mvks4yx4';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvks4yx4';
+import { initAccount, markAccountUnavailable, onAccountChange } from './account.js?v=1.5.0-mvks4yx4';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvks4yx4';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvks4yx4';
 
 let session = null;
 

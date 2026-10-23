@@ -5,10 +5,10 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkrt633';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvkrt633';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvkrt633';
-import { t } from './i18n.js?v=1.5.0-mvkrt633';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvks4yx4';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.5.0-mvks4yx4';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.5.0-mvks4yx4';
+import { t } from './i18n.js?v=1.5.0-mvks4yx4';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -93,21 +93,22 @@ onSettingsChange(schedulePush);
 
 // ---------- התחברות / התנתקות ----------
 
-async function googleCredential(authMod) {
+/** באנדרואיד: חלון בחירת החשבון של Google (נייטיב, בתוך האפליקציה). מחזיר idToken, או null בדפדפן */
+async function nativeIdToken() {
   const native = globalThis.Capacitor?.isNativePlatform?.();
+  if (!native) return null;
   const FA = globalThis.Capacitor?.Plugins?.FirebaseAuthentication;
-  if (native) {
-    if (!FA) throw new Error(t('התחברות עם Google עוד לא זמינה בגרסה הזו'));
-    const res = await FA.signInWithGoogle({ skipNativeAuth: true });
-    const idToken = res?.credential?.idToken;
-    if (!idToken) throw new Error(t('ההתחברות בוטלה'));
-    return authMod.GoogleAuthProvider.credential(idToken);
-  }
-  return null; // בדפדפן: חלון קופץ
+  if (!FA) throw new Error(t('התחברות עם Google עוד לא זמינה בגרסה הזו'));
+  const res = await FA.signInWithGoogle({ skipNativeAuth: true });
+  const idToken = res?.credential?.idToken;
+  if (!idToken) throw new Error(t('ההתחברות בוטלה'));
+  return idToken;
 }
 
 /** מחבר את המשתמש הנוכחי לחשבון Google. אם החשבון כבר שייך למשתמש אחר – עוברים אליו. */
 export async function signInWithGoogle() {
+  // קודם חלון Google (חייב לקרות מיד בלחיצה); רק אחר כך מתחברים ל-Firebase
+  const idToken = await nativeIdToken();
   const { auth, modules } = await getFirebase();
   const a = modules.auth;
   const user = await ensureSignedIn().catch(() => null);
@@ -118,7 +119,7 @@ export async function signInWithGoogle() {
     return current;
   }
 
-  const cred = await googleCredential(a);
+  const cred = idToken ? a.GoogleAuthProvider.credential(idToken) : null;
   try {
     if (cred) await a.linkWithCredential(user, cred);
     else {

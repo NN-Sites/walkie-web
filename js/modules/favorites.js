@@ -1,7 +1,7 @@
 // מועדפים: בית, מקום שני (עבודה / בית ספר), מקומות שמורים, תחנות וקווים מועדפים.
 // נשמר במכשיר (localStorage). בחשבון חינמי יש מגבלה – ראו premium.js.
 
-import { allowAdd } from './premium.js?v=1.5.0-mvkrt633';
+import { allowAdd } from './premium.js?v=1.5.0-mvks4yx4';
 
 // שמירה דורשת חשבון Google (auth-gate.js מגדיר את הבדיקה). מחזיר false = הפעולה בוטלה.
 let saveGuard = () => true;
