@@ -3,8 +3,8 @@
 //    ותחנות אוטובוס (GTFS). "גרג יבנה", "בית ספר אור העתיד", "רמי לוי", "דיזנגוף 50".
 //  - קטגוריה ("מסעדה", "בתי ספר", "סופר"...): כל המקומות מהסוג הזה סביב המשתמש, לפי מרחק.
 
-import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.5.0-mvkudy41';
-import { getCategory, labelForTag } from './categories.js?v=1.5.0-mvkudy41';
+import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.5.0-mvkunw6c';
+import { getCategory, labelForTag } from './categories.js?v=1.5.0-mvkunw6c';
 
 const PHOTON_SEARCH = 'https://photon.komoot.io/api/';
 const PHOTON_REVERSE = 'https://photon.komoot.io/reverse';

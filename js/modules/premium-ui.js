@@ -2,13 +2,13 @@
 
 import {
   isPremium, premiumInfo, currentPrice, getPricing, getStats, co2SavedKg, freeLimit, onPremiumChange
-} from './premium.js?v=1.5.0-mvkudy41';
-import { PREMIUM_FEATURES, FREE_LIMITS, formatPrice, formatLaunchEnd } from './pricing.js?v=1.5.0-mvkudy41';
-import { purchase, restore, manageSubscription, storePriceLabel, billingAvailable } from './billing.js?v=1.5.0-mvkudy41';
-import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkudy41';
-import { icon } from './transit-ui.js?v=1.5.0-mvkudy41';
-import { celebrate } from './fx.js?v=1.5.0-mvkudy41';
-import { t, LOCALE } from './i18n.js?v=1.5.0-mvkudy41';
+} from './premium.js?v=1.5.0-mvkunw6c';
+import { PREMIUM_FEATURES, FREE_LIMITS, formatPrice, formatLaunchEnd } from './pricing.js?v=1.5.0-mvkunw6c';
+import { purchase, restore, manageSubscription, storePriceLabel, billingAvailable } from './billing.js?v=1.5.0-mvkunw6c';
+import { showToast, escapeHtml } from './ui.js?v=1.5.0-mvkunw6c';
+import { icon } from './transit-ui.js?v=1.5.0-mvkunw6c';
+import { celebrate } from './fx.js?v=1.5.0-mvkunw6c';
+import { t, LOCALE } from './i18n.js?v=1.5.0-mvkunw6c';
 
 const REASONS = {
   stops: (n) => t('בחשבון החינמי אפשר לשמור עד {n} תחנות.', { n }),
@@ -78,7 +78,7 @@ export class PremiumScreen {
     return `
       ${reason}
       <div class="pm-price-card">
-        ${p.isLaunch ? `<span class="pm-badge">${t('מחיר השקה · {n}% הנחה', { n: p.discount })}</span>` : ''}
+        ${p.isLaunch ? `<span class="pm-badge">${t('מחיר השקה')}</span>` : ''}
         <div class="pm-price">
           <strong>${formatPrice(p.price, pricing)}</strong><span>${t('לחודש')}</span>
           ${p.isLaunch ? `<s>${formatPrice(p.regular, pricing)}</s>` : ''}
@@ -190,7 +190,7 @@ export function premiumCardHtml() {
     <button class="pm-card" type="button" data-action="open-premium">
       <span class="pm-card-ic">⚡</span>
       <span class="pm-card-text">
-        <strong><bdi>Walkie Premium</bdi> ${p.isLaunch ? `<em><bdi>${t('{n}% הנחה', { n: p.discount })}</bdi></em>` : ''}</strong>
+        <strong><bdi>Walkie Premium</bdi></strong>
         <small>${p.isLaunch ? `<b>${formatPrice(p.price, pricing)}</b> <s>${formatPrice(p.regular, pricing)}</s> ${t('לחודש')} · ${t('עד {date}', { date: formatLaunchEnd(pricing) })}` : `${formatPrice(p.price, pricing)} ${t('לחודש')}`}</small>
       </span>
       ${icon('chevron', 20)}

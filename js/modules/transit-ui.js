@@ -1,12 +1,12 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.5.0-mvkudy41';
-import { lineColor, operatorColor } from './stops.js?v=1.5.0-mvkudy41';
-import { formatNavDistance } from './route-ui.js?v=1.5.0-mvkudy41';
-import { WHATSAPP_ICON } from './share.js?v=1.5.0-mvkudy41';
-import { t, tn, LOCALE } from './i18n.js?v=1.5.0-mvkudy41';
-import { serviceNoticeHtml } from './ui.js?v=1.5.0-mvkudy41';
-import { lineKeyOf, lineUsersHtml } from './community.js?v=1.5.0-mvkudy41';
+import { escapeHtml } from './ui.js?v=1.5.0-mvkunw6c';
+import { lineColor, operatorColor } from './stops.js?v=1.5.0-mvkunw6c';
+import { formatNavDistance } from './route-ui.js?v=1.5.0-mvkunw6c';
+import { WHATSAPP_ICON } from './share.js?v=1.5.0-mvkunw6c';
+import { t, tn, LOCALE } from './i18n.js?v=1.5.0-mvkunw6c';
+import { serviceNoticeHtml } from './ui.js?v=1.5.0-mvkunw6c';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.5.0-mvkunw6c';
 
 const TZ = 'Asia/Jerusalem';
 
