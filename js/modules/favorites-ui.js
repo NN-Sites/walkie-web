@@ -1,8 +1,8 @@
 // סרגל גישה מהירה במסך הבית: 🏠 בית · 💼 עבודה / 🎒 בית ספר · ⭐ מקומות שמורים
 
-import { getFavorites, onFavoritesChange, secondLabel } from './favorites.js?v=1.5.0-mvks4yx4';
-import { escapeHtml } from './ui.js?v=1.5.0-mvks4yx4';
-import { t } from './i18n.js?v=1.5.0-mvks4yx4';
+import { getFavorites, onFavoritesChange, secondLabel } from './favorites.js?v=1.5.0-mvkscoi4';
+import { escapeHtml } from './ui.js?v=1.5.0-mvkscoi4';
+import { t } from './i18n.js?v=1.5.0-mvkscoi4';
 
 export const STAR_ON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="m12 17.3 6.2 3.7-1.6-7 5.4-4.7-7.2-.6L12 2 9.2 8.7 2 9.3l5.4 4.7-1.6 7z"/></svg>';
 export const STAR_OFF = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="m22 9.2-7.2-.6L12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3l6.2 3.7-1.6-7.1L22 9.2ZM12 15.4l-3.8 2.3 1-4.3-3.3-2.9 4.4-.4L12 6.1l1.7 4 4.4.4-3.3 2.9 1 4.3-3.8-2.3Z"/></svg>';

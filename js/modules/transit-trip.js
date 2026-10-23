@@ -4,8 +4,8 @@
 // הרעיון: כל רגלי הנסיעה מחוברות לקו גיאומטרי אחד, וכל מיקום GPS "מוצמד" אליו (כמו בניווט הרגלי).
 // גבולות הרגליים ומיקומי התחנות מחושבים פעם אחת כמרחק לאורך הקו.
 
-import { buildRouteModel, snapToRoute } from './navigation.js?v=1.5.0-mvks4yx4';
-import { distanceMeters } from './geo.js?v=1.5.0-mvks4yx4';
+import { buildRouteModel, snapToRoute } from './navigation.js?v=1.5.0-mvkscoi4';
+import { distanceMeters } from './geo.js?v=1.5.0-mvkscoi4';
 
 const WAIT_RADIUS_M = 40;        // קרוב לתחנה = ממתינים
 const LEFT_STOP_M = 70;          // התרחקנו מתחנת העלייה לאורך הקו = עלינו

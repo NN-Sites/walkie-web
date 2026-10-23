@@ -14,7 +14,8 @@ export const firebaseConfig = {
   // databaseURL: להוסיף כשיוקם Realtime Database (צ'אט / מעקב קהילתי)
 };
 
-const SDK_BASE = 'https://www.gstatic.com/firebasejs/10.12.2';
+// ה-SDK ארוז עם האפליקציה (vendor/firebase), כדי שההתחברות לא תיכשל כשה-CDN לא נגיש מהמכשיר
+const SDK_BASE = new URL('../vendor/firebase', import.meta.url).href;
 
 let firebasePromise = null;
 

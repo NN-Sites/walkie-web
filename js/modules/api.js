@@ -7,9 +7,9 @@ import {
   API_SEARCH_TIMEOUT_MS,
   API_ROUTE_TIMEOUT_MS,
   MAX_STOPS
-} from '../config.js?v=1.5.0-mvks4yx4';
-import { getSettings, transitPrefsParams } from './settings.js?v=1.5.0-mvks4yx4';
-import { LANG } from './i18n.js?v=1.5.0-mvks4yx4';
+} from '../config.js?v=1.5.0-mvkscoi4';
+import { getSettings, transitPrefsParams } from './settings.js?v=1.5.0-mvkscoi4';
+import { LANG } from './i18n.js?v=1.5.0-mvkscoi4';
 
 export class ApiError extends Error {
   constructor(message, status = 0) {
@@ -46,7 +46,7 @@ let localApi = null;
 
 async function getLocalJson(path, { timeoutMs, signal }) {
   if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-  localApi ??= import('../local-api.js?v=1.5.0-mvks4yx4');
+  localApi ??= import('../local-api.js?v=1.5.0-mvkscoi4');
   const { request } = await localApi;
 
   let timer;
