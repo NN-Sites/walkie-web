@@ -5,13 +5,13 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkwm5k0';
-import { APP_VERSION } from '../config.js?v=1.5.0-mvkwm5k0';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.5.0-mvkwm5k0';
-import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.5.0-mvkwm5k0';
-import { showToast } from './ui.js?v=1.5.0-mvkwm5k0';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.5.0-mvkwm5k0';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.5.0-mvkwm5k0';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.6.0-mvn1g0s1';
+import { APP_VERSION } from '../config.js?v=1.6.0-mvn1g0s1';
+import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.6.0-mvn1g0s1';
+import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.6.0-mvn1g0s1';
+import { showToast } from './ui.js?v=1.6.0-mvn1g0s1';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.6.0-mvn1g0s1';
+import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.6.0-mvn1g0s1';
 
 let session = null;
 

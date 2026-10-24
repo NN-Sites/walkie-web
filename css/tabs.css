@@ -1,5 +1,5 @@
 /* =========================================================
-   Walkie – סרגל ניווט תחתון, לשוניות קווים / תחנות / הגדרות
+   Walkie – סרגל ניווט תחתון, לשוניות קווים / תחנות / משחקים / הגדרות
    ========================================================= */
 
 :root { --tabbar-h: 0px; }
@@ -12,7 +12,7 @@
   bottom: 0;
   z-index: 850;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   padding: 6px 4px calc(var(--safe-bottom) + 6px);
   background: rgba(255, 255, 255, 0.97);
   border-top: 1px solid var(--border);
@@ -32,6 +32,7 @@
 }
 
 .tab-pill {
+  position: relative;
   width: 60px;
   height: 32px;
   display: grid;
@@ -41,6 +42,22 @@
 }
 
 .tab:active .tab-pill { transform: scale(0.92); }
+
+/* נקודה אדומה על לשונית: יש שם משהו שמחכה לך */
+.tab-dot {
+  position: absolute;
+  top: 3px;
+  inset-inline-end: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid var(--surface);
+  transform: scale(0);
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.tab.has-badge .tab-dot { transform: scale(1); }
 
 .tab-label {
   font-size: 12px;
@@ -62,10 +79,13 @@
 .fab-stack { bottom: calc(var(--sheet-visible) + var(--tabbar-h, 0px) + 14px); }
 .leaflet-control-attribution { margin-bottom: calc(var(--sheet-visible) + var(--tabbar-h, 0px) - 2px) !important; }
 
-/* בלשונית הגדרות – החיפוש העליון והכפתורים לא רלוונטיים */
+/* בלשונית הגדרות / משחקים – החיפוש העליון והכפתורים לא רלוונטיים */
 body[data-tab="settings"] .topbar,
 body[data-tab="settings"] .fab-stack,
-body[data-tab="settings"] .sheet { visibility: hidden; }
+body[data-tab="settings"] .sheet,
+body[data-tab="games"] .topbar,
+body[data-tab="games"] .fab-stack,
+body[data-tab="games"] .sheet { visibility: hidden; }
 
 body[data-tab="lines"] .topbar,
 body[data-tab="stations"] .topbar { display: none; }
@@ -628,6 +648,7 @@ body.has-route .quick-places,
 body[data-tab="lines"] .quick-places,
 body[data-tab="stations"] .quick-places,
 body[data-tab="settings"] .quick-places,
+body[data-tab="games"] .quick-places,
 body.searching .quick-places { display: none; }
 
 .quick-chip {

@@ -1,11 +1,12 @@
-// סרגל ניווט תחתון: בית | קווים | תחנות | הגדרות
+// סרגל ניווט תחתון: בית | קווים | תחנות | משחקים | הגדרות
 
-import { vibrate } from './settings.js?v=1.5.0-mvkwm5k0';
+import { vibrate } from './settings.js?v=1.6.0-mvn1g0s1';
 
 export class TabBar {
-  constructor(root, { onChange }) {
+  constructor(root, { onChange, getExtraBottom = () => 0 }) {
     this.root = root;
     this.onChange = onChange;
+    this.getExtraBottom = getExtraBottom;
     this.buttons = [...root.querySelectorAll('[data-tab]')];
     this.active = 'home';
     this.hidden = false;
@@ -22,10 +23,10 @@ export class TabBar {
     window.addEventListener('resize', () => this.#syncHeight(), { passive: true });
   }
 
-  /** גובה הסרגל (0 כשהוא מוסתר, למשל בזמן ניווט) */
+  /** גובה כל מה שיושב בתחתית: הסרגל (0 כשהוא מוסתר, למשל בזמן ניווט) + באנר הפרסומת שמתחתיו */
   get height() {
-    if (this.hidden || window.matchMedia('(min-width: 768px)').matches) return 0;
-    return this.root.getBoundingClientRect().height;
+    const bar = this.hidden || window.matchMedia('(min-width: 768px)').matches ? 0 : this.root.getBoundingClientRect().height;
+    return bar + this.getExtraBottom();
   }
 
   select(tab, { silent = false, reselect = false } = {}) {
@@ -44,6 +45,16 @@ export class TabBar {
     if (this.hidden === hidden) return;
     this.hidden = hidden;
     this.root.hidden = hidden;
+    this.#syncHeight();
+  }
+
+  /** נקודה על לשונית (למשל פרס יומי במשחקים שעוד לא נלקח) */
+  setBadge(tab, on) {
+    this.buttons.find((b) => b.dataset.tab === tab)?.classList.toggle('has-badge', on);
+  }
+
+  /** חישוב מחדש של הגובה (למשל כשהבאנר מופיע או נעלם) */
+  refresh() {
     this.#syncHeight();
   }
 

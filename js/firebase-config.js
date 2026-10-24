@@ -69,8 +69,9 @@ export function getFirebase() {
       const firestore = native
         ? firestoreMod.initializeFirestore(app, { experimentalForceLongPolling: true })
         : firestoreMod.getFirestore(app);
-      // בדיקות מקומיות מול אמולטורים: http://localhost:5173/?emu=1 (רק ב-localhost)
-      if (location.hostname === 'localhost' && new URLSearchParams(location.search).has('emu')) {
+      // בדיקות מקומיות מול אמולטורים: http://localhost:5173/?emu=1 (רק ב-localhost).
+      // 127.0.0.1 הוא מקור נפרד עם אחסון נפרד, ולכן אפשר לבדוק משחק בין שני משתמשים בשני חלונות
+      if (['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('emu')) {
         authMod.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
         firestoreMod.connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
       }

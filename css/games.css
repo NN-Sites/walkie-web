@@ -1,0 +1,501 @@
+/* =========================================================
+   Walkie – לשונית משחקים: מסך ראשי, פרס יומי, לוח מובילים ולוחות המשחק
+   ========================================================= */
+
+:root {
+  --gm-p0: #ef4444;   /* שחקן 0: דיסקית אדומה */
+  --gm-p1: #fbbf24;   /* שחקן 1: דיסקית צהובה */
+  --gm-board: #1d4ed8;
+}
+
+.page-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* במסכי המשך (בחירת יריב, חיפוש, משחק) הכותרת הגדולה מיותרת */
+.page.is-sub .page-head { display: none; }
+.page.is-sub .page-body { padding-top: calc(var(--safe-top) * 0 + 10px); }
+
+.gm-card {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.gm-h { margin: 0; font-size: 17px; font-weight: 800; }
+.gm-h2 { margin: 22px 4px 0; font-size: 15px; font-weight: 800; color: var(--brand-600); }
+.gm-sub { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+.gm-empty { margin: 14px 4px; font-size: 14px; text-align: center; color: var(--text-muted); }
+.gm-wide { width: 100%; justify-content: center; margin-top: 10px; }
+
+.gm-avatar {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand-100);
+  color: var(--brand-700);
+  font-size: 20px;
+  font-weight: 800;
+}
+.gm-avatar.sm { width: 34px; height: 34px; font-size: 15px; }
+/* בארבע בשורה צבע השחקן הוא צבע הדיסקית שלו */
+.is-c4 .gm-avatar.p0 { background: color-mix(in srgb, var(--gm-p0) 18%, var(--surface)); color: var(--gm-p0); }
+.is-c4 .gm-avatar.p1 { background: color-mix(in srgb, var(--gm-p1) 25%, var(--surface)); color: #b45309; }
+
+/* ---------- כרטיס עליון: כינוי ונקודות ---------- */
+
+.gm-hero { display: flex; align-items: center; gap: 12px; }
+.gm-hero-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.gm-hero-text strong { font-size: 17px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gm-hero-text small { font-size: 12.5px; color: var(--text-muted); }
+
+.gm-edit {
+  width: 28px;
+  height: 28px;
+  margin-inline-start: 2px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.gm-points {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: #fffbeb;
+  color: #b45309;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- פרס יומי ---------- */
+
+.gm-daily { background: linear-gradient(160deg, var(--brand-50), var(--surface) 70%); }
+
+.gm-daily-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 2px 10px; }
+.gm-daily-head .gm-h { white-space: nowrap; }
+.gm-streak { font-size: 13px; font-weight: 700; color: var(--accent); }
+
+.gm-days {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.gm-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 7px 0 6px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.gm-day-icon { font-size: 15px; line-height: 1.2; }
+.gm-num, .gm-day b, .gm-pts b { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.gm-day b { font-size: 12.5px; font-weight: 800; color: var(--text-2); }
+.gm-day small { font-size: 9.5px; font-weight: 600; }
+
+.gm-day.is-done { border-color: var(--brand); background: var(--brand-100); color: var(--brand-700); }
+.gm-day.is-done b { color: var(--brand-700); }
+.gm-day.is-today { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent); }
+.gm-day.is-big:not(.is-done) { border-color: #fbbf24; background: #fffbeb; }
+.gm-day.is-big:not(.is-done) b { color: #b45309; }
+
+.gm-claim { margin-top: 14px; min-height: 50px; font-size: 17px; }
+.gm-claim:disabled { opacity: 0.6; }
+.gm-claimed { margin: 12px 0 0; text-align: center; font-size: 13.5px; font-weight: 700; color: var(--brand-700); }
+
+/* ---------- רשימת משחקים ---------- */
+
+.gm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+
+.gm-game {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 132px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: start;
+  transition: transform 0.15s var(--ease-spring);
+}
+
+.gm-game:active { transform: scale(0.97); }
+.gm-game-emoji { font-size: 34px; line-height: 1.2; }
+.gm-game strong { margin-top: 4px; font-size: 15.5px; font-weight: 800; }
+.gm-game small { font-size: 12.5px; line-height: 1.35; color: var(--text-muted); }
+
+.gm-game-time {
+  margin-top: auto;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+/* ---------- לוח מובילים ---------- */
+
+.gm-seg { margin-top: 10px; }
+
+.gm-lb {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 4px 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.gm-lb-row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
+.gm-lb-row + .gm-lb-row { border-top: 1px solid var(--border); }
+.gm-lb-row.is-me { background: var(--brand-50); }
+
+.gm-rank { flex: none; width: 28px; text-align: center; font-size: 17px; font-weight: 800; color: var(--text-muted); }
+.gm-lb-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gm-lb-name small { color: var(--text-muted); font-weight: 600; }
+.gm-lb-pts { flex: none; font-size: 15px; font-variant-numeric: tabular-nums; }
+.gm-lb-gap { padding: 0 14px; text-align: center; color: var(--text-muted); line-height: 0.6; }
+
+/* ---------- מסכי המשך: סרגל עליון ---------- */
+
+.gm-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding-top: calc(var(--safe-top) * 0);
+}
+
+.gm-top-title { margin: 0; font-size: 20px; font-weight: 800; }
+.gm-top-game { margin-inline-start: auto; font-size: 14px; font-weight: 700; color: var(--text-muted); }
+[dir="ltr"] .gm-top .icon-btn svg { transform: scaleX(-1); }
+
+.gm-leave {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+/* ---------- בחירת יריב / חיפוש ---------- */
+
+.gm-mode, .gm-search { text-align: center; }
+.gm-mode-emoji { font-size: 64px; line-height: 1.2; }
+.gm-rules { margin: 6px 0 0; font-size: 15px; line-height: 1.55; color: var(--text-2); }
+
+.gm-pts {
+  list-style: none;
+  margin: 14px 0 16px;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gm-pts li {
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.gm-pts b { color: var(--brand-700); }
+.gm-mode .btn-go { margin-top: 0; font-size: 16px; line-height: 1.35; padding: 12px 16px; }
+.gm-mode .btn-secondary small { font-weight: 600; color: var(--text-muted); }
+.gm-mode .set-note { margin-inline: 0; }
+
+.gm-bus { margin: 8px 0 4px; font-size: 56px; line-height: 1.2; animation: gm-drive 2.4s ease-in-out infinite; }
+.gm-search .gm-h { margin-top: 8px; }
+.gm-search > .btn-secondary { margin-top: 18px; }
+.gm-offer { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.gm-offer[hidden] { display: none; }
+.gm-offer .btn-go { margin-top: 10px; }
+
+@keyframes gm-drive {
+  0%, 100% { transform: translateX(-18px); }
+  50% { transform: translateX(18px); }
+}
+
+/* ---------- משחק ---------- */
+
+.gm-players {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.gm-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gm-player .gm-avatar { width: 36px; height: 36px; font-size: 16px; }
+.gm-pname { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 14px; line-height: 1.25; }
+.gm-pname b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gm-pname small { font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
+.gm-player.is-turn { border-color: var(--brand); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 20%, transparent); }
+
+.gm-vs { display: flex; align-items: center; gap: 4px; font-size: 20px; font-weight: 800; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.gm-vs i { font-style: normal; opacity: 0.6; }
+.gm-vs b { color: var(--text); }
+
+.gm-mark { flex: none; font-size: 18px; font-weight: 800; line-height: 1; }
+.gm-mark.xo.p0 { color: var(--brand); }
+.gm-mark.xo.p1 { color: var(--accent); }
+.gm-mark.disc { width: 16px; height: 16px; border-radius: 50%; }
+.gm-mark.disc.p0 { background: var(--gm-p0); }
+.gm-mark.disc.p1 { background: var(--gm-p1); }
+
+.gm-status {
+  min-height: 24px;
+  margin: 14px 0 6px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.gm-board { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+/* איקס עיגול */
+.gm-xo {
+  width: min(100%, 330px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  direction: ltr;
+}
+
+.gm-cell {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font-size: clamp(38px, 14vw, 58px);
+  font-weight: 800;
+  line-height: 1;
+  transition: transform 0.12s var(--ease-spring), background 0.2s ease;
+}
+
+.gm-cell:not(:disabled):active { transform: scale(0.94); }
+.gm-cell:disabled { opacity: 1; cursor: default; }
+.gm-cell.is-x { color: var(--brand); animation: gm-pop 0.25s var(--ease-spring); }
+.gm-cell.is-o { color: var(--accent); animation: gm-pop 0.25s var(--ease-spring); }
+.gm-cell.is-win { background: var(--brand-100); box-shadow: 0 0 0 3px var(--brand); }
+
+/* ארבע בשורה */
+.gm-c4 {
+  width: min(100%, 360px);
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  padding: 8px;
+  border-radius: 20px;
+  background: var(--gm-board);
+  box-shadow: var(--shadow-md);
+  direction: ltr;
+}
+
+.gm-col {
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: 5px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.gm-col:not(:disabled):active { background: rgba(255, 255, 255, 0.18); }
+.gm-col:disabled { opacity: 1; }
+
+.gm-disc {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg) 92%, #000);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gm-disc.p0 { background: var(--gm-p0); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2); }
+.gm-disc.p1 { background: var(--gm-p1); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+.gm-disc.is-last { animation: gm-drop 0.4s var(--ease-out); }
+.gm-disc.is-win { box-shadow: 0 0 0 3px #fff, 0 0 12px 2px #fff; }
+
+/* אבן נייר ומספריים */
+.gm-reveal {
+  width: min(100%, 360px);
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.gm-hand { font-size: 52px; line-height: 1; }
+.gm-reveal-text { flex: 1; text-align: center; font-size: 14px; font-weight: 800; color: var(--text-2); }
+
+.gm-rps { width: min(100%, 360px); display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+.gm-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 0 12px;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s var(--ease-spring), border-color 0.2s ease;
+}
+
+.gm-pick span { font-size: 44px; line-height: 1.1; }
+.gm-pick small { font-size: 12.5px; font-weight: 700; color: var(--text-2); }
+.gm-pick:not(:disabled):active { transform: scale(0.94); }
+.gm-pick:disabled { opacity: 0.55; }
+.gm-pick.is-picked { opacity: 1; border-color: var(--brand); background: var(--brand-50); }
+
+/* מי מהיר יותר */
+.gm-pad {
+  width: min(100%, 360px);
+  min-height: 250px;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border: none;
+  border-radius: 28px;
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.5;
+  text-align: center;
+  touch-action: manipulation;
+  transition: background 0.08s linear;
+}
+
+.gm-pad small { font-size: 13px; font-weight: 600; opacity: 0.85; }
+.gm-pad.is-wait { background: #dc2626; color: #fff; }
+.gm-pad.is-go { background: #16a34a; color: #fff; font-size: 34px; }
+.gm-pad.is-sent { background: var(--user); color: #fff; font-size: 18px; }
+.gm-pad.is-done { min-height: 90px; background: var(--surface-2); }
+.gm-pad:disabled { opacity: 1; }
+.gm-hint { margin: 0; font-size: 12.5px; text-align: center; color: var(--text-muted); }
+
+/* ---------- תוצאה ---------- */
+
+.gm-result { text-align: center; animation: gm-rise 0.35s var(--ease-out); }
+.gm-result[hidden] { display: none; }
+.gm-result-emoji { font-size: 52px; line-height: 1.2; }
+.gm-result-pts { margin: 6px 0 0; font-size: 22px; font-weight: 800; color: var(--brand-700); }
+.gm-result-actions { display: grid; gap: 8px; margin-top: 14px; }
+.gm-result-actions .btn-go { margin-top: 0; min-height: 50px; font-size: 16px; }
+.gm-result-actions .btn-go:disabled { opacity: 0.6; box-shadow: none; }
+.gm-result-actions .btn-secondary { justify-content: center; min-height: 44px; }
+
+/* ---------- חלון כינוי ---------- */
+
+.gm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3600;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(11, 19, 36, 0.5);
+}
+
+.gm-modal-card {
+  width: min(100%, 340px);
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.gm-input {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  outline: none;
+}
+
+.gm-input:focus { border-color: var(--brand); }
+.gm-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.gm-modal-actions .btn, .gm-modal-actions .btn-secondary { min-height: 42px; }
+
+/* ---------- אנימציות ---------- */
+
+@keyframes gm-pop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes gm-drop { from { transform: translateY(-260%); } 60% { transform: translateY(8%); } to { transform: none; } }
+@keyframes gm-rise { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .gm-bus, .gm-cell.is-x, .gm-cell.is-o, .gm-disc.is-last, .gm-result { animation: none; }
+}
+
+/* ---------- מצב לילה ---------- */
+
+[data-theme="dark"] .gm-points { background: #2a2210; color: #fbbf24; }
+[data-theme="dark"] .gm-day.is-big:not(.is-done) { background: #2a2210; border-color: #a16207; }
+[data-theme="dark"] .gm-day.is-big:not(.is-done) b { color: #fbbf24; }
+[data-theme="dark"] .is-c4 .gm-avatar.p1 { color: #fbbf24; }
+[data-theme="dark"] .gm-disc:not(.p0):not(.p1) { background: #0b1017; }
+
+/* ---------- מסכים רחבים ---------- */
+
+@media (min-width: 768px) {
+  .gm-grid { grid-template-columns: repeat(2, 1fr); }
+}

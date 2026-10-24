@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light">
+  <title>Walkie – ניהול</title>
+  <link rel="icon" type="image/svg+xml" href="../icon.svg">
+  <link rel="stylesheet" href="../vendor/heebo/heebo.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- נפתח כקובץ (file://): הדפדפן חוסם את קוד הדף (type="module") וגם את הכניסה עם Google,
+       ובלי ההודעה הזו רואים רק דף לבן -->
+  <script>
+    if (location.protocol === 'file:') {
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.innerHTML =
+          '<main dir="rtl" style="max-width:520px;margin:12vh auto;padding:24px;font-family:system-ui,Arial,sans-serif;line-height:1.6;color:#0b1324">' +
+          '<h1 style="font-size:22px">דף הניהול לא נפתח מקובץ</h1>' +
+          '<p>הדפדפן לא מריץ את הדף כשהוא נפתח ישירות מהמחשב (file://), וגם הכניסה עם Google עובדת רק מכתובת אינטרנט.</p>' +
+          '<p><b>הדרך הקלה:</b> לחיצה כפולה על <code>admin.cmd</code> בתיקייה <code>walkie</code>. הוא מפעיל את השרת המקומי ופותח את הדף.</p>' +
+          '<p>או באתר: <a href="https://walkie-4a743.web.app/admin/">walkie-4a743.web.app/admin</a></p>' +
+          '</main>';
+      });
+    }
+  </script>
+
+  <!-- מסך כניסה -->
+  <main id="login" class="login" hidden>
+    <div class="login-card">
+      <img src="../icon.svg" alt="" width="72" height="72">
+      <h1>Walkie <span>Admin</span></h1>
+      <p>כניסה למנהלים בלבד, עם חשבון Google מורשה.</p>
+      <button id="btn-login" class="btn btn-primary" type="button">כניסה עם Google</button>
+      <a class="login-demo" href="?demo=1">צפייה בהדגמה עם נתונים לדוגמה</a>
+      <p id="login-error" class="login-error" hidden></p>
+    </div>
+  </main>
+
+  <!-- הדף עצמו -->
+  <div id="app" class="shell" hidden>
+    <aside class="side">
+      <div class="side-brand">
+        <img src="../icon.svg" alt="" width="36" height="36">
+        <div><strong>Walkie</strong><small>ניהול</small></div>
+      </div>
+      <nav class="side-nav" aria-label="ניווט">
+        <button type="button" data-view="overview" class="is-active"><span>📊</span>סקירה כללית</button>
+        <button type="button" data-view="acquisition"><span>🧲</span>רכישת משתמשים</button>
+        <button type="button" data-view="revenue"><span>💰</span>מנויים והכנסות</button>
+        <button type="button" data-view="product"><span>🛠️</span>שיפור המוצר</button>
+        <button type="button" data-view="geo"><span>🗺️</span>אזורים ומכשירים</button>
+        <button type="button" data-view="users"><span>👥</span>משתמשים</button>
+        <button type="button" data-view="control"><span>📡</span>בקרה והודעות</button>
+        <button type="button" data-view="premium"><span>💎</span>Premium ומחירים</button>
+        <button type="button" data-view="limits"><span>🎛️</span>מגבלות ופיצ'רים</button>
+        <button type="button" data-view="announce"><span>📣</span>הודעה למשתמשים</button>
+        <button type="button" data-view="admins"><span>🛡️</span>מנהלים ויומן</button>
+      </nav>
+      <div class="side-user">
+        <div id="me" class="me"></div>
+        <button id="btn-logout" class="btn btn-ghost btn-sm" type="button">יציאה</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div id="demo-banner" class="demo-banner" hidden>
+        מצב הדגמה: נתונים מומצאים, ושום שינוי לא נשמר. <a href="./">למצב אמיתי</a>
+      </div>
+      <header class="top">
+        <h1 id="view-title">סקירה כללית</h1>
+        <div class="top-actions">
+          <span id="updated" class="muted"></span>
+          <button id="btn-refresh" class="btn btn-ghost btn-sm" type="button">↻ רענון</button>
+        </div>
+      </header>
+      <section id="view" class="view" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <!-- פאנל פרטי משתמש -->
+  <div id="drawer" class="drawer" hidden>
+    <div class="drawer-backdrop" data-close></div>
+    <aside class="drawer-panel" role="dialog" aria-label="פרטי משתמש">
+      <div id="drawer-body"></div>
+    </aside>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

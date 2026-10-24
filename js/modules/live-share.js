@@ -2,14 +2,15 @@
 // ובדף הצפייה (public/live/) מוצעת לו הורדת האפליקציה (עם קוד ההזמנה שלי).
 //
 // נכתב מסמך liveShares/{מזהה אקראי} שמתעדכן כל כמה שניות מהמיקום האחרון. הקישור הוא ההרשאה לצפות;
-// השיתוף נגמר כשהנסיעה נגמרת, כשלוחצים "הפסק שיתוף", או כשהאפליקציה נסגרת (הדף מציג "השיתוף הסתיים").
+// השיתוף נגמר כשהנסיעה נגמרת או כשלוחצים "הפסק שיתוף": המיקום, המסלול והיעד נמחקים מהמסמך והדף מציג "השיתוף הסתיים".
+// אם האפליקציה נסגרת בלי לעצור, הדף מציג "השיתוף הסתיים" אחרי 15 דקות בלי עדכון, אבל הנתונים האחרונים נשארים במסמך.
 
-import { SHARE_BASE } from '../config.js?v=1.5.0-mvkwm5k0';
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.5.0-mvkwm5k0';
-import { getReferral } from './referrals.js?v=1.5.0-mvkwm5k0';
-import { openWhatsApp } from './share.js?v=1.5.0-mvkwm5k0';
-import { track } from './analytics.js?v=1.5.0-mvkwm5k0';
-import { t } from './i18n.js?v=1.5.0-mvkwm5k0';
+import { SHARE_BASE } from '../config.js?v=1.6.0-mvn1g0s1';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.6.0-mvn1g0s1';
+import { getReferral } from './referrals.js?v=1.6.0-mvn1g0s1';
+import { openWhatsApp } from './share.js?v=1.6.0-mvn1g0s1';
+import { track } from './analytics.js?v=1.6.0-mvn1g0s1';
+import { t } from './i18n.js?v=1.6.0-mvn1g0s1';
 
 const UPDATE_MS = 8000;
 const MAX_PATH_POINTS = 160;
@@ -83,7 +84,11 @@ export async function startLiveShare({ trip, getState }) {
       clearInterval(timer);
       active = null;
       track('share.trip_stopped');
-      await updateDoc(ref, { active: false, updatedAt: Date.now() }).catch(() => {});
+      // מוחקים מהשרת את המיקום, המסלול והיעד: דף הצפייה יציג רק "השיתוף הסתיים"
+      await updateDoc(ref, {
+        active: false, updatedAt: Date.now(),
+        pos: null, dest: null, path: [], destName: '', lineText: null, arrival: null
+      }).catch(() => {});
     }
   };
   track('share.trip_created');

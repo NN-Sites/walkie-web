@@ -36,16 +36,18 @@
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
   <!-- Leaflet והפונט ארוזים עם האפליקציה: המפה עולה גם כשהרשת איטית, ובלי בקשות ל-CDN -->
-  <link rel="stylesheet" href="vendor/heebo/heebo.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="css/style.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="css/navigation.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="css/transit.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="css/tabs.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="css/premium.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="css/motion.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="css/community.css?v=1.5.0-mvkwm5k0">
-  <link rel="stylesheet" href="css/theme.css?v=1.5.0-mvkwm5k0">
+  <link rel="stylesheet" href="vendor/heebo/heebo.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/style.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/navigation.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/transit.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/tabs.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/ads.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/premium.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/motion.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/community.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/games.css?v=1.6.0-mvn1g0s1">
+  <link rel="stylesheet" href="css/theme.css?v=1.6.0-mvn1g0s1">
   <!-- אנימציית פתיחה (~1.5 שנ'): הלוגו מצטייר, ואז עיגול נפתח מהלוגו אל האפליקציה.
        בתוך ה-HTML כדי שתופיע מהפריים הראשון, בהמשך ישיר למסך הפתיחה של אנדרואיד (אותו צבע).
        כל האנימציות כאן הן transform/opacity בלבד – רצות על ה-GPU (compositor), ולכן נשארות חלקות
@@ -305,6 +307,18 @@
     <div id="settings-body" class="page-body"></div>
   </section>
 
+  <!-- מסך משחקים -->
+  <section id="games-page" class="page" aria-label="משחקים" hidden>
+    <header class="page-head">
+      <h1 class="page-title">משחקים</h1>
+      <p class="page-sub">מחכים לאוטובוס? שחקו מול מישהו שמחכה כמוכם</p>
+    </header>
+    <div id="games-body" class="page-body"></div>
+  </section>
+
+  <!-- באנר פרסומת קבוע בתחתית המסך (ad-banner.js) -->
+  <aside id="ad-banner" class="ad-banner" aria-label="פרסומת"></aside>
+
   <!-- סרגל ניווט תחתון -->
   <nav id="tabbar" class="tabbar" aria-label="ניווט ראשי" role="tablist">
     <button class="tab is-active" type="button" role="tab" aria-selected="true" data-tab="home">
@@ -318,6 +332,10 @@
     <button class="tab" type="button" role="tab" aria-selected="false" data-tab="stations">
       <span class="tab-pill"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 2C8 2 4 2.5 4 6v9.5A3.5 3.5 0 0 0 7.5 19L6 20.5v.5h2.2l2-2h3.6l2 2H18v-.5L16.5 19a3.5 3.5 0 0 0 3.5-3.5V6c0-3.5-3.6-4-8-4ZM7.5 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3.5-7H6V6h5v4Zm2 0V6h5v4h-5Zm3.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg></span>
       <span class="tab-label">תחנות</span>
+    </button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-tab="games">
+      <span class="tab-pill"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M21.6 16.1 20.5 8.4A4 4 0 0 0 16.5 5h-9a4 4 0 0 0-4 3.4l-1.1 7.7A2.5 2.5 0 0 0 4.9 19c.7 0 1.3-.3 1.8-.8L9 16h6l2.3 2.2c.5.5 1.1.8 1.8.8a2.5 2.5 0 0 0 2.5-2.9ZM11 11H9v2H8v-2H6v-1h2V8h1v2h2v1Zm4-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm2 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg><i class="tab-dot" aria-hidden="true"></i></span>
+      <span class="tab-label">משחקים</span>
     </button>
     <button class="tab" type="button" role="tab" aria-selected="false" data-tab="settings">
       <span class="tab-pill"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M19.1 12.9a7 7 0 0 0 0-1.8l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.6-.9L14.8 3h-4l-.4 2.6c-.6.2-1.1.5-1.6.9l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 1.8l-2 1.6 2 3.4 2.4-1c.5.4 1 .7 1.6.9l.4 2.6h4l.4-2.6c.6-.2 1.1-.5 1.6-.9l2.4 1 2-3.4-2.1-1.6ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg></span>
@@ -340,8 +358,8 @@
     <div id="search-results" class="search-results"></div>
   </div>
 
-  <script src="js/runtime-config.js?v=1.5.0-mvkwm5k0"></script>
-  <script src="vendor/leaflet/leaflet.js?v=1.5.0-mvkwm5k0"></script>
-  <script type="module" src="js/app.js?v=1.5.0-mvkwm5k0"></script>
+  <script src="js/runtime-config.js?v=1.6.0-mvn1g0s1"></script>
+  <script src="vendor/leaflet/leaflet.js?v=1.6.0-mvn1g0s1"></script>
+  <script type="module" src="js/app.js?v=1.6.0-mvn1g0s1"></script>
 </body>
 </html>

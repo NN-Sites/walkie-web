@@ -35,6 +35,7 @@
       background: var(--surface); border-radius: 22px 22px 0 0; margin-top: -22px; position: relative; z-index: 500;
       padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 16px); box-shadow: 0 -8px 30px rgba(11,19,36,.18);
     }
+    .sheet.ended { margin-top: auto; }
     .row { display: flex; align-items: center; gap: 12px; }
     .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--live); flex: none; box-shadow: 0 0 0 0 rgba(22,163,74,.6); animation: pulse 1.8s infinite; }
     .dot.off { background: var(--muted); animation: none; }
@@ -144,17 +145,34 @@
     }
 
     function render(data) {
-      ensureMap(data);
       const age = Date.now() - (data.updatedAt || 0);
       const ended = data.active === false || age > 15 * 60000;
       const stale = !ended && age > 90000;
 
+      // שיתוף שנגמר: לא מציגים מיקום, מסלול או יעד, רק שהוא הסתיים
+      if (ended) {
+        $('loading').hidden = true;
+        $('map').hidden = true;
+        $('sheet').hidden = false;
+        $('sheet').classList.add('ended');
+        $('title').textContent = 'השיתוף הסתיים';
+        $('sub').textContent = '';
+        $('status-dot').className = 'dot off';
+        $('eta').hidden = true;
+        last = data;
+        return;
+      }
+
+      ensureMap(data);
+      $('map').hidden = false;
+      $('sheet').classList.remove('ended');
+
       $('title').textContent = `בדרך ל${data.destName || 'יעד'}`;
       const how = data.mode === 'transit' ? `🚌 בתחבורה ציבורית${data.lineText ? ` (${data.lineText})` : ''}` : '🚶 בהליכה';
-      $('sub').textContent = ended ? 'השיתוף הסתיים' : stale ? `${how} · המיקום לא התעדכן ${Math.round(age / 60000)} דק'` : how;
-      $('status-dot').className = `dot${ended ? ' off' : stale ? ' warn' : ''}`;
+      $('sub').textContent = stale ? `${how} · המיקום לא התעדכן ${Math.round(age / 60000)} דק'` : how;
+      $('status-dot').className = `dot${stale ? ' warn' : ''}`;
 
-      if (data.arrival && !ended) {
+      if (data.arrival) {
         $('eta').hidden = false;
         $('eta').innerHTML = `${new Date(data.arrival).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' })}<small>הגעה משוערת</small>`;
       } else {
@@ -178,7 +196,7 @@
           const bounds = L.latLngBounds([ll]);
           if (data.dest) bounds.extend([data.dest.lat, data.dest.lng]);
           map.fitBounds(bounds.pad(0.35), { maxZoom: 16 });
-        } else if (!ended && !map.getBounds().pad(-0.1).contains(ll)) {
+        } else if (!map.getBounds().pad(-0.1).contains(ll)) {
           map.panTo(ll);
         }
       }

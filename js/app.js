@@ -12,8 +12,8 @@ import {
   NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
-} from './config.js?v=1.5.0-mvkwm5k0';
-import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.5.0-mvkwm5k0';
+} from './config.js?v=1.6.0-mvn1g0s1';
+import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.6.0-mvn1g0s1';
 import {
   createMap,
   focusPoint,
@@ -24,38 +24,40 @@ import {
   TransitLayer,
   VehiclesLayer,
   MapRotator
-} from './modules/map.js?v=1.5.0-mvkwm5k0';
-import { fetchNearbyStops } from './modules/stops.js?v=1.5.0-mvkwm5k0';
-import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.5.0-mvkwm5k0';
-import { Sheet, showToast } from './modules/ui.js?v=1.5.0-mvkwm5k0';
-import { SearchOverlay } from './modules/search.js?v=1.5.0-mvkwm5k0';
-import { RouteController } from './modules/route-controller.js?v=1.5.0-mvkwm5k0';
-import { TransitController } from './modules/transit-controller.js?v=1.5.0-mvkwm5k0';
-import { DirectionsController } from './modules/directions.js?v=1.5.0-mvkwm5k0';
-import { initSessionWhenIdle } from './modules/session.js?v=1.5.0-mvkwm5k0';
-import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.5.0-mvkwm5k0';
-import { TabBar } from './modules/tabs.js?v=1.5.0-mvkwm5k0';
-import { LinesView } from './modules/lines-view.js?v=1.5.0-mvkwm5k0';
-import { StationsView } from './modules/stations-view.js?v=1.5.0-mvkwm5k0';
-import { SettingsView } from './modules/settings-view.js?v=1.5.0-mvkwm5k0';
-import { getSettings, onSettingsChange } from './modules/settings.js?v=1.5.0-mvkwm5k0';
-import { shareMyLocation, shareTrip } from './modules/share.js?v=1.5.0-mvkwm5k0';
-import { QuickBar } from './modules/favorites-ui.js?v=1.5.0-mvkwm5k0';
-import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.5.0-mvkwm5k0';
-import { loadDepartures } from './modules/arrivals.js?v=1.5.0-mvkwm5k0';
-import { PremiumScreen } from './modules/premium-ui.js?v=1.5.0-mvkwm5k0';
-import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.5.0-mvkwm5k0';
+} from './modules/map.js?v=1.6.0-mvn1g0s1';
+import { fetchNearbyStops } from './modules/stops.js?v=1.6.0-mvn1g0s1';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.6.0-mvn1g0s1';
+import { Sheet, showToast } from './modules/ui.js?v=1.6.0-mvn1g0s1';
+import { SearchOverlay } from './modules/search.js?v=1.6.0-mvn1g0s1';
+import { RouteController } from './modules/route-controller.js?v=1.6.0-mvn1g0s1';
+import { TransitController } from './modules/transit-controller.js?v=1.6.0-mvn1g0s1';
+import { DirectionsController } from './modules/directions.js?v=1.6.0-mvn1g0s1';
+import { initSessionWhenIdle } from './modules/session.js?v=1.6.0-mvn1g0s1';
+import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.6.0-mvn1g0s1';
+import { TabBar } from './modules/tabs.js?v=1.6.0-mvn1g0s1';
+import { LinesView } from './modules/lines-view.js?v=1.6.0-mvn1g0s1';
+import { StationsView } from './modules/stations-view.js?v=1.6.0-mvn1g0s1';
+import { SettingsView } from './modules/settings-view.js?v=1.6.0-mvn1g0s1';
+import { GamesView } from './modules/games-view.js?v=1.6.0-mvn1g0s1';
+import { getSettings, onSettingsChange } from './modules/settings.js?v=1.6.0-mvn1g0s1';
+import { shareMyLocation, shareTrip } from './modules/share.js?v=1.6.0-mvn1g0s1';
+import { QuickBar } from './modules/favorites-ui.js?v=1.6.0-mvn1g0s1';
+import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.6.0-mvn1g0s1';
+import { loadDepartures } from './modules/arrivals.js?v=1.6.0-mvn1g0s1';
+import { PremiumScreen } from './modules/premium-ui.js?v=1.6.0-mvn1g0s1';
+import { AdBanner } from './modules/ad-banner.js?v=1.6.0-mvn1g0s1';
+import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.6.0-mvn1g0s1';
 import {
   captureAttribution, trackOnce, trackPerf, trackRegion, trackFeature, notePaywall, noteSubscriptionState
-} from './modules/analytics.js?v=1.5.0-mvkwm5k0';
-import { CommunityController } from './modules/community-controller.js?v=1.5.0-mvkwm5k0';
-import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.5.0-mvkwm5k0';
-import { initBilling } from './modules/billing.js?v=1.5.0-mvkwm5k0';
-import { supportId } from './modules/session.js?v=1.5.0-mvkwm5k0';
-import { escapeHtml } from './modules/ui.js?v=1.5.0-mvkwm5k0';
-import { t, translateDom } from './modules/i18n.js?v=1.5.0-mvkwm5k0';
-import { initTheme } from './modules/theme.js?v=1.5.0-mvkwm5k0';
-import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.5.0-mvkwm5k0';
+} from './modules/analytics.js?v=1.6.0-mvn1g0s1';
+import { CommunityController } from './modules/community-controller.js?v=1.6.0-mvn1g0s1';
+import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.6.0-mvn1g0s1';
+import { initBilling } from './modules/billing.js?v=1.6.0-mvn1g0s1';
+import { supportId } from './modules/session.js?v=1.6.0-mvn1g0s1';
+import { escapeHtml } from './modules/ui.js?v=1.6.0-mvn1g0s1';
+import { t, translateDom } from './modules/i18n.js?v=1.6.0-mvn1g0s1';
+import { initTheme } from './modules/theme.js?v=1.6.0-mvn1g0s1';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.6.0-mvn1g0s1';
 
 // טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
 translateDom();
@@ -322,6 +324,11 @@ const settingsView = new SettingsView(document.getElementById('settings-page'), 
   getSupportId: supportId
 });
 
+// משחקים: נקודה על הלשונית כשיש פרס יומי שלא נלקח, או כשהתור שלי במשחק שברקע
+const gamesView = new GamesView(document.getElementById('games-page'), {
+  onBadge: (on) => tabbar?.setBadge('games', on)
+});
+
 // סרגל גישה מהירה: בית · עבודה/בית ספר · מקומות שמורים
 new QuickBar(document.getElementById('quick-places'), {
   onGo: (place) => openDirectionsTo(place),
@@ -364,9 +371,25 @@ onFavoritesChange(() => {
   render();
 });
 
+let adBanner = null;
 tabbar = new TabBar(document.getElementById('tabbar'), {
-  onChange: (tab, prev, opts) => onTabChange(tab, prev, opts)
+  onChange: (tab, prev, opts) => onTabChange(tab, prev, opts),
+  getExtraBottom: () => adBanner?.height ?? 0
 });
+// באנר פרסומת קבוע בתחתית: כשהוא מופיע / משתנה, הסרגל והלוח מתיישבים מחדש מעליו
+adBanner = new AdBanner(document.getElementById('ad-banner'), {
+  openPremium: () => {
+    notePaywall('banner');
+    premiumScreen.open();
+  },
+  openInvite: openInvitePage,
+  onResize: () => {
+    tabbar.refresh();
+    sheet.refreshLayout();
+  }
+});
+tabbar.refresh(); // הבאנר כבר קיים עכשיו: מחשבים את הגובה המשותף מחדש
+gamesView.refreshBadge(); // הלשונית כבר קיימת: מציגים נקודה אם יש פרס יומי
 sheet.refreshLayout();
 
 onSettingsChange((s) => {
@@ -601,6 +624,7 @@ function onTabChange(tab, prev, { reselect = false } = {}) {
     if (prev === 'lines') linesView.deactivate();
     if (prev === 'stations') stationsView.deactivate();
     if (prev === 'settings') settingsView.hide();
+    if (prev === 'games') gamesView.hide();
   }
 
   stopsLayer.setVisible(false);
@@ -625,6 +649,9 @@ function onTabChange(tab, prev, { reselect = false } = {}) {
       break;
     case 'settings':
       settingsView.show();
+      break;
+    case 'games':
+      gamesView.show({ reset: reselect });
       break;
     default:
       break;
@@ -843,6 +870,7 @@ function handleBack() {
   if (directions.isActive) return directions.close();
   if (tabbar.active === 'lines' && linesView.mode !== 'list') return linesView.handleAction('line-back', {});
   if (tabbar.active === 'stations' && stationsView.mode !== 'list') return stationsView.handleAction('station-back', {});
+  if (tabbar.active === 'games' && gamesView.handleBack()) return;
   if (tabbar.active !== 'home') return tabbar.select('home');
   if (sheet.snap === 'full') return sheet.setSnap('half');
   if (state.selectedId) {
