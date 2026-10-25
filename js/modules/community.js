@@ -1,9 +1,9 @@
 // קהילה: כמה משתמשי Walkie על כל קו, דיווחים על אוטובוסים, חסימות, הודעות מהמנהל וסקרים.
 // כל הפונקציות שקטות: אם השרת לא זמין האפליקציה ממשיכה לעבוד כרגיל.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvo8e244';
-import { track, safeKey } from './analytics.js?v=1.8.0-mvo8e244';
-import { t } from './i18n.js?v=1.8.0-mvo8e244';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvoa2j6c';
+import { track, safeKey } from './analytics.js?v=1.8.0-mvoa2j6c';
+import { t } from './i18n.js?v=1.8.0-mvoa2j6c';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -24,7 +24,7 @@ export function lineUsersHtml(n) {
 }
 
 
-export { lineKeyOf } from './keys.js?v=1.8.0-mvo8e244';
+export { lineKeyOf } from './keys.js?v=1.8.0-mvoa2j6c';
 
 const presenceSources = { view: null, trip: null };
 let presenceTimer = null;
@@ -102,7 +102,7 @@ export async function fetchLineUsers(lineKey) {
 
 // ---------- דיווחים ----------
 
-export { REPORT_TYPES } from './report-types.js?v=1.8.0-mvo8e244';
+export { REPORT_TYPES } from './report-types.js?v=1.8.0-mvoa2j6c';
 
 const REPORT_COOLDOWN_MS = 60000;
 let lastReportAt = 0;

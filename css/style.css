@@ -97,6 +97,11 @@ button:focus-visible {
   background: #eef0f3;
 }
 
+.attribution-fixed {
+  position: fixed !important;
+  z-index: 400;
+}
+
 .leaflet-container {
   font-family: inherit;
   background: #eef0f3;

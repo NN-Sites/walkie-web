@@ -1,8 +1,8 @@
 // שכבת המפה: Leaflet + מפה וקטורית חינמית של OpenFreeMap (בלי מפתח), עם אריחי OSM כגיבוי. סמן משתמש ותחנות.
 /* global L */
 
-import { STOPS_DETAIL_ZOOM } from '../config.js?v=1.8.0-mvo8e244';
-import { createMotion } from './vehicle-motion.js?v=1.8.0-mvo8e244';
+import { STOPS_DETAIL_ZOOM } from '../config.js?v=1.8.0-mvoa2j6c';
+import { createMotion } from './vehicle-motion.js?v=1.8.0-mvoa2j6c';
 
 const BUS_SVG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .9.4 1.7 1 2.2V20c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h8v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6v10Zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM18 11H6V6h12v5Z"/></svg>';
@@ -38,6 +38,12 @@ async function loadStyle() {
 
 /** מוסיף את המפה הוקטורית; נכשל (reject) אם היא לא נטענת בזמן, כדי לעבור לגיבוי */
 async function addVectorMap(map, onReady) {
+  // עברית ברכיב המפה הוקטורית: בלי התוסף הזה האותיות מצוירות הפוך (כתב מראה)
+  try {
+    globalThis.maplibregl.setRTLTextPlugin(new URL('vendor/maplibre/mapbox-gl-rtl-text.js', document.baseURI).href, false)?.catch?.(() => {});
+  } catch {
+    // כבר נטען
+  }
   const style = await loadStyle();
   const layer = L.maplibreGL({
     style,
@@ -103,6 +109,10 @@ export function createMap(elementId, center, zoom, { onTilesReady = null } = {})
   else addRaster();
 
   map.attributionControl.setPrefix(false);
+  // זכויות היוצרים מחוץ למכולת המפה: כשהמפה מסתובבת הטקסט נשאר ישר ובמקומו
+  const attribution = map.attributionControl.getContainer().parentElement;
+  attribution.classList.add('attribution-fixed');
+  document.body.appendChild(attribution);
 
   // בזום רחוק – תחנות כנקודות קטנות (CSS בלבד, בלי לבנות סמנים מחדש)
   const updateZoomClass = () => {

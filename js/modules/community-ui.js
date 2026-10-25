@@ -1,15 +1,15 @@
 // מסכים של הקהילה: הזמנת חברים, דיווח על אוטובוס, שיתוף נסיעה בלייב, סקרים, הודעות מהמנהל ומסך חסימה.
 
-import { t, tn } from './i18n.js?v=1.8.0-mvo8e244';
-import { escapeHtml, showToast } from './ui.js?v=1.8.0-mvo8e244';
-import { icon } from './transit-ui.js?v=1.8.0-mvo8e244';
-import { celebrate } from './fx.js?v=1.8.0-mvo8e244';
-import { track } from './analytics.js?v=1.8.0-mvo8e244';
-import { REPORT_TYPES } from './report-types.js?v=1.8.0-mvo8e244';
-import { submitReport, markBroadcastSeen, answerSurvey, markSurveyDone } from './community.js?v=1.8.0-mvo8e244';
+import { t, tn } from './i18n.js?v=1.8.0-mvoa2j6c';
+import { escapeHtml, showToast } from './ui.js?v=1.8.0-mvoa2j6c';
+import { icon } from './transit-ui.js?v=1.8.0-mvoa2j6c';
+import { celebrate } from './fx.js?v=1.8.0-mvoa2j6c';
+import { track } from './analytics.js?v=1.8.0-mvoa2j6c';
+import { REPORT_TYPES } from './report-types.js?v=1.8.0-mvoa2j6c';
+import { submitReport, markBroadcastSeen, answerSurvey, markSurveyDone } from './community.js?v=1.8.0-mvoa2j6c';
 
-export { lineUsersText, lineUsersHtml } from './community.js?v=1.8.0-mvo8e244';
-import { requireSignIn } from './auth-gate.js?v=1.8.0-mvo8e244';
+export { lineUsersText, lineUsersHtml } from './community.js?v=1.8.0-mvoa2j6c';
+import { requireSignIn } from './auth-gate.js?v=1.8.0-mvoa2j6c';
 
 // ---------- עזרים ----------
 
