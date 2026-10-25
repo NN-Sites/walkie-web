@@ -1,18 +1,18 @@
 // מחבר את הקהילה לאפליקציה: חסימה, הודעות מהמנהל, סקרים בין לשוניות,
 // נוכחות על הקו בזמן נסיעה, דיווחים ושיתוף נסיעה בלייב.
 
-import { t } from './i18n.js?v=1.6.0-mvn1g0s1';
-import { showToast } from './ui.js?v=1.6.0-mvn1g0s1';
-import { getFavorites } from './favorites.js?v=1.6.0-mvn1g0s1';
-import { requireSignIn } from './auth-gate.js?v=1.6.0-mvn1g0s1';
+import { t } from './i18n.js?v=1.8.0-mvo8e244';
+import { showToast } from './ui.js?v=1.8.0-mvo8e244';
+import { getFavorites } from './favorites.js?v=1.8.0-mvo8e244';
+import { requireSignIn } from './auth-gate.js?v=1.8.0-mvo8e244';
 import {
   checkBan, fetchBroadcasts, fetchActiveSurvey, fetchLineUsers, lineKeyOf, setPresence
-} from './community.js?v=1.6.0-mvn1g0s1';
+} from './community.js?v=1.8.0-mvo8e244';
 import {
   showBanScreen, showBroadcast, showSurvey, openShareChooser, openReportSheet
-} from './community-ui.js?v=1.6.0-mvn1g0s1';
-import { startLiveShare, stopLiveShare, isLiveSharing, liveShareUrl, sendLiveShareLink } from './live-share.js?v=1.6.0-mvn1g0s1';
-import { setTripUsers } from './transit-ui.js?v=1.6.0-mvn1g0s1';
+} from './community-ui.js?v=1.8.0-mvo8e244';
+import { startLiveShare, stopLiveShare, isLiveSharing, liveShareUrl, sendLiveShareLink } from './live-share.js?v=1.8.0-mvo8e244';
+import { setTripUsers } from './transit-ui.js?v=1.8.0-mvo8e244';
 
 const SURVEY_LAST_KEY = 'walkie:survey:last';
 const SURVEY_MIN_GAP_MS = 20 * 3600 * 1000;   // סקר אחד ביום, לא יותר
@@ -91,7 +91,7 @@ export class CommunityController {
     }
     this.surveyChecked = true;
     const survey = await fetchActiveSurvey();
-    if (!survey || !this.canInterrupt() || document.querySelector('.cm-modal, .premium-overlay')) return;
+    if (!survey || !this.canInterrupt() || document.querySelector('.cm-modal')) return;
     try {
       localStorage.setItem(SURVEY_LAST_KEY, String(Date.now()));
     } catch {

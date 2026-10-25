@@ -1,19 +1,15 @@
 // מסכים של הקהילה: הזמנת חברים, דיווח על אוטובוס, שיתוף נסיעה בלייב, סקרים, הודעות מהמנהל ומסך חסימה.
 
-import { t, tn } from './i18n.js?v=1.6.0-mvn1g0s1';
-import { escapeHtml, showToast } from './ui.js?v=1.6.0-mvn1g0s1';
-import { icon } from './transit-ui.js?v=1.6.0-mvn1g0s1';
-import { celebrate } from './fx.js?v=1.6.0-mvn1g0s1';
-import { track } from './analytics.js?v=1.6.0-mvn1g0s1';
-import {
-  getReferral, REFERRAL_TIERS, INVITEE_DAYS, nextTier, inviteLink, shareInvite, redeemCode, onReferralChange,
-  refreshReferral, isInfluencer
-} from './referrals.js?v=1.6.0-mvn1g0s1';
-import { REPORT_TYPES } from './report-types.js?v=1.6.0-mvn1g0s1';
-import { submitReport, markBroadcastSeen, answerSurvey, markSurveyDone } from './community.js?v=1.6.0-mvn1g0s1';
+import { t, tn } from './i18n.js?v=1.8.0-mvo8e244';
+import { escapeHtml, showToast } from './ui.js?v=1.8.0-mvo8e244';
+import { icon } from './transit-ui.js?v=1.8.0-mvo8e244';
+import { celebrate } from './fx.js?v=1.8.0-mvo8e244';
+import { track } from './analytics.js?v=1.8.0-mvo8e244';
+import { REPORT_TYPES } from './report-types.js?v=1.8.0-mvo8e244';
+import { submitReport, markBroadcastSeen, answerSurvey, markSurveyDone } from './community.js?v=1.8.0-mvo8e244';
 
-export { lineUsersText, lineUsersHtml } from './community.js?v=1.6.0-mvn1g0s1';
-import { requireSignIn } from './auth-gate.js?v=1.6.0-mvn1g0s1';
+export { lineUsersText, lineUsersHtml } from './community.js?v=1.8.0-mvo8e244';
+import { requireSignIn } from './auth-gate.js?v=1.8.0-mvo8e244';
 
 // ---------- עזרים ----------
 
@@ -31,155 +27,6 @@ function modal(className, html) {
     setTimeout(() => el.remove(), 350);
   };
   return { el, close };
-}
-
-// ---------- הזמנת חברים ----------
-
-let inviteEl = null;
-
-export function isInviteOpen() {
-  return !!inviteEl;
-}
-
-export function closeInvite() {
-  inviteEl?.remove();
-  inviteEl = null;
-}
-
-function tierRows(count) {
-  return REFERRAL_TIERS.map((tier) => {
-    const done = count >= tier.n;
-    const pct = Math.min(100, Math.round((count / tier.n) * 100));
-    return `
-      <li class="inv-tier${done ? ' is-done' : ''}">
-        <span class="inv-tier-n">${done ? icon('check', 18) : tier.n}</span>
-        <span class="inv-tier-text">
-          <strong>${tn(tier.n, 'נרשם אחד', '{n} נרשמים')}</strong>
-          <small>${escapeHtml(t(tier.title))}</small>
-          ${done ? '' : `<span class="inv-bar"><i style="width:${pct}%"></i></span>`}
-        </span>
-        <span class="inv-tier-ic">${done ? '✅' : tier.badge ? '🏅' : '🎁'}</span>
-      </li>`;
-  }).join('');
-}
-
-function inviteHtml() {
-  const r = getReferral();
-  const next = nextTier(r.count);
-  const left = next ? next.n - r.count : 0;
-  return `
-    <div class="pm-bar">
-      <button class="icon-btn" type="button" data-inv="close" aria-label="${t('סגירה')}">${icon('back', 22)}</button>
-    </div>
-    <div class="pm-body inv-body">
-      <div class="pm-hero">
-        <span class="inv-emoji" aria-hidden="true">🎁</span>
-        <h1>${t('הזמן חברים')}</h1>
-        <p class="pm-sub">${t('מי שנרשם עם הקוד שלך מקבל יום Premium חינם, ואתם מתקדמים לפרסים.')}</p>
-      </div>
-
-      ${isInfluencer() ? `<div class="inv-badge-card"><span aria-hidden="true">🏅</span><div><strong>${t('משפיען כיתתי')}</strong><small>${t('התג מופיע בפרופיל שלך')}</small></div></div>` : ''}
-
-      <section class="inv-code-card">
-        <span class="inv-label">${t('קוד ההזמנה שלך')}</span>
-        <button class="inv-code" type="button" data-inv="copy-code" aria-label="${t('העתקת הקוד')}"><bdi>${escapeHtml(r.code ?? '——')}</bdi></button>
-        <div class="inv-actions">
-          <button class="btn" type="button" data-inv="share" ${r.code ? '' : 'disabled'}>${t('שליחה בוואטסאפ')}</button>
-          <button class="btn-secondary" type="button" data-inv="copy-link" ${r.code ? '' : 'disabled'}>${t('העתקת קישור')}</button>
-        </div>
-        ${r.code ? '' : `<p class="inv-fine inv-center">${t('הקוד נוצר כשהאפליקציה מתחברת לשרת. נסו שוב בעוד רגע.')}</p>`}
-        <p class="inv-fine">${t('מי שנרשם עם הקוד מקבל {n} Premium חינם (התחברות עם Google).', { n: tn(INVITEE_DAYS, 'יום', '{n} ימים') })}</p>
-      </section>
-
-      <section class="inv-progress">
-        <div class="inv-count"><strong>${r.count}</strong><span>${tn(r.count, 'חבר נרשם בזכותך', 'חברים נרשמו בזכותך')}</span></div>
-        ${next ? `<p class="inv-next">${tn(left, 'עוד חבר אחד ל', 'עוד {n} חברים ל', { n: left })}${escapeHtml(t(next.title))}</p>` : `<p class="inv-next">${t('הגעת לכל הפרסים. תודה ענקית! 💚')}</p>`}
-        <ul class="inv-tiers">${tierRows(r.count)}</ul>
-      </section>
-
-      ${r.referredBy ? `<p class="inv-fine inv-center">${t('נרשמת דרך הזמנה של חבר ✓')}</p>` : `
-      <section class="inv-redeem">
-        <h2>${t('יש לך קוד מחבר?')}</h2>
-        <div class="inv-redeem-row">
-          <input id="inv-input" class="inv-input" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABC123" aria-label="${t('קוד הזמנה')}">
-          <button class="btn" type="button" data-inv="redeem">${t('מימוש')}</button>
-        </div>
-        <p class="inv-fine">${t('צריך להיות מחובר עם Google. מקבלים {n} Premium חינם.', { n: tn(INVITEE_DAYS, 'יום', '{n} ימים') })}</p>
-      </section>`}
-
-      <p class="pm-legal">${t('נרשם = משתמש חדש שהתחבר עם Google. כל חבר נספר פעם אחת, ואי אפשר להזמין את עצמך. ימי Premium מתווספים לתקופה שכבר יש לך.')}</p>
-    </div>`;
-}
-
-export function openInvitePage() {
-  if (inviteEl) return;
-  track('feat.invite_open');
-  const el = document.createElement('div');
-  el.className = 'premium-overlay invite-overlay';
-  el.setAttribute('role', 'dialog');
-  el.setAttribute('aria-label', t('הזמן חברים'));
-  document.body.appendChild(el);
-  inviteEl = el;
-
-  const render = () => {
-    if (!inviteEl) return;
-    const input = el.querySelector('#inv-input')?.value ?? '';
-    el.innerHTML = inviteHtml();
-    const next = el.querySelector('#inv-input');
-    if (next && input) next.value = input;
-  };
-  render();
-  const off = onReferralChange(render);
-  refreshReferral().catch(() => {});
-
-  el.addEventListener('click', async (e) => {
-    const btn = e.target.closest('[data-inv]');
-    if (!btn) return;
-    const r = getReferral();
-    switch (btn.dataset.inv) {
-      case 'close':
-        off();
-        closeInvite();
-        break;
-      case 'share':
-        shareInvite();
-        break;
-      case 'copy-code':
-        copy(r.code, t('הקוד הועתק'));
-        break;
-      case 'copy-link':
-        copy(inviteLink(), t('הקישור הועתק'));
-        track('invite.link_copied');
-        break;
-      case 'redeem': {
-        const code = el.querySelector('#inv-input').value;
-        if (!requireSignIn(t('לממש קוד הזמנה'))) return;
-        btn.disabled = true;
-        try {
-          await redeemCode(code);
-          celebrate(btn, 36);
-          showToast(t('הקוד מומש! קיבלת יום Premium 🎉'));
-          await refreshReferral().catch(() => {});
-        } catch (err) {
-          showToast(err.message);
-        } finally {
-          btn.disabled = false;
-        }
-        break;
-      }
-      default:
-    }
-  });
-}
-
-async function copy(text, message) {
-  if (!text) return;
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast(message);
-  } catch {
-    showToast(text);
-  }
 }
 
 // ---------- דיווח על אוטובוס ----------

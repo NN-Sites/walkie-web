@@ -1,17 +1,16 @@
 // סשן משתמש: התחברות אנונימית ל-Firebase + מסמך users/{uid} ב-Firestore.
 // רץ רק אחרי שהמפה כבר מוצגת (requestIdleCallback), כדי לא לעכב את הפתיחה.
 //
-// מה נשלח: גרסה, פלטפורמה, זמן פעילות אחרון, סטטיסטיקה מצטברת, מצב המנוי ותרומות – בשביל דף הניהול.
+// מה נשלח: גרסה, פלטפורמה, זמן פעילות אחרון וסטטיסטיקה מצטברת – בשביל דף הניהול.
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
-// מה מתקבל: מתנת Premium מהמנהל, מחירים ומגבלות (config/*), והודעה למשתמשים.
+// מה מתקבל: הודעה למשתמשים (config/announcement).
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.6.0-mvn1g0s1';
-import { APP_VERSION } from '../config.js?v=1.6.0-mvn1g0s1';
-import { getStats, premiumInfo, setAdminGrant, applyRemoteConfig, onPremiumChange, getDonations } from './premium.js?v=1.6.0-mvn1g0s1';
-import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.6.0-mvn1g0s1';
-import { showToast } from './ui.js?v=1.6.0-mvn1g0s1';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.6.0-mvn1g0s1';
-import { newRefCode, setCode, registerCode, refreshReferral, redeemPendingIfAny } from './referrals.js?v=1.6.0-mvn1g0s1';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvo8e244';
+import { APP_VERSION } from '../config.js?v=1.8.0-mvo8e244';
+import { getStats } from './stats.js?v=1.8.0-mvo8e244';
+import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.8.0-mvo8e244';
+import { showToast } from './ui.js?v=1.8.0-mvo8e244';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.8.0-mvo8e244';
 
 let session = null;
 
@@ -45,11 +44,6 @@ function authTypeOf(user) {
 function profileOf(user) {
   const g = user?.providerData?.find((p) => p.providerId === 'google.com');
   return g ? { name: g.displayName ?? user.displayName ?? '', email: g.email ?? user.email ?? '', photo: g.photoURL ?? null } : null;
-}
-
-function premiumReport() {
-  const p = premiumInfo();
-  return { active: p.active, source: p.source, since: p.since };
 }
 
 /** מצב הסשן האחרון (מוצג בהגדרות, כדי לאבחן תקלות בטלפון בלי כלי פיתוח) */
@@ -88,12 +82,8 @@ export async function initSession({ onAnnouncement } = {}) {
     const snap = await getDoc(ref);
     step = snap.exists() ? 'update-user' : 'create-user';
 
-    let refCode = snap.exists() ? snap.data().refCode : null;
-
     if (!snap.exists()) {
-      refCode = newRefCode();
       const attribution = getAttribution();
-      // ה-plan תמיד 'free' ביצירה – כללי Firestore אוכפים את זה. Premium נקבע רק ע"י המנהל או החנות.
       await setDoc(ref, {
         createdAt: serverTimestamp(),
         lastSeenAt: serverTimestamp(),
@@ -102,36 +92,24 @@ export async function initSession({ onAnnouncement } = {}) {
         settings: {},
         device: deviceInfo(),
         stats: getStats(),
-        premium: premiumReport(),
-        donations: getDonations(),
-        refCode,
         authType: authTypeOf(user),
         profile: profileOf(user),
         attribution: { source: attribution.source, medium: attribution.medium, campaign: attribution.campaign, ref: attribution.ref },
         sessions: 1
       });
-      setCode(refCode);
       // נספר רק אחרי שהחשבון נוצר בפועל (ניסיון שנכשל יחזור בפתיחה הבאה)
       track(`acq.${attribution.source}`);
       track('funnel.account_created');
     } else {
-      const data = snap.data();
-      // מתנה מהמנהל
-      setAdminGrant(data.plan === 'pro' ? data.premiumUntil ?? 'forever' : null);
       await updateDoc(ref, {
         lastSeenAt: serverTimestamp(),
         device: deviceInfo(),
         stats: getStats(),
-        premium: premiumReport(),
-        donations: getDonations(),
         authType: authTypeOf(user),
         profile: profileOf(user),
-        ...(refCode ? {} : { refCode: (refCode = newRefCode()) }),
         sessions: increment(1)
       });
-      setCode(refCode);
     }
-    registerCode(refCode).then(() => refreshReferral()).catch(() => {});
     step = 'account';
     setStatus('ok');
     trackDeviceSession(deviceInfo().platform);
@@ -139,18 +117,10 @@ export async function initSession({ onAnnouncement } = {}) {
     // חשבון Google (לא חובה): פרטי החשבון וסנכרון מועדפים
     await initAccount({ user, docRef: ref, data: snap.exists() ? snap.data() : null }).catch((err) => console.warn('[Walkie] account init failed', err));
 
-    // הזמנת חברים: קוד שנקלט מקישור ממומש ברגע שיש חשבון Google (עכשיו, או אחרי שיתחבר)
-    const redeem = async () => {
-      const r = await redeemPendingIfAny(true);
-      if (r) window.dispatchEvent(new CustomEvent('walkie:referral-redeemed', { detail: r }));
-      else refreshReferral().catch(() => {});
-    };
-    if (user.providerData?.some((p) => p.providerId === 'google.com')) redeem();
     onAccountChange((a) => {
       if (!a?.linked) return;
       updateDoc(ref, { authType: 'google' }).catch(() => {});
       track('auth.google_linked');
-      redeem();
     });
 
     // דופק: lastSeenAt מתעדכן כל כמה דקות כל עוד האפליקציה פתוחה, כדי שהאדמין יראה "מחוברים עכשיו"
@@ -160,20 +130,11 @@ export async function initSession({ onAnnouncement } = {}) {
     setInterval(beat, 150000);
     document.addEventListener('visibilitychange', beat);
 
-    // כשמצב המנוי משתנה (רכישה / ביטול) – מעדכנים את המנהל
-    onPremiumChange(() => {
-      updateDoc(ref, { premium: premiumReport(), donations: getDonations(), lastSeenAt: serverTimestamp() }).catch(() => {});
-    });
-
-    // הגדרות מהמנהל: מחירים, מגבלות, הודעה
-    const [pricing, limits, announcement] = await Promise.all(
-      ['pricing', 'limits', 'announcement'].map((id) =>
-        getDoc(doc(firestore, 'config', id)).then((d) => (d.exists() ? d.data() : null)).catch(() => null))
-    );
-    applyRemoteConfig({ pricing, limits });
+    // הודעה מהמנהל
+    const announcement = await getDoc(doc(firestore, 'config', 'announcement')).then((d) => (d.exists() ? d.data() : null)).catch(() => null);
     if (announcement) onAnnouncement?.(announcement);
 
-    session = { uid: user.uid, isAnonymous: user.isAnonymous, plan: premiumInfo().active ? 'pro' : 'free' };
+    session = { uid: user.uid, isAnonymous: user.isAnonymous, plan: 'free' };
     return session;
   } catch (err) {
     if (err?.code === 'sign-in-required') {

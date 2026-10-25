@@ -5,10 +5,10 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.6.0-mvn1g0s1';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.6.0-mvn1g0s1';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.6.0-mvn1g0s1';
-import { t } from './i18n.js?v=1.6.0-mvn1g0s1';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvo8e244';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.8.0-mvo8e244';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.8.0-mvo8e244';
+import { t } from './i18n.js?v=1.8.0-mvo8e244';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -149,6 +149,41 @@ export async function signOutGoogle() {
   const { auth, modules } = await getFirebase();
   await globalThis.Capacitor?.Plugins?.FirebaseAuthentication?.signOut?.().catch(() => {});
   await modules.auth.signOut(auth);
+  location.reload();
+}
+
+/**
+ * מחיקת החשבון והנתונים (דרישת Google Play): מסמך המשתמש, הלבבות והנוכחות בשרת, חשבון Firebase,
+ * והנתונים שבמכשיר. דורש אימות מחדש עם Google (Firebase מחייב זאת למחיקת חשבון).
+ */
+export async function deleteAccount() {
+  const { auth, firestore, modules } = await getFirebase();
+  const a = modules.auth;
+  const f = modules.firestore;
+  const user = auth.currentUser;
+  if (!user) throw new Error(t('לא מחובר'));
+
+  const idToken = await nativeIdToken();
+  if (idToken) await a.reauthenticateWithCredential(user, a.GoogleAuthProvider.credential(idToken));
+  else await a.reauthenticateWithPopup(user, new a.GoogleAuthProvider());
+
+  const uid = user.uid;
+  const quiet = (p) => p.catch(() => {});
+  try {
+    const thanks = await f.getDocs(f.collection(firestore, 'thanks'));
+    await Promise.all(thanks.docs.map((d) => quiet(f.deleteDoc(f.doc(firestore, 'thanksHearts', `${d.id}_${uid}`)))));
+  } catch { /* אין לבבות למחוק */ }
+  await quiet(f.deleteDoc(f.doc(firestore, 'linePresence', uid)));
+  await f.deleteDoc(f.doc(firestore, 'users', uid));
+  await a.deleteUser(user);
+
+  await globalThis.Capacitor?.Plugins?.FirebaseAuthentication?.signOut?.().catch(() => {});
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k?.startsWith('walkie:')) localStorage.removeItem(k);
+    }
+  } catch { /* ignore */ }
   location.reload();
 }
 

@@ -71,8 +71,6 @@
 [data-theme="dark"] .stop-head-icon.is-focused,
 [data-theme="dark"] .result-icon.kind-poi { background: #3a2412; }
 [data-theme="dark"] .chip-warn,
-[data-theme="dark"] .pm-reason { background: #3a2412; color: #fdba74; }
-[data-theme="dark"] .pm-until { color: #fdba74; }
 [data-theme="dark"] .chip-live,
 [data-theme="dark"] .dep-chip.is-live { background: #12301f; }
 [data-theme="dark"] .notice { background: #16233b; color: #bfdbfe; }
@@ -82,9 +80,7 @@
 [data-theme="dark"] .btn-end { background: #3b1518; color: #fda4af; }
 [data-theme="dark"] .fab-share { color: var(--live); }
 [data-theme="dark"] .fab-share:active,
-[data-theme="dark"] .btn-share-trip,
-[data-theme="dark"] .donate-thanks,
-[data-theme="dark"] .supporter-badge { background: #12301f; color: #86efac; }
+[data-theme="dark"] .btn-share-trip { background: #12301f; color: #86efac; }
 [data-theme="dark"] .star-btn.is-on { background: #33280c; border-color: #6b5413; color: #fcd34d; }
 [data-theme="dark"] .dir-fav.is-on { color: #fbbf24; }
 [data-theme="dark"] .fav-stop-main { background: #1f1b10; border-color: #4a3d14; }
@@ -109,3 +105,4 @@
 :root.theme-anim * {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
 }
+[data-theme="dark"] .maplibregl-canvas { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.6); }

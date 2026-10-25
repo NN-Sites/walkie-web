@@ -91,6 +91,7 @@ button:focus-visible {
 
 #map {
   position: fixed;
+  touch-action: none; /* הזום והסיבוב באצבעות מטופלים באפליקציה, לא בדפדפן */
   inset: 0;
   z-index: 0;
   background: #eef0f3;

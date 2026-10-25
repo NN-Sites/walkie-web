@@ -1,10 +1,9 @@
 // קהילה: כמה משתמשי Walkie על כל קו, דיווחים על אוטובוסים, חסימות, הודעות מהמנהל וסקרים.
 // כל הפונקציות שקטות: אם השרת לא זמין האפליקציה ממשיכה לעבוד כרגיל.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.6.0-mvn1g0s1';
-import { track, safeKey } from './analytics.js?v=1.6.0-mvn1g0s1';
-import { isPremium } from './premium.js?v=1.6.0-mvn1g0s1';
-import { t } from './i18n.js?v=1.6.0-mvn1g0s1';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvo8e244';
+import { track, safeKey } from './analytics.js?v=1.8.0-mvo8e244';
+import { t } from './i18n.js?v=1.8.0-mvo8e244';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -25,7 +24,7 @@ export function lineUsersHtml(n) {
 }
 
 
-export { lineKeyOf } from './keys.js?v=1.6.0-mvn1g0s1';
+export { lineKeyOf } from './keys.js?v=1.8.0-mvo8e244';
 
 const presenceSources = { view: null, trip: null };
 let presenceTimer = null;
@@ -103,7 +102,7 @@ export async function fetchLineUsers(lineKey) {
 
 // ---------- דיווחים ----------
 
-export { REPORT_TYPES } from './report-types.js?v=1.6.0-mvn1g0s1';
+export { REPORT_TYPES } from './report-types.js?v=1.8.0-mvo8e244';
 
 const REPORT_COOLDOWN_MS = 60000;
 let lastReportAt = 0;
@@ -184,11 +183,10 @@ export async function fetchBroadcasts({ lineKeys = [] } = {}) {
     const snap = await getDocs(query(collection(firestore, 'broadcasts'), orderBy('createdAt', 'desc'), limit(8)));
     const seen = readSeen();
     const now = Date.now();
-    const premium = isPremium();
     return snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
       .filter((b) => b.active !== false && !seen.has(b.id) && (!b.expiresAt || b.expiresAt > now))
-      .filter((b) => b.audience === 'all' || !b.audience || (b.audience === 'premium' ? premium : !premium))
+      .filter((b) => b.audience === 'all' || !b.audience || b.audience !== 'premium')
       .filter((b) => !b.lineKey || lineKeys.includes(b.lineKey));
   } catch {
     return [];
@@ -227,11 +225,10 @@ export async function fetchActiveSurvey() {
     const snap = await getDocs(query(collection(firestore, 'surveys'), orderBy('createdAt', 'desc'), limit(6)));
     const done = readDone();
     const now = Date.now();
-    const premium = isPremium();
     return snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
       .find((s) => s.active !== false && !done.has(s.id) && (!s.expiresAt || s.expiresAt > now)
-        && (s.audience === 'all' || !s.audience || (s.audience === 'premium' ? premium : !premium))) ?? null;
+        && (s.audience === 'all' || !s.audience || s.audience !== 'premium')) ?? null;
   } catch {
     return null;
   }

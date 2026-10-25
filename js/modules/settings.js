@@ -1,12 +1,12 @@
 // הגדרות משתמש: נשמרות במכשיר (localStorage), משפיעות על תכנון המסלולים ועל התצוגה.
 
-import { STORAGE_KEYS } from '../config.js?v=1.6.0-mvn1g0s1';
+import { STORAGE_KEYS } from '../config.js?v=1.8.0-mvo8e244';
 
 const KEY = 'walkie:settings';
 
 export const DEFAULT_SETTINGS = Object.freeze({
   modes: { bus: true, rail: true, lightrail: true },  // אמצעי תחבורה בתכנון מסלול
-  maxWalkMin: 15,                                     // הליכה מקסימלית לתחנה/מתחנה
+  maxWalkMin: 30,                                     // הליכה מקסימלית לתחנה/מתחנה
   walkSpeed: 'normal',                                // slow | normal | fast
   wheelchair: false,                                  // מסלולים נגישים
   vibrate: true,                                      // רטט לפני פנייה / ירידה
@@ -23,6 +23,8 @@ let current = load();
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+    // ברירת המחדל הישנה (15 דק') נשמרה אצל מי שלא בחר בעצמו – מעבירים אותו לברירת המחדל החדשה
+    if (saved.maxWalkMin === 15 && !saved.walkChosen) delete saved.maxWalkMin;
     return {
       ...DEFAULT_SETTINGS,
       ...saved,
@@ -41,6 +43,7 @@ export function updateSettings(patch) {
   current = {
     ...current,
     ...patch,
+    ...(patch.maxWalkMin !== undefined ? { walkChosen: true } : {}),
     modes: { ...current.modes, ...(patch.modes ?? {}) }
   };
   // לפחות אמצעי תחבורה אחד חייב להישאר פעיל
@@ -65,7 +68,7 @@ export function transitPrefsParams() {
   const params = {};
   const modes = Object.entries(s.modes).filter(([, on]) => on).map(([m]) => m);
   if (modes.length < 3) params.modes = modes.join(',');
-  if (s.maxWalkMin && s.maxWalkMin !== 15) params.maxWalk = String(s.maxWalkMin);
+  if (s.maxWalkMin) params.maxWalk = String(s.maxWalkMin);
   if (s.wheelchair) params.wheelchair = '1';
   return params;
 }

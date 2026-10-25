@@ -1,24 +1,18 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.6.0-mvn1g0s1';
-import { t, LANG, setLanguage } from './i18n.js?v=1.6.0-mvn1g0s1';
-import { showToast } from './ui.js?v=1.6.0-mvn1g0s1';
-import { modeIcon, icon } from './transit-ui.js?v=1.6.0-mvn1g0s1';
-import { escapeHtml } from './ui.js?v=1.6.0-mvn1g0s1';
-import { APP_VERSION } from '../config.js?v=1.6.0-mvn1g0s1';
-import { sessionStatus } from './session.js?v=1.6.0-mvn1g0s1';
-import { premiumCardHtml } from './premium-ui.js?v=1.6.0-mvn1g0s1';
-import { onPremiumChange, getDonations } from './premium.js?v=1.6.0-mvn1g0s1';
-import { TIPS } from './pricing.js?v=1.6.0-mvn1g0s1';
-import { donate, tipPriceLabel, onBillingChange } from './billing.js?v=1.6.0-mvn1g0s1';
-import { celebrate, stagger } from './fx.js?v=1.6.0-mvn1g0s1';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, accountErrorMessage } from './account.js?v=1.6.0-mvn1g0s1';
-import { isSupporter } from './premium.js?v=1.6.0-mvn1g0s1';
-import { isInfluencer, onReferralChange, REFERRAL_TIERS } from './referrals.js?v=1.6.0-mvn1g0s1';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.8.0-mvo8e244';
+import { t, LANG, setLanguage } from './i18n.js?v=1.8.0-mvo8e244';
+import { showToast } from './ui.js?v=1.8.0-mvo8e244';
+import { modeIcon, icon } from './transit-ui.js?v=1.8.0-mvo8e244';
+import { escapeHtml } from './ui.js?v=1.8.0-mvo8e244';
+import { APP_VERSION } from '../config.js?v=1.8.0-mvo8e244';
+import { sessionStatus } from './session.js?v=1.8.0-mvo8e244';
+import { celebrate, stagger } from './fx.js?v=1.8.0-mvo8e244';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.8.0-mvo8e244';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.6.0-mvn1g0s1';
+} from './favorites.js?v=1.8.0-mvo8e244';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -39,11 +33,9 @@ const LANGUAGES = [
 
 export class SettingsView {
   /** pickPlace(purpose, onPick) – פותח את מסך החיפוש לבחירת מקום (בית / עבודה / בית ספר) */
-  constructor(root, { pickPlace, openPremium, openInvite, getSupportId } = {}) {
+  constructor(root, { pickPlace, getSupportId } = {}) {
     this.root = root;
-    this.openInvite = openInvite;
     this.pickPlace = pickPlace;
-    this.openPremium = openPremium;
     this.getSupportId = getSupportId;
     this.body = root.querySelector('#settings-body');
 
@@ -56,7 +48,7 @@ export class SettingsView {
     root.addEventListener('click', (e) => {
       const favBtn = e.target.closest('[data-fav]');
       if (favBtn) return this.#onFav(favBtn.dataset);
-      const btn = e.target.closest('[data-set], [data-action], [data-tip]');
+      const btn = e.target.closest('[data-set], [data-action]');
       if (!btn) return;
       if (btn.dataset.set === 'maxWalkMin') updateSettings({ maxWalkMin: Number(btn.dataset.value) });
       else if (btn.dataset.set === 'walkSpeed') updateSettings({ walkSpeed: btn.dataset.value });
@@ -67,12 +59,8 @@ export class SettingsView {
         showToast(t('החיפושים האחרונים והמטמון נמחקו מהמכשיר'));
       } else if (btn.dataset.action === 'open-privacy') {
         this.openPrivacy();
-      } else if (btn.dataset.action === 'open-premium') {
-        this.openPremium?.();
-      } else if (btn.dataset.action === 'open-invite') {
-        this.openInvite?.();
-      } else if (btn.dataset.tip) {
-        this.#donate(btn);
+      } else if (btn.dataset.action === 'delete-account') {
+        this.#deleteAccount(btn);
       } else if (btn.dataset.action === 'google-signin') {
         this.#signIn(btn);
       } else if (btn.dataset.action === 'google-signout') {
@@ -81,21 +69,25 @@ export class SettingsView {
     });
 
     onSettingsChange(() => this.render());
-    onPremiumChange(() => {
-      if (!this.root.hidden) this.render();
-    });
-    onBillingChange(() => {
-      if (!this.root.hidden) this.render();
-    });
     onAccountChange(() => {
       if (!this.root.hidden) this.render();
     });
     onFavoritesChange(() => {
       if (!this.root.hidden) this.render();
     });
-    onReferralChange(() => {
-      if (!this.root.hidden) this.render();
-    });
+  }
+
+  async #deleteAccount(btn) {
+    if (!confirm(t('למחוק את החשבון וכל הנתונים שלך? אי אפשר לשחזר. המועדפים וההגדרות יימחקו גם מהמכשיר.'))) return;
+    btn.disabled = true;
+    try {
+      await deleteAccount();
+    } catch (err) {
+      const msg = accountErrorMessage(err);
+      if (msg) showToast(msg);
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   async #signIn(btn) {
@@ -117,8 +109,6 @@ export class SettingsView {
   #accountHtml() {
     const a = accountInfo();
     const G = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
-    const badge = (isSupporter() ? ` <span class="supporter-badge">💚 ${t('תומך')}</span>` : '')
-      + (isInfluencer() ? ` <span class="influencer-badge">🏅 ${t('משפיען כיתתי')}</span>` : '');
     if (a?.linked) {
       const initial = escapeHtml((a.name || a.email || '?').trim().charAt(0).toUpperCase());
       return `
@@ -126,7 +116,7 @@ export class SettingsView {
           <h2 class="set-title">${t('החשבון שלי')}</h2>
           <div class="account-row">
             ${a.photo ? `<img src="${escapeHtml(a.photo)}" alt="" referrerpolicy="no-referrer">` : `<span class="account-avatar">${initial}</span>`}
-            <span class="account-text"><strong>${escapeHtml(a.name || a.email)}${badge}</strong><small>${escapeHtml(a.email)} · ${t('מועדפים והגדרות מסונכרנים')}</small></span>
+            <span class="account-text"><strong>${escapeHtml(a.name || a.email)}</strong><small>${escapeHtml(a.email)} · ${t('מועדפים והגדרות מסונכרנים')}</small></span>
           </div>
           <button class="set-row set-button" type="button" data-action="google-signout">
             <span class="set-icon">↩️</span>
@@ -136,47 +126,9 @@ export class SettingsView {
     }
     return `
       <section class="set-group">
-        <h2 class="set-title">${t('החשבון שלי')}${badge}</h2>
-        <p class="set-note" style="margin-top:8px">${t('התחברות עם Gmail שומרת את המועדפים, ההגדרות וה-Premium בחשבון – ומחזירה אותם בטלפון חדש או אחרי התקנה מחדש.')}</p>
+        <h2 class="set-title">${t('החשבון שלי')}</h2>
+        <p class="set-note" style="margin-top:8px">${t('התחברות עם Gmail שומרת את המועדפים, ההגדרות בחשבון – ומחזירה אותם בטלפון חדש או אחרי התקנה מחדש.')}</p>
         <button class="btn-google" type="button" data-action="google-signin">${G} ${t('התחברות עם Google')}</button>
-      </section>`;
-  }
-
-  async #donate(btn) {
-    if (this.donating) return;
-    this.donating = true;
-    btn.classList.add('is-busy');
-    try {
-      if (await donate(btn.dataset.tip)) {
-        celebrate(btn);
-        showToast(t('תודה ענקית! בזכותך Walkie נשארת חינמית 💚'));
-      }
-    } catch (err) {
-      showToast(err?.message || t('התרומה לא הושלמה'));
-    } finally {
-      this.donating = false;
-      btn.classList.remove('is-busy');
-    }
-  }
-
-  #donateHtml() {
-    const d = getDonations();
-    return `
-      <section class="set-group donate" aria-labelledby="donate-title">
-        <h2 class="set-title" id="donate-title">${t('תמכו ב-Walkie 💚')}</h2>
-        <div class="donate-box">
-          <p class="donate-text">${t('Walkie חינמית ובלי פרסומות, ותישאר כזו. השרתים, נתוני התחבורה בזמן אמת והפיתוח עולים לנו לא מעט כל חודש. אם Walkie עוזרת לך, תרומה קטנה עוזרת לנו להמשיך.')}</p>
-          <div class="tip-row">
-            ${TIPS.map((tip) => `
-              <button class="tip" type="button" data-tip="${tip.id}">
-                <span class="tip-ic">${tip.icon}</span>
-                <strong>${escapeHtml(tipPriceLabel(tip.id))}</strong>
-                <small>${escapeHtml(t(tip.label))}</small>
-              </button>`).join('')}
-          </div>
-          ${d.count ? `<p class="donate-thanks">${d.count === 1 ? t('תודה! תרמת פעם אחת 💚') : t('תודה! תרמת {n} פעמים 💚', { n: d.count })}</p>` : ''}
-          <p class="set-note">${t('תשלום חד-פעמי ומאובטח דרך Google Play. התרומה לא פותחת פיצ\'רים – בשביל זה יש Premium.')}</p>
-        </div>
       </section>`;
   }
 
@@ -308,12 +260,6 @@ export class SettingsView {
       </label>`;
 
     this.body.innerHTML = `
-      ${premiumCardHtml()}
-      <button class="invite-card" type="button" data-action="open-invite">
-        <span class="ic" aria-hidden="true">🎁</span>
-        <span class="tx"><strong>${t('הזמן חברים')}</strong><small>${t('חבר שנרשם = יום Premium חינם. {n} חברים = {prize}', { n: REFERRAL_TIERS[0].n, prize: t(REFERRAL_TIERS[0].title) })}</small></span>
-        ${icon('chevron', 20)}
-      </button>
       ${this.#accountHtml()}
       ${this.#favoritesHtml()}
 
@@ -364,13 +310,16 @@ export class SettingsView {
         ${toggleRow('showBuses', 'אוטובוסים בזמן אמת על המפה', 'איפה האוטובוס עכשיו – בתחנה, בקו ובמסלול', '📍')}
       </section>
 
-      ${this.#donateHtml()}
 
       <section class="set-group">
         <h2 class="set-title">${t('פרטיות')}</h2>
         <button class="set-row set-button" type="button" data-action="clear-data">
           <span class="set-icon">🗑️</span>
           <span class="set-text"><span class="set-label">${t('מחיקת נתונים מהמכשיר')}</span><span class="set-hint">${t('חיפושים אחרונים ומטמון תחנות')}</span></span>
+        </button>
+        <button class="set-row set-button" type="button" data-action="delete-account">
+          <span class="set-icon">⚠️</span>
+          <span class="set-text"><span class="set-label">${t('מחיקת החשבון והנתונים')}</span><span class="set-hint">${t('מוחק את החשבון, המועדפים וכל מה שנשמר עליך')}</span></span>
         </button>
         <button class="set-row set-button" type="button" data-action="open-privacy">
           <span class="set-icon">🔒</span>
@@ -384,7 +333,7 @@ export class SettingsView {
         <h2 class="set-title">${t('אודות')}</h2>
         <div class="set-about">
           <div class="set-brand"><img src="icon.svg" alt="" width="36" height="36"> Walkie <span class="set-version">${APP_VERSION}</span></div>
-          <p>${t('ניווט רגלי ותחבורה ציבורית, בלי פרסומות.')}</p>
+          <p>${t('ניווט רגלי ותחבורה ציבורית, חינמי.')}</p>
           <p class="set-note">${t('לוחות זמנים, קווים ותחנות: משרד התחבורה (GTFS), דרך הסדנא לידע ציבורי ו-Transitous. זמן אמת: SIRI של משרד התחבורה. מפות: © OpenStreetMap. בתי ספר: מאגר משרד החינוך (data.gov.il).')}</p>
           ${sessionStatus() ? `<p class="set-note" dir="ltr">sync: ${escapeHtml(sessionStatus())}</p>` : ''}
           ${this.getSupportId?.() ? `<p class="set-note">${t('מזהה תמיכה:')} <bdi>${escapeHtml(this.getSupportId())}</bdi></p>` : ''}

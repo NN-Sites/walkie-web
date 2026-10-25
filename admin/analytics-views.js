@@ -2,7 +2,7 @@
 // רכישת משתמשים, מנויים והכנסות, שיפור המוצר, דמוגרפיה וגיאוגרפיה, וניהול משתמשים (חסימות, הודעות, סקרים, דיווחים).
 //
 // הנתונים מגיעים ממונים יומיים (analytics/*) ש-public/js/modules/analytics.js שולח מהאפליקציה.
-// ctx = { b: backend, state, esc, fmtNum, fmtMoney, fmtDateTime, fmtAgo, toast, barChart, distBars, priceAt, go }
+// ctx = { b: backend, state, esc, fmtNum, fmtMoney, fmtDateTime, fmtAgo, toast, barChart, distBars, go }
 
 import { CITY_LABELS } from '../js/modules/cities.js';
 import { lineKeyOf } from '../js/modules/keys.js';
@@ -35,11 +35,6 @@ const SOURCE_LABELS = {
 };
 const sourceLabel = (k) => SOURCE_LABELS[k] ?? k.replace(/_/g, ' ');
 
-const PAYWALL_LABELS = {
-  stops: 'מועדפים: תחנות (מגבלה)', lines: 'מועדפים: קווים (מגבלה)', places: 'מקומות שמורים (מגבלה)', stats: 'סטטיסטיקה אישית',
-  settings: 'כרטיס Premium בהגדרות', unknown: 'לא ידוע'
-};
-const paywallLabel = (k) => PAYWALL_LABELS[k] ?? k;
 
 const FEATURES = [
   ['tab_lines', 'לשונית קווים'], ['tab_stations', 'לשונית תחנות'], ['tab_settings', 'הגדרות'], ['line_detail', 'פרטי קו'],
@@ -146,65 +141,6 @@ export async function renderAcquisition(el, ctx) {
     </div>`;
   bindRange(el, ctx, () => renderAcquisition(el, ctx));
 }
-
-/* =========================================================
-   2. מנויים, מונטיזציה והכנסות
-   ========================================================= */
-
-export async function renderRevenue(el, ctx) {
-  const days = ctx.state.range;
-  const an = await loadAnalytics(ctx);
-  const c = ctx.state.counts;
-  const price = ctx.priceAt(Date.now(), ctx.state.pricing);
-  const paying = c.paying;
-  const mrr = paying * price.price;
-  const sub = an.total.sub ?? {};
-  const cancels = sub.cancel ?? 0;
-  const fresh = sub.new ?? 0;
-  // נטישה = ביטולים בתקופה, מתוך מי שהיה מנוי בתחילתה (מנויים היום + ביטולים - חדשים)
-  const base = Math.max(1, paying + cancels - fresh);
-  const paywall = an.total.paywall ?? {};
-  const upgrade = an.total.upgrade ?? {};
-  const features = [...new Set([...Object.keys(paywall), ...Object.keys(upgrade)])]
-    .map((k) => ({ k, opens: paywall[k] ?? 0, up: upgrade[k] ?? 0 }))
-    .sort((a, b) => b.up - a.up || b.opens - a.opens);
-  const top = features[0];
-
-  el.innerHTML = `
-    ${rangeBar(ctx, days)}
-    <div class="grid kpis">
-      <div class="card kpi is-brand"><div class="label">מנויים פעילים (משלמים)</div><div class="value">${ctx.fmtNum(paying)}</div><div class="sub">עוד ${ctx.fmtNum(c.gifts)} עם Premium במתנה</div></div>
-      <div class="card kpi is-accent"><div class="label">הכנסה חודשית חוזרת (MRR)</div><div class="value">${ctx.fmtMoney(mrr)}</div><div class="sub">${paying} × ${ctx.fmtMoney(price.price)} · לפני עמלת Google</div></div>
-      <div class="card kpi"><div class="label">המרה לפרימיום</div><div class="value">${pctText(paying, c.total)}</div><div class="sub">${ctx.fmtNum(paying)} מתוך ${ctx.fmtNum(c.total)} משתמשים</div></div>
-      <div class="card kpi"><div class="label">הפיצ'ר הממיר ביותר</div><div class="value value-sm">${top && top.up > 0 ? ctx.esc(paywallLabel(top.k)) : '—'}</div><div class="sub">${top && top.up > 0 ? `${ctx.fmtNum(top.up)} שדרוגים ב-${days} ימים` : 'עוד אין שדרוגים'}</div></div>
-      <div class="card kpi"><div class="label">שיעור נטישה</div><div class="value">${pctText(cancels, base)}</div><div class="sub">${ctx.fmtNum(cancels)} ביטולים · ${ctx.fmtNum(fresh)} מנויים חדשים ב-${days} ימים</div></div>
-    </div>
-
-    <div class="grid cols-2">
-      <div class="card">
-        <h2>מנויים חדשים וביטולים ליום</h2>
-        ${ctx.barChart(dayLabels(days), dailySeries(an, days, (d) => d.sub?.new ?? 0))}
-        <div class="legend-row"><span><i class="lg lg-brand"></i>מנויים חדשים</span><span class="muted">ביטולים בתקופה: ${ctx.fmtNum(cancels)}</span></div>
-      </div>
-      <div class="card">
-        <h2>איזה פיצ'ר גרם לשדרוג</h2>
-        ${features.length ? `<div class="table-wrap static"><table>
-          <thead><tr><th>הפיצ'ר / המסך</th><th>נפתח מסך Premium</th><th>שדרגו</th><th>המרה</th></tr></thead>
-          <tbody>${features.map((f) => `<tr><td>${ctx.esc(paywallLabel(f.k))}</td><td class="num">${ctx.fmtNum(f.opens)}</td><td class="num">${ctx.fmtNum(f.up)}</td><td class="num">${pctText(f.up, f.opens)}</td></tr>`).join('')}</tbody>
-        </table></div>` : '<div class="empty">עוד לא נאספו נתונים</div>'}
-        ${note(ctx, 'שדרוג מיוחס למסך ה-Premium האחרון שנפתח עד 7 ימים לפני הרכישה.')}
-      </div>
-    </div>
-    ${note(ctx, 'ביטולים מדווחים כשהמשתמש פותח את האפליקציה אחרי הביטול, ולכן שיעור הנטישה מעט מאחר. נתוני התשלום האמיתיים נמצאים ב-Google Play Console.')}
-    <div class="actions"><button class="btn btn-ghost btn-sm" type="button" data-go="premium">עריכת מחירים ומנויים ←</button></div>`;
-  bindRange(el, ctx, () => renderRevenue(el, ctx));
-}
-
-/* =========================================================
-   3. שיפור המוצר ונקודות נטישה
-   ========================================================= */
-
-const LOAD_TARGETS = { map: [2500, 4500], gps: [6000, 12000], arrivals: [1200, 2500] };
 
 function loadCard(ctx, key, label, hint, perf) {
   const n = perf[`${key}_n`] ?? 0;

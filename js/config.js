@@ -1,16 +1,13 @@
 // הגדרות גלובליות של Walkie – מקום אחד לכל המספרים הקסומים.
 
 // לעדכן יחד עם versionName ב-android/app/build.gradle
-export const APP_VERSION = '1.6.0';
+export const APP_VERSION = '1.8.0';
 
 // מרכז ברירת מחדל (תל אביב, עזריאלי) – בשימוש רק אם אין מיקום שמור ואין עדיין GPS
 export const DEFAULT_CENTER = [32.0741, 34.7922];
 export const DEFAULT_ZOOM = 16;
 export const STOPS_DETAIL_ZOOM = 16;      // מתחת לזום הזה תחנות מוצגות כנקודות
 
-// מפתח MapTiler (חינמי עד מכסה) לסגנון מפה מעוצב. ריק = אריחי OSM סטנדרטיים מרוככים.
-// https://cloud.maptiler.com/account/keys/
-export const MAPTILER_KEY = '';
 export const USER_ZOOM = 17;
 
 // ה-API שלנו (Firebase Hosting מפנה /api ל-Cloud Function; בפיתוח – server/dev-server.js)

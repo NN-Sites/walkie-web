@@ -1,14 +1,12 @@
 // מועדפים: בית, מקום שני (עבודה / בית ספר), מקומות שמורים, תחנות וקווים מועדפים.
-// נשמר במכשיר (localStorage). בחשבון חינמי יש מגבלה – ראו premium.js.
-
-import { allowAdd } from './premium.js?v=1.6.0-mvn1g0s1';
+// נשמר במכשיר (localStorage).
 
 // שמירה דורשת חשבון Google (auth-gate.js מגדיר את הבדיקה). מחזיר false = הפעולה בוטלה.
 let saveGuard = () => true;
 export function setFavoritesGuard(fn) {
   saveGuard = fn;
 }
-const canAdd = (kind, count) => saveGuard() && allowAdd(kind, count);
+const canAdd = () => saveGuard();
 
 const KEY = 'walkie:favorites';
 

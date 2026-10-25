@@ -164,6 +164,50 @@ class FirebaseBackend {
     await deleteDoc(doc(this.db, 'users', id));
   }
 
+  /** כמה לבבות אמיתיים משתמשים נתנו לתודה מסוימת */
+  async heartCount(id) {
+    const { collection, query, where, getCountFromServer } = this.fs;
+    return (await getCountFromServer(query(collection(this.db, 'thanksHearts'), where('t', '==', id)))).data().count;
+  }
+
+  async listThanks() {
+    const { collection, getDocs, query, orderBy } = this.fs;
+    const snap = await getDocs(query(collection(this.db, 'thanks'), orderBy('createdAt', 'desc')));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  }
+
+  async saveThanks(id, data) {
+    const { doc, setDoc } = this.fs;
+    await setDoc(doc(this.db, 'thanks', id), { ...data, updatedAt: Date.now(), updatedBy: this.auth.currentUser.email });
+  }
+
+  async deleteThanks(id) {
+    const { doc, deleteDoc } = this.fs;
+    await deleteDoc(doc(this.db, 'thanks', id));
+  }
+
+  /* ---------- שיתופי פעולה ---------- */
+
+  async listCollabs() {
+    const { collection, getDocs } = this.fs;
+    const snap = await getDocs(collection(this.db, 'collabs'));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+  }
+
+  /** id ריק = ערוץ חדש */
+  async saveCollab(id, data) {
+    const { collection, doc, addDoc, setDoc } = this.fs;
+    const body = { ...data, updatedAt: Date.now(), updatedBy: this.auth.currentUser.email };
+    if (!id) return (await addDoc(collection(this.db, 'collabs'), { ...body, createdAt: Date.now() })).id;
+    await setDoc(doc(this.db, 'collabs', id), body, { merge: true });
+    return id;
+  }
+
+  async deleteCollab(id) {
+    const { doc, deleteDoc } = this.fs;
+    await deleteDoc(doc(this.db, 'collabs', id));
+  }
+
   async getConfig(id) {
     const { doc, getDoc } = this.fs;
     const d = await getDoc(doc(this.db, 'config', id));
@@ -534,6 +578,25 @@ class DemoBackend {
     this.users = this.users.filter((u) => u.id !== id);
   }
 
+  thanks = [];
+  async heartCount() { return 7; }
+  async listThanks() { return structuredClone(this.thanks).sort((x, y) => y.createdAt - x.createdAt); }
+  async saveThanks(id, data) {
+    this.thanks = this.thanks.filter((x) => x.id !== id);
+    this.thanks.push({ ...structuredClone(data), id, updatedAt: Date.now() });
+  }
+  async deleteThanks(id) { this.thanks = this.thanks.filter((x) => x.id !== id); }
+  collabs = [];
+  async listCollabs() { return structuredClone(this.collabs).sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0)); }
+  async saveCollab(id, data) {
+    if (!id) {
+      id = `c${Date.now()}`;
+      this.collabs.push({ id, createdAt: Date.now() });
+    }
+    Object.assign(this.collabs.find((x) => x.id === id), structuredClone(data), { updatedAt: Date.now() });
+    return id;
+  }
+  async deleteCollab(id) { this.collabs = this.collabs.filter((x) => x.id !== id); }
   async getConfig(id) { return this.config[id] ? structuredClone(this.config[id]) : null; }
   async setConfig(id, data) { this.config[id] = { ...data, updatedAt: Date.now(), updatedBy: OWNER_EMAIL }; }
   async listAdmins() { return [...this.admins]; }

@@ -3,8 +3,8 @@
 //
 // פרטיות: נכללים רק בתי ספר וגני ילדים. מעונות יום ומשפחתונים לא נכללים – רבים מהם בבתים פרטיים.
 
-import { distanceMeters, israelDate, fetchWithTimeout } from './geo.js?v=1.6.0-mvn1g0s1';
-import { itmToWgs84 } from './itm.js?v=1.6.0-mvn1g0s1';
+import { distanceMeters, israelDate, fetchWithTimeout } from './geo.js?v=1.8.0-mvo8e244';
+import { itmToWgs84 } from './itm.js?v=1.8.0-mvo8e244';
 
 const DATASTORE = 'https://data.gov.il/api/3/action/datastore_search';
 const RESOURCE_ID = '2055063b-93e8-4d6a-b2c5-c253d18c0cf6';
@@ -110,6 +110,19 @@ export class EducationIndex {
       .sort((a, b) => a.score - b.score)
       .slice(0, limit)
       .map(({ item, d }) => ({ ...item, distance: near ? Math.round(d) : undefined }));
+  }
+
+  /** מוסדות הכי קרובים למיקום (בית ספר, או גן ילדים) ברדיוס נתון, ממוינים לפי מרחק */
+  nearby(near, { kindergarten = false } = {}, radiusKm = 5, limit = 25) {
+    const want = kindergarten ? 'גן ילדים' : 'בית ספר';
+    const out = [];
+    for (const item of this.items) {
+      if (item.type !== want) continue;
+      if (Math.abs(item.lat - near.lat) > radiusKm / 111) continue;
+      const d = distanceMeters(near, item);
+      if (d <= radiusKm * 1000) out.push({ ...item, distance: Math.round(d) });
+    }
+    return out.sort((a, b) => a.distance - b.distance).slice(0, limit);
   }
 
   async #load() {

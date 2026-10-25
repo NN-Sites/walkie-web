@@ -40,7 +40,7 @@ function restoreNativeXhr() {
   const original = globalThis.CapacitorWebFetch;
   const patched = globalThis.fetch;
   if (original && patched) {
-    const google = /^https:\/\/([a-z0-9-]+\.)*(googleapis|gstatic|firebaseio|firebaseapp)\.com\//i;
+    const google = /^https:\/\/([a-z0-9-]+\.)*(googleapis|gstatic|firebaseio|firebaseapp)\.com\/|^https:\/\/([a-z0-9-]+\.)*firebasedatabase\.app\//i;
     globalThis.fetch = (input, init) => (google.test(typeof input === 'string' ? input : input?.url ?? String(input)) ? original : patched).call(globalThis, input, init);
   }
 }
@@ -69,18 +69,20 @@ export function getFirebase() {
       const firestore = native
         ? firestoreMod.initializeFirestore(app, { experimentalForceLongPolling: true })
         : firestoreMod.getFirestore(app);
+      const rtdb = hasRtdb ? databaseMod.getDatabase(app) : null;
       // בדיקות מקומיות מול אמולטורים: http://localhost:5173/?emu=1 (רק ב-localhost).
       // 127.0.0.1 הוא מקור נפרד עם אחסון נפרד, ולכן אפשר לבדוק משחק בין שני משתמשים בשני חלונות
       if (['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('emu')) {
         authMod.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
         firestoreMod.connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
+        if (rtdb) databaseMod.connectDatabaseEmulator(rtdb, '127.0.0.1', 9000);
       }
 
       return {
         app,
         auth,
         firestore,
-        rtdb: hasRtdb ? databaseMod.getDatabase(app) : null,
+        rtdb,
         modules: {
           auth: authMod,
           firestore: firestoreMod,

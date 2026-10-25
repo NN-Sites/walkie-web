@@ -2,7 +2,7 @@
 // מקור נוכחי: curlbus.app (פרויקט קהילתי שעוטף את SIRI של משרד התחבורה).
 // לפרודקשן: להירשם ל-SIRI של משרד התחבורה ולהחליף את המימוש של #fetchUpstream בלבד.
 
-import { fetchWithTimeout } from './geo.js?v=1.6.0-mvn1g0s1';
+import { fetchWithTimeout } from './geo.js?v=1.8.0-mvo8e244';
 
 const CURLBUS_BASE = 'https://curlbus.app';
 const USER_AGENT = 'Walkie/0.2 (pedestrian & bus navigation)';

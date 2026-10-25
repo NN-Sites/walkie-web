@@ -5,10 +5,10 @@
 // המונים נצברים בזיכרון ונשלחים בקבוצה, ואם האפליקציה נסגרת לפני השליחה הם נשמרים במכשיר לפתיחה הבאה.
 // אפשר לכבות בהגדרות ← פרטיות.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.6.0-mvn1g0s1';
-import { getSettings } from './settings.js?v=1.6.0-mvn1g0s1';
-import { nearestCity } from './cities.js?v=1.6.0-mvn1g0s1';
-import { safeKey } from './keys.js?v=1.6.0-mvn1g0s1';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvo8e244';
+import { getSettings } from './settings.js?v=1.8.0-mvo8e244';
+import { nearestCity } from './cities.js?v=1.8.0-mvo8e244';
+import { safeKey } from './keys.js?v=1.8.0-mvo8e244';
 
 const QUEUE_KEY = 'walkie:analytics:q';
 const ATTR_KEY = 'walkie:attr';
@@ -199,9 +199,6 @@ export function captureAttribution() {
     if (hasSignal && !localStorage.getItem(ATTR_KEY)) {
       localStorage.setItem(ATTR_KEY, JSON.stringify({ ...found, at: Date.now() }));
     }
-    if (found.ref && !localStorage.getItem('walkie:pendingRef') && !localStorage.getItem('walkie:referral:done')) {
-      localStorage.setItem('walkie:pendingRef', found.ref);
-    }
     if (hasSignal && history.replaceState) {
       for (const k of ['ref', 'utm_source', 'utm_medium', 'utm_campaign', 'src']) params.delete(k);
       const qs = params.toString();
@@ -260,44 +257,3 @@ export function trackRegion(lat, lng) {
   return city;
 }
 
-// ---------- מנויים: איזה פיצ'ר גרם לשדרוג ----------
-
-const PAYWALL_KEY = 'walkie:lastPaywall';
-const WAS_PLAY_KEY = 'walkie:wasPlay';
-
-/** נקרא כשנפתח מסך ה-Premium. reason = הפיצ'ר/המגבלה שהובילו לשם (stops, lines, places, stats, settings) */
-export function notePaywall(reason) {
-  const r = safeKey(reason || 'settings');
-  track(`paywall.${r}`);
-  try {
-    localStorage.setItem(PAYWALL_KEY, JSON.stringify({ reason: r, at: Date.now() }));
-  } catch {
-    // ignore
-  }
-}
-
-/**
- * נקרא כשמצב המנוי ב-Google Play משתנה. מנוי חדש מיוחס למסך ה-Premium האחרון שנפתח (עד 7 ימים אחורה);
- * ביטול נספר כנטישה. הנטישה מדווחת כשהמשתמש פותח את האפליקציה, ולכן היא קצת מאוחרת מהביטול עצמו.
- */
-export function noteSubscriptionState(isPlay) {
-  let was = false;
-  try {
-    was = localStorage.getItem(WAS_PLAY_KEY) === '1';
-    localStorage.setItem(WAS_PLAY_KEY, isPlay ? '1' : '0');
-  } catch {
-    return;
-  }
-  if (isPlay && !was) {
-    track('sub.new');
-    try {
-      const last = JSON.parse(localStorage.getItem(PAYWALL_KEY) || 'null');
-      track(`upgrade.${last && Date.now() - last.at < 7 * 86400000 ? last.reason : 'unknown'}`);
-      localStorage.removeItem(PAYWALL_KEY);
-    } catch {
-      track('upgrade.unknown');
-    }
-  } else if (!isPlay && was) {
-    track('sub.cancel');
-  }
-}

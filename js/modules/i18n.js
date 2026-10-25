@@ -7,7 +7,7 @@
 // השפה נקבעת עוד לפני טעינת הקוד (סקריפט קטן ב-index.html, עברית, אלא אם נבחרה אנגלית בהגדרות),
 // כדי שהכיוון (RTL/LTR) יהיה נכון מהפריים הראשון. החלפת שפה = טעינה מחדש של האפליקציה.
 
-import { EN } from './i18n-en.js?v=1.6.0-mvn1g0s1';
+import { EN } from './i18n-en.js?v=1.8.0-mvo8e244';
 
 export const LANG = document.documentElement.lang === 'en' ? 'en' : 'he';
 export const IS_EN = LANG === 'en';

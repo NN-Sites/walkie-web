@@ -6,12 +6,12 @@
 /* ---------- משוב מגע: כל מה שלוחצים עליו "נלחץ" ---------- */
 
 .set-row, .set-button, .nearby-item, .itin-card, .result, .quick-chip,
-.chip, .pm-card, .tip, .fab, .btn-secondary, .search-pill {
+.chip, .fab, .btn-secondary, .search-pill {
   transition: transform 0.18s var(--ease-spring), box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .set-button:active, .nearby-item:active, .itin-card:active, .result:active,
-.quick-chip:active, .chip:active, .pm-card:active, .tip:active, .btn-secondary:active {
+.quick-chip:active, .chip:active, .btn-secondary:active {
   transform: scale(0.97);
 }
 
@@ -41,88 +41,19 @@
 .search-results .result,
 .content-enter .nearby-item,
 .content-enter .itin-card,
-.pm-features li,
 .quick-places .quick-chip {
   animation: rise-in 0.36s var(--ease-out) both;
 }
 
-.search-results .result:nth-child(2), .content-enter .nearby-item:nth-child(2), .content-enter .itin-card:nth-child(2), .pm-features li:nth-child(2), .quick-places .quick-chip:nth-child(2) { animation-delay: 30ms; }
-.search-results .result:nth-child(3), .content-enter .nearby-item:nth-child(3), .content-enter .itin-card:nth-child(3), .pm-features li:nth-child(3), .quick-places .quick-chip:nth-child(3) { animation-delay: 60ms; }
-.search-results .result:nth-child(4), .content-enter .nearby-item:nth-child(4), .content-enter .itin-card:nth-child(4), .pm-features li:nth-child(4), .quick-places .quick-chip:nth-child(4) { animation-delay: 90ms; }
-.search-results .result:nth-child(5), .content-enter .nearby-item:nth-child(5), .content-enter .itin-card:nth-child(5), .pm-features li:nth-child(5) { animation-delay: 120ms; }
-.search-results .result:nth-child(n+6), .content-enter .nearby-item:nth-child(n+6), .content-enter .itin-card:nth-child(n+6), .pm-features li:nth-child(n+6) { animation-delay: 150ms; }
-
-/* ---------- כרטיס Premium: ברק שעובר עליו מדי פעם ---------- */
-
-.pm-card { position: relative; overflow: hidden; }
-
-.pm-card:not(.is-active)::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.32) 50%, transparent 65%);
-  transform: translateX(-120%);
-  animation: sheen 4.5s ease-in-out 1.2s infinite;
-  pointer-events: none;
-}
-
-@keyframes sheen {
-  0%, 70% { transform: translateX(-120%); }
-  100% { transform: translateX(120%); }
-}
-
-.pm-badge { animation: badge-bob 2.8s ease-in-out infinite; }
-
-@keyframes badge-bob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-3px); }
-}
+.search-results .result:nth-child(2), .content-enter .nearby-item:nth-child(2), .content-enter .itin-card:nth-child(2), .quick-places .quick-chip:nth-child(2) { animation-delay: 30ms; }
+.search-results .result:nth-child(3), .content-enter .nearby-item:nth-child(3), .content-enter .itin-card:nth-child(3), .quick-places .quick-chip:nth-child(3) { animation-delay: 60ms; }
+.search-results .result:nth-child(4), .content-enter .nearby-item:nth-child(4), .content-enter .itin-card:nth-child(4), .quick-places .quick-chip:nth-child(4) { animation-delay: 90ms; }
+.search-results .result:nth-child(5), .content-enter .nearby-item:nth-child(5), .content-enter .itin-card:nth-child(5) { animation-delay: 120ms; }
+.search-results .result:nth-child(n+6), .content-enter .nearby-item:nth-child(n+6), .content-enter .itin-card:nth-child(n+6) { animation-delay: 150ms; }
 
 /* ---------- Toast: קפיץ קטן ---------- */
 
 .toast { transition: opacity 0.22s ease, transform 0.32s var(--ease-spring); }
-
-/* ---------- תרומות ---------- */
-
-.donate-box { padding: 4px 16px 6px; }
-
-.donate-text {
-  margin: 4px 0 12px;
-  font-size: 14px;
-  line-height: 1.65;
-  color: var(--text-2);
-}
-
-.tip-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-
-.tip {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  padding: 12px 6px 10px;
-  border: 1.5px solid var(--brand-100);
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, var(--brand-50), var(--surface));
-}
-
-.tip:hover { border-color: var(--brand); }
-.tip-ic { font-size: 26px; line-height: 1.2; transition: transform 0.3s var(--ease-spring); }
-.tip:active .tip-ic { transform: scale(1.25) rotate(-8deg); }
-.tip strong { font-size: 16px; font-weight: 800; color: var(--brand-700); }
-.tip small { font-size: 12px; color: var(--text-muted); }
-.tip.is-busy { opacity: 0.6; pointer-events: none; }
-
-.donate-thanks {
-  margin: 12px 0 0;
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  background: #dcfce7;
-  color: #166534;
-  font-size: 13.5px;
-  font-weight: 700;
-  text-align: center;
-  animation: rise-in 0.4s var(--ease-out);
-}
 
 /* ---------- חשבון Google ---------- */
 
@@ -170,18 +101,6 @@
 .btn-google:active { transform: scale(0.98); }
 .btn-google:disabled { opacity: 0.6; }
 
-.supporter-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #dcfce7;
-  color: #166534;
-  font-size: 11.5px;
-  font-weight: 800;
-}
-
 /* ---------- קונפטי ---------- */
 
 .fx-layer { position: fixed; inset: 0; z-index: 5000; pointer-events: none; }
@@ -201,7 +120,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pm-card::after, .pm-badge, .fx-in { animation: none !important; }
+  .fx-in { animation: none !important; }
 }
 
 /* ---------- חובת התחברות (auth-gate.js) ---------- */

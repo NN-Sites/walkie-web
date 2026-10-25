@@ -450,6 +450,9 @@ body.map-rotating #map {
   will-change: transform;
 }
 
+/* תוך כדי תנועה באצבעות המפה צמודה לאצבעות – בלי האטה */
+body.map-gesture #map { transition: none; }
+
 /* ---------- Route on map ---------- */
 
 .route-dest { background: none; border: none; }

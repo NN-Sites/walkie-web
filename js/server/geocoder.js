@@ -3,8 +3,8 @@
 //    ותחנות אוטובוס (GTFS). "גרג יבנה", "בית ספר אור העתיד", "רמי לוי", "דיזנגוף 50".
 //  - קטגוריה ("מסעדה", "בתי ספר", "סופר"...): כל המקומות מהסוג הזה סביב המשתמש, לפי מרחק.
 
-import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.6.0-mvn1g0s1';
-import { getCategory, labelForTag } from './categories.js?v=1.6.0-mvn1g0s1';
+import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.8.0-mvo8e244';
+import { getCategory, matchCategory, labelForTag } from './categories.js?v=1.8.0-mvo8e244';
 
 const PHOTON_SEARCH = 'https://photon.komoot.io/api/';
 const PHOTON_REVERSE = 'https://photon.komoot.io/reverse';
@@ -13,7 +13,7 @@ const ISRAEL_BBOX = '34.2,29.4,35.95,33.4';
 const USER_AGENT = 'Walkie/0.5 (pedestrian & bus navigation)';
 
 // Photon הציבורי לפעמים עמוס/נופל. אחרי כישלון – מדלגים עליו לדקה ועוברים ל-Nominatim
-const PHOTON_COOLDOWN_MS = 60 * 1000;
+const PHOTON_COOLDOWN_MS = 3 * 60 * 1000;
 // מדיניות Nominatim: לכל היותר בקשה אחת בשנייה (נאכף בתור בצד השרת)
 const NOMINATIM_MIN_INTERVAL_MS = 1100;
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -100,7 +100,8 @@ function normalizeNominatim(x, { fallbackLabel = null } = {}) {
   if (city && city !== name) subtitleParts.push(city);
 
   let kind = 'place';
-  if (NOMINATIM_AREA_TYPES.has(x.addresstype) || x.category === 'boundary' || x.category === 'place') kind = 'area';
+  if (x.type === 'house' || (a.house_number && x.category !== 'highway')) kind = 'address';
+  else if (NOMINATIM_AREA_TYPES.has(x.addresstype) || x.category === 'boundary' || x.category === 'place') kind = 'area';
   else if (POI_KEYS.has(x.category)) kind = 'poi';
   else if (x.category === 'highway') kind = 'street';
   else if (a.house_number) kind = 'address';
@@ -129,7 +130,7 @@ function norm(text) {
   return String(text ?? '')
     .toLowerCase()
     .replace(/[״"׳'`]/g, '')
-    .replace(/[-–/\\.,()]/g, ' ')
+    .replace(/[-–־/\\.,()]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -138,6 +139,24 @@ function queryTokens(query) {
   const all = norm(query).split(' ').filter((t) => t.length >= 2);
   const specific = all.filter((t) => !GENERIC_WORDS.has(t));
   return specific.length ? specific : all;
+}
+
+/**
+ * כתובת מדויקת: "הרצל 10 חיפה", "10 הרצל", "דיזנגוף 99א". מספר בית הוא מילה של 1-4 ספרות (אפשר עם אות).
+ * מספר לבד הוא קוד תחנה, ולכן דורשים לפחות עוד מילה.
+ */
+function parseAddress(query) {
+  const tokens = String(query ?? '').trim().split(/\s+/).filter(Boolean);
+  if (tokens.length < 2) return null;
+  const number = tokens.find((t) => /^\d{1,4}[א-תa-z]?$/i.test(t));
+  if (!number) return null;
+  return { number: norm(number), raw: number };
+}
+
+/** האם התוצאה היא בדיוק הבית המבוקש (מספר הבית מופיע בשם או בכתובת) */
+function hasHouseNumber(r, number) {
+  const text = ` ${norm(r.name)} ${norm(r.subtitle)} `;
+  return text.includes(` ${number} `);
 }
 
 /**
@@ -161,12 +180,15 @@ function matchInfo(r, tokens) {
  * דירוג: התאמה מלאה > השם מתחיל במילה הראשונה > התאמה חלקית; עסקים לפני ערים/אזורים;
  * בתוך כל דרגה – קרוב (עד 3 ק"מ) לפי מרחק, ואז סדר הרלוונטיות של מנוע החיפוש.
  */
-function rankResults(results, tokens) {
+function rankResults(results, tokens, addr = null) {
   const tier = (d) => (!Number.isFinite(d) ? 1 : d <= 3000 ? 0 : d <= 15000 ? 1 : 2);
   return results
     .map((r, index) => {
       const m = matchInfo(r, tokens);
-      const bucket = m.full && m.anyInName ? 0 : m.firstInName ? 1 : m.anyInName ? 2 : 3;
+      const exact = addr && hasHouseNumber(r, addr.number) && m.full && tokens.some((t) => t !== addr.number && norm(r.name).split(' ').includes(t));
+      // מספר הבית נמצא, אבל ברחוב אחר ("הרצליה 10" עבור "הרצל 10"): לא התאמה טובה
+      const wrongStreet = addr && !exact && hasHouseNumber(r, addr.number);
+      const bucket = exact ? 0 : wrongStreet ? 2 : m.full && m.anyInName ? 0 : m.firstInName ? 1 : m.anyInName ? 2 : 3;
       return { r, index, bucket, area: r.kind === 'area' ? 1 : 0, tier: tier(r.distance) };
     })
     .sort((a, b) =>
@@ -219,11 +241,16 @@ export class Geocoder {
    */
   async search(rawQuery, near, { categoryId = null } = {}) {
     const query = String(rawQuery ?? '').trim().slice(0, 80);
-    // חיפוש לפי סוג מקום ("מסעדה" -> מסעדות קרובות) כבוי בבקשת המשתמש – רק חיפוש לפי שם.
-    // נשאר זמין רק בבקשה מפורשת עם category=...
-    const category = categoryId ? getCategory(categoryId) : null;
+    // "מסעדה" / "בתי ספר" / "סופר קרוב" -> כל המקומות מהסוג הזה סביב המשתמש. אפשר גם בבקשה מפורשת עם category=...
+    const category = categoryId ? getCategory(categoryId) : (near ? matchCategory(query) : null);
 
     if (!category && query.length < 2) return { mode: 'text', category: null, results: [] };
+
+    // "מסעדות תל אביב", "בתי ספר בחיפה": קטגוריה + מקום -> מוצאים את המקום ומחפשים את הקטגוריה סביבו
+    if (!category && !categoryId) {
+      const hit = await this.#categoryInPlace(query);
+      if (hit) return this.#cached(`p|${hit.category.id}|${hit.center.lat.toFixed(3)},${hit.center.lng.toFixed(3)}`, () => this.#categorySearch(hit.category, hit.center));
+    }
     if (category && !near) {
       // חיפוש "מסעדה" בלי מיקום לא משמעותי – נופלים לחיפוש טקסט
       return this.#cached(`t|${query}|`, () => this.#textSearch(query, null));
@@ -234,6 +261,29 @@ export class Geocoder {
       return this.#cached(`c|${category.id}|${loc}`, () => this.#categorySearch(category, near));
     }
     return this.#cached(`t|${query}|${loc}`, () => this.#textSearch(query, near));
+  }
+
+  async #categoryInPlace(query) {
+    const words = query.split(/\s+/).filter(Boolean);
+    if (words.length < 2 || words.length > 5) return null;
+    for (let k = Math.min(2, words.length - 1); k >= 1; k--) {
+      const category = matchCategory(words.slice(0, k).join(' '));
+      if (!category) continue;
+      const rest = words.slice(k).join(' ');
+      // "בחיפה" -> גם "חיפה"
+      const variants = /^ב.{3,}/.test(rest) ? [rest, rest.slice(1)] : [rest];
+      for (const place of variants) {
+        try {
+          const found = await this.#nominatimText(place, null);
+          const area = found.find((r) => r.kind === 'area');
+          if (area) return { category, center: { lat: area.lat, lng: area.lng } };
+        } catch (err) {
+          this.log.warn?.(`[search] place lookup failed: ${err.message}`);
+          return null;
+        }
+      }
+    }
+    return null;
   }
 
   async #cached(key, producer) {
@@ -265,6 +315,31 @@ export class Geocoder {
         break;
       }
       if (results.length >= CATEGORY_MIN_RESULTS) break;
+    }
+
+    // בתי ספר וגנים: המאגר הרשמי של משרד החינוך שלם יותר מ-OpenStreetMap
+    if ((category.id === 'school' || category.id === 'kindergarten') && this.educationIndex) {
+      try {
+        await this.educationIndex.ensureLoaded();
+        const official = this.educationIndex
+          .nearby(near, { kindergarten: category.id === 'kindergarten' }, CATEGORY_RADII_KM[1], CATEGORY_MAX_RESULTS)
+          .map((s) => ({
+            id: s.id,
+            kind: 'poi',
+            name: s.name,
+            subtitle: [s.type === 'גן ילדים' ? 'גן ילדים' : s.stage ? `בית ספר ${s.stage}` : 'בית ספר', s.city].filter(Boolean).join(' · '),
+            category: category.id,
+            emoji: category.emoji,
+            source: 'moe',
+            lat: s.lat,
+            lng: s.lng,
+            distance: s.distance
+          }));
+        results = [...results, ...official.filter((o) => !results.some((r) => similarName(r.name, o.name) && distanceMeters(r, o) < 400))]
+          .sort((a, b) => a.distance - b.distance);
+      } catch (err) {
+        this.log.warn?.(`[search] education nearby failed: ${err.message}`);
+      }
     }
 
     // הסרת כפולים (אותו מקום ממופה גם כנקודה וגם כבניין)
@@ -302,6 +377,47 @@ export class Geocoder {
       .sort((a, b) => a.distance - b.distance);
   }
 
+  // ---------- כתובת מדויקת ----------
+
+  /**
+   * "הרצל 10 חיפה": Nominatim מכיר מספרי בתים (Photon מחזיר לרוב רק את הרחוב).
+   * אם הבית לא ממופה, מחזירים את הרחוב עם הסבר, כדי שיהיה אפשר להמשיך אליו.
+   */
+  async #houseLookup(query, addr, near) {
+    const isHouse = (r) => r.kind !== 'street' && hasHouseNumber(r, addr.number);
+    // קודם באזור המשתמש ("דיזנגוף 50" בתל אביב ולא ברחוב באותו שם בעיר אחרת), ואז בכל הארץ
+    // ואם כתבו גם עיר ("הרצל 10 חיפה") – קודם בכל הארץ, כי העיר עשויה להיות רחוקה מהמשתמש
+    const hasCity = norm(query).split(' ').length >= 3;
+    const first = await this.#nominatimText(query, near, { local: !hasCity && !!near });
+    let found = first;
+    if (!found.some(isHouse)) found = mergeById(found, await this.#nominatimText(query, near, { local: hasCity && !!near }));
+    if (found.some(isHouse)) return found;
+
+    // "הרצל 10 חיפה": מאתרים את העיר ומחפשים את "הרצל 10" רק בתוכה
+    if (hasCity) {
+      const words = query.split(/\s+/).filter(Boolean);
+      const at = words.indexOf(addr.raw);
+      const split = at >= 0 ? words.filter((_, i) => i !== at) : words;
+      for (const cityWords of [split.slice(-1), split.slice(-2)]) {
+        const streetWords = split.slice(0, split.length - cityWords.length);
+        if (streetWords.length === 0) continue;
+        const area = (await this.#nominatimText(cityWords.join(' '), null)).find((r) => r.kind === 'area');
+        if (!area) continue;
+        const inCity = await this.#nominatimText(`${streetWords.join(' ')} ${addr.raw}`, { lat: area.lat, lng: area.lng }, { local: true });
+        if (inCity.length > 0) {
+          found = mergeById(inCity, found);
+          if (inCity.some(isHouse)) return found;
+          break;
+        }
+      }
+    }
+
+    const street = found.find((r) => r.kind === 'street');
+    if (!street) return found;
+    const note = `לא נמצא מספר ${addr.raw} במפה`;
+    return found.map((r) => (r === street ? { ...r, subtitle: [r.subtitle, note].filter(Boolean).join(' · ') } : r));
+  }
+
   // ---------- חיפוש טקסט ----------
 
   async #textSearch(query, near) {
@@ -321,10 +437,18 @@ export class Geocoder {
     // מקורות מקומיים (מהירים, בלי רשת): תחנות + מוסדות חינוך רשמיים
     const [stops, schools] = await Promise.all([this.#searchStops(query, near), this.#searchSchools(query, near)]);
 
-    // 1) חיפוש מקומי סביב המשתמש  2) ארצי – רק אם אין מספיק התאמות טובות (חוסך עומס על השירות)
-    let places = near ? await safe(this.#photon(query, near, { local: true })) : [];
-    if (fullMatches([...places, ...schools]) < 3) {
-      places = mergeById(places, await safe(this.#photon(query, near)));
+    // כתובת עם מספר בית ("הרצל 10 חיפה"): מחפשים את הבית עצמו בנתוני OpenStreetMap. מצאנו – אין צורך בחיפוש הכללי
+    const addr = parseAddress(query);
+    let places = addr ? await safe(this.#houseLookup(query, addr, near)) : [];
+    const foundHouse = addr && places.some((r) => r.kind !== 'street' && hasHouseNumber(r, addr.number));
+
+    if (!foundHouse) {
+      // 1) חיפוש מקומי סביב המשתמש  2) ארצי – רק אם אין מספיק התאמות טובות (חוסך עומס על השירות)
+      let general = near ? await safe(this.#photon(query, near, { local: true })) : [];
+      if (fullMatches([...general, ...schools]) < 3) {
+        general = mergeById(general, await safe(this.#photon(query, near)));
+      }
+      places = mergeById(places, general);
     }
 
     // "מקדונלדס יבנה" כשאין סניף ביבנה: מחפשים את שם המקום לבד באזור (הסניף הקרוב)
@@ -340,7 +464,7 @@ export class Geocoder {
     // מוסד חינוך מהמאגר הרשמי שכבר קיים ב-OSM (אותו שם, קרוב) – לא מציגים פעמיים
     const uniqueSchools = schools.filter((s) => !places.some((p) => similarName(p.name, s.name) && distanceMeters(p, s) < 400));
 
-    const ranked = rankResults([...places, ...uniqueSchools], tokens);
+    const ranked = rankResults([...places, ...uniqueSchools], tokens, addr);
     const stopsFirst = /^\d{2,6}$/.test(query) || query.includes('/');
     const strong = ranked.filter((r) => r._bucket <= 1);
     const weak = ranked.filter((r) => r._bucket > 1);
@@ -508,7 +632,7 @@ export class Geocoder {
   async #photonFetch(url) {
     for (let attempt = 0; attempt < 2; attempt++) {
       // timeout קצר: אם Photon לא עונה – עדיף לעבור מהר לגיבוי
-      const res = await fetchWithTimeout(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' } }, 4500);
+      const res = await fetchWithTimeout(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' } }, 3000);
       if (res.ok) return res.json();
       if ((res.status === 503 || res.status === 429) && attempt === 0) {
         await sleep(450);

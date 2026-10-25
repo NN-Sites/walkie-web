@@ -12,8 +12,8 @@ import {
   NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
-} from './config.js?v=1.6.0-mvn1g0s1';
-import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.6.0-mvn1g0s1';
+} from './config.js?v=1.8.0-mvo8e244';
+import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.8.0-mvo8e244';
 import {
   createMap,
   focusPoint,
@@ -24,40 +24,37 @@ import {
   TransitLayer,
   VehiclesLayer,
   MapRotator
-} from './modules/map.js?v=1.6.0-mvn1g0s1';
-import { fetchNearbyStops } from './modules/stops.js?v=1.6.0-mvn1g0s1';
-import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.6.0-mvn1g0s1';
-import { Sheet, showToast } from './modules/ui.js?v=1.6.0-mvn1g0s1';
-import { SearchOverlay } from './modules/search.js?v=1.6.0-mvn1g0s1';
-import { RouteController } from './modules/route-controller.js?v=1.6.0-mvn1g0s1';
-import { TransitController } from './modules/transit-controller.js?v=1.6.0-mvn1g0s1';
-import { DirectionsController } from './modules/directions.js?v=1.6.0-mvn1g0s1';
-import { initSessionWhenIdle } from './modules/session.js?v=1.6.0-mvn1g0s1';
-import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.6.0-mvn1g0s1';
-import { TabBar } from './modules/tabs.js?v=1.6.0-mvn1g0s1';
-import { LinesView } from './modules/lines-view.js?v=1.6.0-mvn1g0s1';
-import { StationsView } from './modules/stations-view.js?v=1.6.0-mvn1g0s1';
-import { SettingsView } from './modules/settings-view.js?v=1.6.0-mvn1g0s1';
-import { GamesView } from './modules/games-view.js?v=1.6.0-mvn1g0s1';
-import { getSettings, onSettingsChange } from './modules/settings.js?v=1.6.0-mvn1g0s1';
-import { shareMyLocation, shareTrip } from './modules/share.js?v=1.6.0-mvn1g0s1';
-import { QuickBar } from './modules/favorites-ui.js?v=1.6.0-mvn1g0s1';
-import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.6.0-mvn1g0s1';
-import { loadDepartures } from './modules/arrivals.js?v=1.6.0-mvn1g0s1';
-import { PremiumScreen } from './modules/premium-ui.js?v=1.6.0-mvn1g0s1';
-import { AdBanner } from './modules/ad-banner.js?v=1.6.0-mvn1g0s1';
-import { setPaywallOpener, refreshInterval, recordWalk, recordTrip, isPremium, onPremiumChange, premiumSource } from './modules/premium.js?v=1.6.0-mvn1g0s1';
+} from './modules/map.js?v=1.8.0-mvo8e244';
+import { fetchNearbyStops } from './modules/stops.js?v=1.8.0-mvo8e244';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.8.0-mvo8e244';
+import { Sheet, showToast } from './modules/ui.js?v=1.8.0-mvo8e244';
+import { SearchOverlay } from './modules/search.js?v=1.8.0-mvo8e244';
+import { RouteController } from './modules/route-controller.js?v=1.8.0-mvo8e244';
+import { TransitController } from './modules/transit-controller.js?v=1.8.0-mvo8e244';
+import { DirectionsController } from './modules/directions.js?v=1.8.0-mvo8e244';
+import { initSessionWhenIdle } from './modules/session.js?v=1.8.0-mvo8e244';
+import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.8.0-mvo8e244';
+import { TabBar } from './modules/tabs.js?v=1.8.0-mvo8e244';
+import { LinesView } from './modules/lines-view.js?v=1.8.0-mvo8e244';
+import { StationsView } from './modules/stations-view.js?v=1.8.0-mvo8e244';
+import { ThanksView } from './modules/thanks-view.js?v=1.8.0-mvo8e244';
+import { SettingsView } from './modules/settings-view.js?v=1.8.0-mvo8e244';
+import { getSettings, onSettingsChange } from './modules/settings.js?v=1.8.0-mvo8e244';
+import { shareMyLocation, shareTrip } from './modules/share.js?v=1.8.0-mvo8e244';
+import { QuickBar } from './modules/favorites-ui.js?v=1.8.0-mvo8e244';
+import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.8.0-mvo8e244';
+import { loadDepartures } from './modules/arrivals.js?v=1.8.0-mvo8e244';
+import { AdBanner } from './modules/ad-banner.js?v=1.8.0-mvo8e244';
+import { recordWalk, recordTrip } from './modules/stats.js?v=1.8.0-mvo8e244';
 import {
-  captureAttribution, trackOnce, trackPerf, trackRegion, trackFeature, notePaywall, noteSubscriptionState
-} from './modules/analytics.js?v=1.6.0-mvn1g0s1';
-import { CommunityController } from './modules/community-controller.js?v=1.6.0-mvn1g0s1';
-import { openInvitePage, closeInvite, isInviteOpen } from './modules/community-ui.js?v=1.6.0-mvn1g0s1';
-import { initBilling } from './modules/billing.js?v=1.6.0-mvn1g0s1';
-import { supportId } from './modules/session.js?v=1.6.0-mvn1g0s1';
-import { escapeHtml } from './modules/ui.js?v=1.6.0-mvn1g0s1';
-import { t, translateDom } from './modules/i18n.js?v=1.6.0-mvn1g0s1';
-import { initTheme } from './modules/theme.js?v=1.6.0-mvn1g0s1';
-import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.6.0-mvn1g0s1';
+  captureAttribution, trackOnce, trackPerf, trackRegion, trackFeature
+} from './modules/analytics.js?v=1.8.0-mvo8e244';
+import { CommunityController } from './modules/community-controller.js?v=1.8.0-mvo8e244';
+import { supportId } from './modules/session.js?v=1.8.0-mvo8e244';
+import { escapeHtml } from './modules/ui.js?v=1.8.0-mvo8e244';
+import { t, translateDom } from './modules/i18n.js?v=1.8.0-mvo8e244';
+import { initTheme } from './modules/theme.js?v=1.8.0-mvo8e244';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.8.0-mvo8e244';
 
 // טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
 translateDom();
@@ -266,7 +263,6 @@ const community = new CommunityController({
   shareOnce: () => shareCurrentTrip()
 });
 window.addEventListener('walkie:line-open', (e) => community.onLineOpened(e.detail.lineKey));
-window.addEventListener('walkie:referral-redeemed', () => showToast(t('קוד ההזמנה מומש – קיבלת יום Premium חינם 🎁'), 5000));
 
 const linesView = new LinesView({
   sheet,
@@ -277,6 +273,8 @@ const linesView = new LinesView({
   getOcclusion,
   onNavigateTo: (place) => openDirectionsTo(place, 'walk')
 });
+
+const thanksView = new ThanksView(document.getElementById('thanks-page'));
 
 const stationsView = new StationsView({
   sheet,
@@ -307,26 +305,9 @@ function pickPlace(placeholder, onPick, placeName = t('המיקום שלי')) {
   });
 }
 
-// Walkie Premium: נפתח מההגדרות, או כשמגיעים למגבלה של החשבון החינמי
-const premiumScreen = new PremiumScreen({ getSupportId: supportId });
-setPaywallOpener((reason) => {
-  notePaywall(reason);
-  premiumScreen.open(reason);
-});
-
 const settingsView = new SettingsView(document.getElementById('settings-page'), {
   pickPlace,
-  openPremium: () => {
-    notePaywall('settings');
-    premiumScreen.open();
-  },
-  openInvite: openInvitePage,
   getSupportId: supportId
-});
-
-// משחקים: נקודה על הלשונית כשיש פרס יומי שלא נלקח, או כשהתור שלי במשחק שברקע
-const gamesView = new GamesView(document.getElementById('games-page'), {
-  onBadge: (on) => tabbar?.setBadge('games', on)
 });
 
 // סרגל גישה מהירה: בית · עבודה/בית ספר · מקומות שמורים
@@ -378,18 +359,12 @@ tabbar = new TabBar(document.getElementById('tabbar'), {
 });
 // באנר פרסומת קבוע בתחתית: כשהוא מופיע / משתנה, הסרגל והלוח מתיישבים מחדש מעליו
 adBanner = new AdBanner(document.getElementById('ad-banner'), {
-  openPremium: () => {
-    notePaywall('banner');
-    premiumScreen.open();
-  },
-  openInvite: openInvitePage,
   onResize: () => {
     tabbar.refresh();
     sheet.refreshLayout();
   }
 });
 tabbar.refresh(); // הבאנר כבר קיים עכשיו: מחשבים את הגובה המשותף מחדש
-gamesView.refreshBadge(); // הלשונית כבר קיימת: מציגים נקודה אם יש פרס יומי
 sheet.refreshLayout();
 
 onSettingsChange((s) => {
@@ -624,7 +599,7 @@ function onTabChange(tab, prev, { reselect = false } = {}) {
     if (prev === 'lines') linesView.deactivate();
     if (prev === 'stations') stationsView.deactivate();
     if (prev === 'settings') settingsView.hide();
-    if (prev === 'games') gamesView.hide();
+    if (prev === 'thanks') thanksView.hide();
   }
 
   stopsLayer.setVisible(false);
@@ -650,8 +625,8 @@ function onTabChange(tab, prev, { reselect = false } = {}) {
     case 'settings':
       settingsView.show();
       break;
-    case 'games':
-      gamesView.show({ reset: reselect });
+    case 'thanks':
+      thanksView.show();
       break;
     default:
       break;
@@ -826,17 +801,18 @@ function onLocationError(err) {
 
 // ---------- Ticker (פעיל רק כשהאפליקציה גלויה) ----------
 
+const REFRESH_MS = 30000; // רענון זמני הגעה בזמן אמת
+
 function tick() {
   if (directions.isActive || tabbar.active !== 'home') return;
   loadFavBoards();
-  // Premium: רענון זמן אמת כל 15 שניות במקום 30
-  if (Date.now() - lastArrivalsRefresh >= refreshInterval() - 1000) refreshArrivals();
+  if (Date.now() - lastArrivalsRefresh >= REFRESH_MS - 1000) refreshArrivals();
   render(); // מעדכן דקות שנותרו גם בלי בקשה חדשה
 }
 
 function startTicker() {
   stopTicker();
-  tickTimer = setInterval(tick, Math.min(NOW_TICK_MS, ETA_TICK_MS, refreshInterval()));
+  tickTimer = setInterval(tick, Math.min(NOW_TICK_MS, ETA_TICK_MS, REFRESH_MS));
 }
 
 function stopTicker() {
@@ -862,15 +838,12 @@ function handleBack() {
   if (closeAuthDialog()) return;
   if (search.isOpen) return search.close();
   if (document.querySelector('.cm-modal')) return document.querySelector('.cm-modal').remove();
-  if (isInviteOpen()) return closeInvite();
-  if (premiumScreen.isOpen) return premiumScreen.close();
   if (settingsView.isPrivacyOpen) return settingsView.closePrivacy();
   // בזמן ניווט/נסיעה לא מבטלים בטעות – רק ממזערים, והליווי ממשיך
   if (isGuiding()) return NativeApp?.minimizeApp();
   if (directions.isActive) return directions.close();
   if (tabbar.active === 'lines' && linesView.mode !== 'list') return linesView.handleAction('line-back', {});
   if (tabbar.active === 'stations' && stationsView.mode !== 'list') return stationsView.handleAction('station-back', {});
-  if (tabbar.active === 'games' && gamesView.handleBack()) return;
   if (tabbar.active !== 'home') return tabbar.select('home');
   if (sheet.snap === 'full') return sheet.setSnap('half');
   if (state.selectedId) {
@@ -893,13 +866,6 @@ loadFavBoards(true);
 tracker.start();
 startTicker();
 
-// מנוי Premium משנה את קצב הרענון
-onPremiumChange(() => {
-  if (tickTimer) startTicker();
-  noteSubscriptionState(premiumSource() === 'play');
-});
-initBilling();
-
 // ---------- הודעה מהמנהל (config/announcement) ----------
 
 const ANNOUNCE_SEEN_KEY = 'walkie:announceSeen';
@@ -907,7 +873,7 @@ const ANNOUNCE_SEEN_KEY = 'walkie:announceSeen';
 function showAnnouncement(a) {
   const id = String(a.id ?? a.updatedAt?.seconds ?? a.title ?? '');
   const expired = a.until && Date.parse(a.until) < Date.now();
-  const audienceOk = a.audience === 'premium' ? isPremium() : a.audience === 'free' ? !isPremium() : true;
+  const audienceOk = a.audience !== 'premium';
   if (!a.active || expired || !audienceOk || !a.text) return;
   try {
     if (localStorage.getItem(ANNOUNCE_SEEN_KEY) === id) return;

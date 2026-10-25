@@ -1,10 +1,7 @@
-// Walkie Admin – סקירה, משתמשים, Premium ומחירים, מגבלות, הודעות, מנהלים ויומן.
+// Walkie Admin – סקירה, משתמשים, הודעות, דף תודות, מנהלים ויומן.
 
 import { createBackend, createDemoBackend, OWNER_EMAIL } from './backend.js';
-import { renderAcquisition, renderRevenue, renderProduct, renderGeo, renderControl } from './analytics-views.js';
-import {
-  PRICING, FREE_LIMITS, PREMIUM_FEATURES, mergePricing, priceAt, discountPercent, formatPrice, formatLaunchEnd
-} from '../js/modules/pricing.js';
+import { renderAcquisition, renderProduct, renderGeo, renderControl } from './analytics-views.js';
 
 const DAY = 86400000;
 const $ = (s, root = document) => root.querySelector(s);
@@ -19,7 +16,6 @@ const state = {
   users: [],
   next: null,
   counts: null,
-  pricing: PRICING,
   filter: 'all',
   query: '',
   sort: { key: 'lastSeenAt', dir: -1 },
@@ -58,56 +54,17 @@ function fmtAgo(ms) {
   return fmtDate(ms);
 }
 
-/** מצב ה-Premium של משתמש מנקודת המבט של המנהל */
-function premiumOf(u) {
-  const giftActive = u.plan === 'pro' && (u.premiumUntil === 'forever' || !u.premiumUntil || Date.parse(u.premiumUntil) > Date.now());
-  if (giftActive) {
-    return { kind: 'gift', label: u.premiumGrantedBy === 'referral' ? 'הזמנות' : 'מתנה', until: u.premiumUntil === 'forever' || !u.premiumUntil ? 'ללא הגבלה' : fmtDate(Date.parse(u.premiumUntil)) };
-  }
-  if (u.premium?.active && u.premium.source === 'play') return { kind: 'play', label: 'משלם', until: null };
-  return { kind: 'free', label: 'חינם', until: null };
-}
-
-const badge = (p) => `<span class="badge ${p.kind}">${p.kind === 'play' ? '💳' : p.kind === 'gift' ? '🎁' : ''} ${p.label}</span>`;
 const supportIdOf = (u) => u.id.slice(0, 8);
-
-// datetime-local <-> ISO בשעון ישראל
-function israelOffset(date) {
-  const part = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jerusalem', timeZoneName: 'shortOffset' })
-    .formatToParts(date).find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+2';
-  const m = part.match(/GMT([+-])(\d+)/);
-  const h = m ? Number(m[2]) : 2;
-  return `${m?.[1] ?? '+'}${String(h).padStart(2, '0')}:00`;
-}
-
-function localToIso(value) {
-  if (!value) return null;
-  const guess = new Date(`${value}:00Z`);
-  return `${value}:00${israelOffset(guess)}`;
-}
-
-function isoToLocal(iso) {
-  const d = new Date(iso);
-  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
-  }).formatToParts(d).map((x) => [x.type, x.value]));
-  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
-}
 
 /* ---------- טעינה ---------- */
 
 async function loadAll() {
   $('#view').innerHTML = '<div class="loading">טוען נתונים…</div>';
   const b = state.backend;
-  const [counts, page, pricing] = await Promise.all([
-    b.counts(),
-    b.listUsers({ pageSize: 300 }),
-    b.getConfig('pricing')
-  ]);
+  const [counts, page] = await Promise.all([b.counts(), b.listUsers({ pageSize: 300 })]);
   state.counts = counts;
   state.users = page.users;
   state.next = page.next;
-  state.pricing = mergePricing(pricing);
   state.analyticsCache = {};
   state.loadedAt = Date.now();
   $('#updated').textContent = `עודכן ${new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`;
@@ -125,21 +82,20 @@ async function loadMoreUsers() {
 /** מה שמסכי האנליטיקה (analytics-views.js) צריכים מהדף */
 function viewCtx() {
   return {
-    b: state.backend, state, esc, fmtNum, fmtMoney, fmtDateTime, fmtAgo, toast, barChart, distBars, priceAt, go: (v) => go(v)
+    b: state.backend, state, esc, fmtNum, fmtMoney, fmtDateTime, fmtAgo, toast, barChart, distBars, go: (v) => go(v)
   };
 }
 
 const VIEWS = {
   overview: { title: 'סקירה כללית', render: renderOverview },
   acquisition: { title: 'רכישת משתמשים ומקורות הגעה', render: (el) => renderAcquisition(el, viewCtx()) },
-  revenue: { title: 'מנויים, מונטיזציה והכנסות', render: (el) => renderRevenue(el, viewCtx()) },
   product: { title: 'שיפור המוצר ונקודות נטישה', render: (el) => renderProduct(el, viewCtx()) },
   geo: { title: 'דמוגרפיה, אזורים ומכשירים', render: (el) => renderGeo(el, viewCtx()) },
   control: { title: 'בקרת משתמשים והודעות', render: (el) => renderControl(el, viewCtx()) },
   users: { title: 'משתמשים', render: renderUsers },
-  premium: { title: 'Premium ומחירים', render: renderPremium },
-  limits: { title: "מגבלות ופיצ'רים", render: renderLimits },
   announce: { title: 'הודעה למשתמשים', render: renderAnnounce },
+  collabs: { title: 'שיתופי פעולה', render: renderCollabs },
+  thanks: { title: 'דף תודות', render: renderThanks },
   admins: { title: 'מנהלים ויומן', render: renderAdmins }
 };
 
@@ -191,7 +147,6 @@ function countBy(list, fn) {
 
 async function renderOverview(el) {
   const c = state.counts;
-  const p = priceAt(Date.now(), state.pricing);
   const signups = await state.backend.signupsSince(30);
 
   const days = [];
@@ -204,14 +159,8 @@ async function renderOverview(el) {
     values.push(signups.filter((u) => u.createdAt >= from && u.createdAt < from + DAY).length);
   }
 
-  const premiumTotal = c.paying + c.gifts;
-  const conversion = c.total ? ((c.paying / c.total) * 100).toFixed(1) : '0.0';
-  const mrrNow = c.paying * p.price;
-  const mrrRegular = c.paying * state.pricing.regular;
   const sample = state.users;
   const sum = (k) => sample.reduce((a, u) => a + (u.stats?.[k] ?? 0), 0);
-  const donors = sample.filter((u) => u.donations?.count > 0);
-  const donated = donors.reduce((a, u) => a + (u.donations?.total ?? 0), 0);
   const linked = sample.filter((u) => u.profile?.email).length;
 
   el.innerHTML = `
@@ -224,20 +173,8 @@ async function renderOverview(el) {
     <div class="grid kpis">
       <div class="card kpi is-brand"><div class="label">משתמשים</div><div class="value">${fmtNum(c.total)}</div><div class="sub">+${fmtNum(c.new7)} ב-7 הימים האחרונים</div></div>
       <div class="card kpi"><div class="label">פעילים היום</div><div class="value">${fmtNum(c.active1)}</div><div class="sub">${fmtNum(c.active7)} בשבוע · ${fmtNum(c.active30)} בחודש</div></div>
-      <div class="card kpi"><div class="label">מנויי Premium</div><div class="value">${fmtNum(premiumTotal)}</div><div class="sub">💳 ${fmtNum(c.paying)} משלמים · 🎁 ${fmtNum(c.gifts)} מתנות</div></div>
-      <div class="card kpi"><div class="label">המרה לתשלום</div><div class="value">${conversion}%</div><div class="sub">מתוך כל המשתמשים</div></div>
-      <div class="card kpi is-accent"><div class="label">הכנסה חודשית (MRR)</div><div class="value">${fmtMoney(mrrNow)}</div><div class="sub">לפי ${formatPrice(p.price, state.pricing)} למנוי, לפני עמלת Google</div></div>
-      <div class="card kpi"><div class="label">תרומות 💚</div><div class="value">${fmtMoney(donated)}</div><div class="sub">${fmtNum(donors.length)} תורמים · ${fmtNum(sample.length)} האחרונים</div></div>
       <div class="card kpi"><div class="label">מחוברים עם Google</div><div class="value">${fmtNum(linked)}</div><div class="sub">${sample.length ? Math.round((linked / sample.length) * 100) : 0}% מהמשתמשים</div></div>
-      <div class="card kpi"><div class="label">MRR במחיר מלא</div><div class="value">${fmtMoney(mrrRegular)}</div><div class="sub">אותם מנויים ב-${formatPrice(state.pricing.regular, state.pricing)}</div></div>
     </div>
-
-    ${p.isLaunch ? `
-      <div class="promo" style="margin-top:14px">
-        <span class="big">${p.daysLeft}</span>
-        <div><strong>ימים נשארו למבצע ההשקה</strong><div class="muted">${formatPrice(p.launch, state.pricing)} במקום ${formatPrice(p.regular, state.pricing)} (${p.discount}% הנחה) · עד ${formatLaunchEnd(state.pricing)}</div></div>
-        <button class="btn btn-ghost btn-sm" type="button" data-go="premium" style="margin-inline-start:auto">עריכת מחירים</button>
-      </div>` : ''}
 
     <div class="card">
       <h2>הרשמות ב-30 הימים האחרונים <small>· סה"כ ${fmtNum(signups.length)}</small></h2>
@@ -279,22 +216,15 @@ async function renderOverview(el) {
 
 const FILTERS = {
   all: { label: 'כולם', fn: () => true },
-  premium: { label: 'Premium', fn: (u) => premiumOf(u).kind !== 'free' },
-  play: { label: 'משלמים', fn: (u) => premiumOf(u).kind === 'play' },
-  gift: { label: 'מתנות', fn: (u) => premiumOf(u).kind === 'gift' },
-  free: { label: 'חינם', fn: (u) => premiumOf(u).kind === 'free' },
   active: { label: 'פעילים (7 ימים)', fn: (u) => u.lastSeenAt >= Date.now() - 7 * DAY },
   dormant: { label: 'רדומים (30+ ימים)', fn: (u) => u.lastSeenAt < Date.now() - 30 * DAY },
   google: { label: 'מחוברים ל-Google', fn: (u) => !!u.profile?.email || u.authType === 'google' },
-  donors: { label: 'תורמים', fn: (u) => u.donations?.count > 0 },
   notes: { label: 'עם הערות', fn: (u) => !!u.notes }
 };
 
 const COLUMNS = [
   { key: 'id', label: 'מזהה תמיכה', sort: (u) => u.id },
-  { key: 'premium', label: 'מצב', sort: (u) => ['free', 'gift', 'play'].indexOf(premiumOf(u).kind) },
   { key: 'account', label: 'חשבון', sort: (u) => u.profile?.email ?? '' },
-  { key: 'donations', label: 'תרומות', sort: (u) => u.donations?.total ?? 0 },
   { key: 'createdAt', label: 'הצטרף', sort: (u) => u.createdAt ?? 0 },
   { key: 'lastSeenAt', label: 'פעיל לאחרונה', sort: (u) => u.lastSeenAt ?? 0 },
   { key: 'sessions', label: 'פתיחות', sort: (u) => u.sessions ?? 0 },
@@ -342,9 +272,7 @@ function renderUsers(el) {
             const active = u.lastSeenAt >= Date.now() - DAY;
             return `<tr data-user="${esc(u.id)}">
               <td><span class="dot ${active ? 'on' : ''}"></span> <bdi class="mono">${esc(supportIdOf(u))}</bdi>${u.notes ? ' 📝' : ''}</td>
-              <td>${badge(premiumOf(u))}</td>
               <td>${u.profile?.email ? esc(u.profile.email) : u.authType === 'google' ? '<span class="muted">Google</span>' : '<span class="muted">אנונימי</span>'}</td>
-              <td class="num">${u.donations?.total ? fmtMoney(u.donations.total) : '—'}</td>
               <td>${fmtDate(u.createdAt)}</td>
               <td>${fmtAgo(u.lastSeenAt)}</td>
               <td class="num">${fmtNum(u.sessions)}</td>
@@ -387,10 +315,9 @@ async function findOnServer() {
 
 function exportCsv() {
   const list = visibleUsers();
-  const head = ['uid', 'support_id', 'email', 'donated', 'status', 'premium_until', 'created', 'last_seen', 'sessions', 'walks', 'walk_km', 'trips', 'platform', 'version', 'notes'];
+  const head = ['uid', 'support_id', 'email', 'created', 'last_seen', 'sessions', 'walks', 'walk_km', 'trips', 'platform', 'version', 'notes'];
   const rows = list.map((u) => {
-    const p = premiumOf(u);
-    return [u.id, supportIdOf(u), u.profile?.email ?? '', u.donations?.total ?? 0, p.kind, p.until ?? '', new Date(u.createdAt).toISOString(), new Date(u.lastSeenAt).toISOString(),
+    return [u.id, supportIdOf(u), u.profile?.email ?? '', new Date(u.createdAt).toISOString(), new Date(u.lastSeenAt).toISOString(),
       u.sessions, u.stats?.walks ?? 0, ((u.stats?.walkMeters ?? 0) / 1000).toFixed(2), u.stats?.trips ?? 0,
       u.device?.platform ?? '', u.device?.appVersion ?? '', u.notes ?? ''];
   });
@@ -407,13 +334,11 @@ function exportCsv() {
 function openUser(id) {
   const u = state.users.find((x) => x.id === id);
   if (!u) return;
-  const p = premiumOf(u);
   const s = u.stats ?? {};
   $('#drawer-body').innerHTML = `
     <div class="drawer-head">
       <div>
         <h2>משתמש <bdi class="mono">${esc(supportIdOf(u))}</bdi></h2>
-        <div style="margin-top:6px">${badge(p)} ${p.until ? `<span class="muted">עד ${esc(p.until)}</span>` : ''}</div>
       </div>
       <button class="btn btn-ghost btn-sm" type="button" data-close>✕</button>
     </div>
@@ -431,26 +356,10 @@ function openUser(id) {
       <dt>הצטרף</dt><dd>${fmtDateTime(u.createdAt)}</dd>
       <dt>פעיל לאחרונה</dt><dd>${fmtDateTime(u.lastSeenAt)} (${fmtAgo(u.lastSeenAt)})</dd>
       <dt>חשבון Google</dt><dd>${u.profile?.email ? `${esc(u.profile.name ?? '')} · <a href="mailto:${esc(u.profile.email)}">${esc(u.profile.email)}</a>` : u.authType === 'google' ? 'Google · האימייל יישמר כשהמשתמש יפתח את הגרסה העדכנית של האפליקציה' : 'לא מחובר'}</dd>
-      <dt>תרומות</dt><dd>${u.donations?.count ? `${fmtMoney(u.donations.total)} ב-${u.donations.count} תרומות · אחרונה ${fmtDate(Date.parse(u.donations.last))}` : 'אין'}</dd>
       <dt>פלטפורמה</dt><dd>${esc(u.device?.platform ?? '—')} · גרסה ${esc(u.device?.appVersion ?? '—')} · ${esc(u.device?.lang ?? '')}</dd>
       <dt>סוג הרשמה</dt><dd>${esc({ google: 'Google', email: 'אימייל', anonymous: 'אורח / אנונימי' }[u.authType] ?? u.authType)}</dd>
       <dt>מקור הגעה</dt><dd>${u.attribution ? esc(`${u.attribution.source} / ${u.attribution.medium}${u.attribution.campaign ? ` / ${u.attribution.campaign}` : ''}`) : '—'}</dd>
-      <dt>קוד הזמנה</dt><dd>${u.refCode ? `<bdi class="mono">${esc(u.refCode)}</bdi>` : '—'}${u.referral?.count ? ` · הזמין ${u.referral.count} חברים${u.referral.badge ? ' 🏅' : ''}` : ''}${u.referral?.referredBy ? ` · נרשם בהזמנה` : ''}</dd>
-      <dt>Premium (מהמכשיר)</dt><dd>${u.premium?.active ? `${esc(u.premium.source)} מאז ${fmtDate(Date.parse(u.premium.since))}` : 'לא פעיל'}</dd>
-      ${u.premiumGrantedBy ? `<dt>מתנה מאת</dt><dd>${esc(u.premiumGrantedBy)}</dd>` : ''}
     </dl>
-
-    <h3>מתנת Premium</h3>
-    <div class="actions">
-      <button class="btn btn-ghost btn-sm" type="button" data-grant="7">7 ימים</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-grant="30">חודש</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-grant="365">שנה</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-grant="forever">ללא הגבלה</button>
-      <input id="grant-date" class="input" type="date" style="width:auto;min-height:32px">
-      <button class="btn btn-ghost btn-sm" type="button" data-grant="date">עד התאריך</button>
-      ${u.plan === 'pro' ? '<button class="btn btn-danger btn-sm" type="button" data-revoke>ביטול המתנה</button>' : ''}
-    </div>
-    <p class="note">מנוי שנקנה ב-Google Play מבוטל רק ב-Play Console (הזמנות ← החזר / ביטול).</p>
 
     <h3>הערות פנימיות</h3>
     <textarea id="notes" class="input" placeholder="למשל: פנה לתמיכה בנושא…">${esc(u.notes)}</textarea>
@@ -482,27 +391,7 @@ async function userAction(e) {
   if (!t) return;
 
   try {
-    if (t.dataset.grant) {
-      let until;
-      if (t.dataset.grant === 'forever') until = 'forever';
-      else if (t.dataset.grant === 'date') {
-        const v = $('#grant-date').value;
-        if (!v) return toast('בחרו תאריך', true);
-        until = new Date(`${v}T23:59:59`).toISOString();
-      } else until = new Date(Date.now() + Number(t.dataset.grant) * DAY).toISOString();
-      const patch = { plan: 'pro', premiumUntil: until, premiumGrantedBy: state.me.email };
-      await b.updateUser(id, patch);
-      Object.assign(u, patch);
-      await b.log('grant-premium', id, { until });
-      toast('Premium הוענק 🎁 (יופעל בפתיחה הבאה של האפליקציה)');
-    } else if ('revoke' in t.dataset) {
-      if (!confirm('לבטל את מתנת ה-Premium?')) return;
-      const patch = { plan: 'free', premiumUntil: null, premiumGrantedBy: null };
-      await b.updateUser(id, patch);
-      Object.assign(u, patch);
-      await b.log('revoke-premium', id);
-      toast('המתנה בוטלה');
-    } else if ('ban' in t.dataset) {
+    if ('ban' in t.dataset) {
       if (!confirm(`לחסום לצמיתות את ${supportIdOf(u)}?`)) return;
       await b.addBan({ type: 'uid', value: id, reason: null });
       await b.log('ban', supportIdOf(u));
@@ -527,135 +416,6 @@ async function userAction(e) {
   } catch (err) {
     toast(`הפעולה נכשלה: ${err.message}`, true);
   }
-}
-
-/* =========================================================
-   Premium ומחירים
-   ========================================================= */
-
-async function renderPremium(el) {
-  const saved = await state.backend.getConfig('pricing');
-  const pr = mergePricing(saved);
-  const subs = state.users.filter((u) => premiumOf(u).kind !== 'free')
-    .sort((a, b) => (Date.parse(b.premium?.since) || 0) - (Date.parse(a.premium?.since) || 0));
-
-  el.innerHTML = `
-    <div class="grid cols-2">
-      <div class="card">
-        <h2>מחירים</h2>
-        <div class="form-grid">
-          <label class="field"><span>מחיר רגיל לחודש (₪)</span><input id="p-regular" class="input" type="number" step="0.01" min="0.5" value="${pr.regular}"></label>
-          <label class="field"><span>מחיר השקה לחודש (₪)</span><input id="p-launch" class="input" type="number" step="0.01" min="0.5" value="${pr.launch}"></label>
-          <label class="field" style="grid-column:1/-1"><span>מבצע ההשקה מסתיים ב- (שעון ישראל)</span>
-            <input id="p-ends" class="input" type="datetime-local" value="${isoToLocal(pr.launchEndsAt)}">
-            <small>ברירת המחדל: 1.1.2027 בחצות – מאז המחיר חוזר למחיר הרגיל.</small></label>
-        </div>
-        <div class="actions" style="margin-top:14px">
-          <button id="p-save" class="btn btn-primary" type="button">שמירת מחירים</button>
-          <button id="p-reset" class="btn btn-ghost" type="button">חזרה לברירת המחדל</button>
-        </div>
-        <p class="note warn">
-          המחיר שבאמת נגבה נקבע ב-Google Play Console (מנוי <bdi class="mono">${esc(PRICING.productId)}</bdi>).
-          אחרי שינוי כאן, צריך לעדכן גם שם – אחרת המשתמשים יראו מחיר אחד וישלמו אחר. ההוראות ב-docs/PREMIUM.md.
-        </p>
-      </div>
-      <div class="card">
-        <h2>תצוגה מקדימה <small>· כמו שהמשתמשים רואים עכשיו</small></h2>
-        <div id="p-preview"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>מנויים פעילים <small>· ${fmtNum(subs.length)}</small></h2>
-      ${subs.length ? `<div class="table-wrap"><table>
-        <thead><tr><th>מזהה</th><th>סוג</th><th>מאז</th><th>עד</th><th>פעיל לאחרונה</th></tr></thead>
-        <tbody>${subs.slice(0, 200).map((u) => {
-          const p = premiumOf(u);
-          return `<tr data-user="${esc(u.id)}"><td><bdi class="mono">${esc(supportIdOf(u))}</bdi></td><td>${badge(p)}</td><td>${fmtDate(Date.parse(u.premium?.since))}</td><td>${esc(p.until ?? 'מתחדש אוטומטית')}</td><td>${fmtAgo(u.lastSeenAt)}</td></tr>`;
-        }).join('')}</tbody></table></div>` : '<div class="empty">עדיין אין מנויים</div>'}
-    </div>`;
-
-  const preview = () => {
-    const draft = mergePricing({ regular: $('#p-regular').value, launch: $('#p-launch').value, launchEndsAt: localToIso($('#p-ends').value) });
-    const p = priceAt(Date.now(), draft);
-    $('#p-preview').innerHTML = `
-      <div class="price-preview">
-        ${p.isLaunch ? `<span class="badge">מחיר השקה · ${p.discount}% הנחה</span>` : ''}
-        <div class="p">${formatPrice(p.price, draft)} <small class="muted" style="font-size:15px">לחודש</small> ${p.isLaunch ? `<s>${formatPrice(p.regular, draft)}</s>` : ''}</div>
-        ${p.isLaunch ? `<div class="muted">המבצע עד ${formatLaunchEnd(draft)} · נשארו ${p.daysLeft} ימים</div>` : '<div class="muted">אין מבצע פעיל – המחיר הרגיל חל</div>'}
-      </div>
-      <dl class="kv" style="margin-top:14px">
-        <dt>אחוז הנחה</dt><dd><strong>${discountPercent(draft)}%</strong> (${((1 - draft.launch / draft.regular) * 100).toFixed(1)}% מדויק, מעוגל למטה)</dd>
-        <dt>חיסכון לחודש</dt><dd>${formatPrice(Math.max(0, draft.regular - draft.launch), draft)}</dd>
-        <dt>אחרי המבצע</dt><dd>${formatPrice(draft.regular, draft)} לחודש</dd>
-        <dt>נטו אחרי עמלת Google (15%)</dt><dd>${formatPrice(p.price * 0.85, draft)} עכשיו · ${formatPrice(draft.regular * 0.85, draft)} אחרי המבצע</dd>
-      </dl>`;
-  };
-  preview();
-  for (const id of ['#p-regular', '#p-launch', '#p-ends']) $(id).addEventListener('input', preview);
-
-  $('#p-save').addEventListener('click', async () => {
-    const regular = Number($('#p-regular').value), launch = Number($('#p-launch').value);
-    if (!(regular > 0) || !(launch > 0)) return toast('מחיר לא תקין', true);
-    if (launch > regular) return toast('מחיר ההשקה גבוה מהמחיר הרגיל', true);
-    const data = { regular, launch, launchEndsAt: localToIso($('#p-ends').value) };
-    try {
-      await state.backend.setConfig('pricing', data);
-      await state.backend.log('pricing', 'config/pricing', data);
-      state.pricing = mergePricing(data);
-      toast('המחירים נשמרו. זכרו לעדכן גם ב-Google Play');
-    } catch (err) {
-      toast(`השמירה נכשלה: ${err.message}`, true);
-    }
-  });
-
-  $('#p-reset').addEventListener('click', () => {
-    $('#p-regular').value = PRICING.regular;
-    $('#p-launch').value = PRICING.launch;
-    $('#p-ends').value = isoToLocal(PRICING.launchEndsAt);
-    preview();
-  });
-}
-
-/* =========================================================
-   מגבלות ופיצ'רים
-   ========================================================= */
-
-async function renderLimits(el) {
-  const saved = (await state.backend.getConfig('limits')) ?? {};
-  const lim = { ...FREE_LIMITS, ...saved };
-  el.innerHTML = `
-    <div class="grid cols-2">
-      <div class="card">
-        <h2>מגבלות לחשבון חינמי</h2>
-        <div class="form-grid">
-          <label class="field"><span>תחנות שמורות</span><input id="l-stops" class="input" type="number" min="0" max="50" value="${lim.stops}"></label>
-          <label class="field"><span>קווים שמורים</span><input id="l-lines" class="input" type="number" min="0" max="50" value="${lim.lines}"></label>
-          <label class="field"><span>מקומות שמורים</span><input id="l-places" class="input" type="number" min="0" max="50" value="${lim.places}"></label>
-        </div>
-        <div class="actions" style="margin-top:14px"><button id="l-save" class="btn btn-primary" type="button">שמירה</button></div>
-        <p class="note">ב-Premium אין מגבלה. בית ועבודה/בית ספר תמיד חינמיים. מי שכבר שמר יותר מהמגבלה לא מאבד כלום – רק לא יכול להוסיף.</p>
-      </div>
-      <div class="card">
-        <h2>פיצ'רים ב-Premium</h2>
-        <ul class="feature-list">
-          ${PREMIUM_FEATURES.map((f) => `<li><span>${f.icon}</span><div><strong>${esc(f.title)}</strong><small>${esc(f.desc)}</small></div>${f.live ? '<span class="badge on">פעיל</span>' : '<span class="badge">בקרוב</span>'}</li>`).join('')}
-        </ul>
-        <p class="note">הרשימה מוגדרת בקוד (public/js/modules/pricing.js). פיצ'ר "בקרוב" מוצג למשתמשים, אבל לא מובטח כחלק מהמנוי.</p>
-      </div>
-    </div>`;
-
-  $('#l-save').addEventListener('click', async () => {
-    const data = { stops: +$('#l-stops').value, lines: +$('#l-lines').value, places: +$('#l-places').value };
-    if (Object.values(data).some((v) => !Number.isInteger(v) || v < 0)) return toast('ערכים לא תקינים', true);
-    try {
-      await state.backend.setConfig('limits', data);
-      await state.backend.log('limits', 'config/limits', data);
-      toast('המגבלות נשמרו');
-    } catch (err) {
-      toast(`השמירה נכשלה: ${err.message}`, true);
-    }
-  });
 }
 
 /* =========================================================
@@ -726,6 +486,295 @@ async function renderAnnounce(el) {
 }
 
 /* =========================================================
+   דף תודות (לשונית "תודות" באפליקציה)
+   ========================================================= */
+
+/** מקטין תמונה ל-JPEG של עד 900px, כדי שתיכנס במסמך ההגדרות (אין צורך ב-Storage) */
+function imageToDataUrl(file, max = 900) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('לא ניתן לקרוא את התמונה')); };
+    img.src = url;
+  });
+}
+
+async function renderThanks(el) {
+  const items = await state.backend.listThanks();
+  await Promise.all(items.map(async (x) => { x.real = await state.backend.heartCount(x.id).catch(() => 0); }));
+  const isHttp = (u) => /^https?:\/\//i.test(u);
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="actions" style="margin-bottom:12px">
+        <button id="t-new" class="btn btn-primary" type="button">➕ הוסף תודה חדשה</button>
+      </div>
+      ${items.length ? `<div class="thanks-list">${items.map((x) => `
+        <div class="thanks-row" data-id="${esc(x.id)}">
+          ${x.image ? `<img src="${esc(x.image)}" alt="">` : '<span class="thanks-row-ph">💚</span>'}
+          <div class="thanks-row-main">
+            <strong>${esc(x.title || '(ללא כותרת)')}</strong>
+            <small>${x.active ? '🟢 מוצגת' : '⚪ מוסתרת'} · ❤️ ${Math.max(0, (x.heartsBase || 0) + x.real)}</small>
+          </div>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" type="button" data-act="edit">עריכה</button>
+            <button class="btn btn-ghost btn-sm" type="button" data-act="toggle">${x.active ? 'הסתרה' : 'הצגה'}</button>
+            <button class="btn btn-ghost btn-sm" type="button" data-act="delete">מחיקה</button>
+          </div>
+        </div>`).join('')}</div>` : '<p class="muted">עוד אין תודות. לחצו על "הוסף תודה חדשה".</p>'}
+    </div>
+    <div id="t-editor"></div>`;
+
+  const openEditor = (item) => {
+    const d = { active: true, title: '', message: '', image: '', linkUrl: '', linkLabel: '', heartsBase: 0, real: 0, ...(item ?? {}) };
+    let image = d.image || '';
+    $('#t-editor').innerHTML = `
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card">
+          <h2>${item ? 'עריכת תודה' : 'תודה חדשה'}</h2>
+          <div class="grid" style="gap:12px">
+            <label class="switch-row"><input id="t-active" type="checkbox" ${d.active ? 'checked' : ''}> מוצגת באפליקציה</label>
+            <label class="field"><span>כותרת</span><input id="t-title" class="input" maxlength="80" value="${esc(d.title)}" placeholder="למשל: תודה לכל מי שעוזר לנו"></label>
+            <label class="field"><span>הודעה</span><textarea id="t-message" class="input" rows="6" maxlength="1500" placeholder="עד 1500 תווים">${esc(d.message)}</textarea></label>
+            <div class="field">
+              <span>תמונה</span>
+              <input id="t-file" class="input" type="file" accept="image/*">
+              <div class="actions" style="margin-top:6px"><button id="t-img-clear" class="btn btn-ghost btn-sm" type="button">הסרת התמונה</button></div>
+            </div>
+            <label class="field"><span>כמות לבבות מוצגת (כרגע ${d.real} מהמשתמשים)</span><input id="t-hearts" class="input" type="number" min="0" step="1" value="${Math.max(0, (d.heartsBase || 0) + d.real)}"></label>
+            <div class="form-grid">
+              <label class="field"><span>קישור (לא חובה)</span><input id="t-url" class="input" type="url" dir="ltr" value="${esc(d.linkUrl)}" placeholder="https://"></label>
+              <label class="field"><span>טקסט הכפתור</span><input id="t-label" class="input" maxlength="40" value="${esc(d.linkLabel)}" placeholder="לפרטים נוספים"></label>
+            </div>
+          </div>
+          <div class="actions" style="margin-top:14px">
+            <button id="t-save" class="btn btn-primary" type="button">שמירה</button>
+            <button id="t-cancel" class="btn btn-ghost" type="button">ביטול</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>תצוגה מקדימה</h2>
+          <div class="preview-phone"><div id="t-preview"></div></div>
+        </div>
+      </div>`;
+
+    const preview = () => {
+      const title = $('#t-title').value.trim(), msg = $('#t-message').value.trim();
+      const url = $('#t-url').value.trim(), label = $('#t-label').value.trim() || 'לפרטים נוספים';
+      $('#t-preview').innerHTML = (title || msg || image)
+        ? `<div class="thanks-preview">${image ? `<img src="${esc(image)}" alt="">` : ''}<div class="thanks-preview-body">${title ? `<strong>${esc(title)}</strong>` : ''}${msg ? `<p>${esc(msg)}</p>` : ''}<span class="thanks-preview-heart">🤍 ${Math.max(0, Number($('#t-hearts').value) || 0)}</span>${isHttp(url) ? `<span class="thanks-preview-link">${esc(label)}</span>` : ''}</div></div>`
+        : '<div class="muted">מלאו כותרת, הודעה או תמונה כדי לראות תצוגה מקדימה</div>';
+    };
+    preview();
+    for (const id of ['#t-title', '#t-message', '#t-url', '#t-label', '#t-hearts']) $(id).addEventListener('input', preview);
+
+    $('#t-file').addEventListener('change', async (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      try {
+        image = await imageToDataUrl(f);
+        preview();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    });
+    $('#t-img-clear').addEventListener('click', () => { image = ''; $('#t-file').value = ''; preview(); });
+    $('#t-cancel').addEventListener('click', () => { $('#t-editor').innerHTML = ''; });
+
+    $('#t-save').addEventListener('click', async () => {
+      const linkUrl = $('#t-url').value.trim();
+      if (linkUrl && !isHttp(linkUrl)) return toast('הקישור חייב להתחיל ב-https://', true);
+      const data = {
+        active: $('#t-active').checked,
+        title: $('#t-title').value.trim(),
+        message: $('#t-message').value.trim(),
+        image,
+        linkUrl,
+        linkLabel: $('#t-label').value.trim(),
+        // מה שמוצג = בסיס + לבבות אמיתיים, לכן הבסיס הוא היעד פחות האמיתיים
+        heartsBase: Math.max(0, Math.floor(Number($('#t-hearts').value) || 0)) - d.real,
+        createdAt: item?.createdAt ?? Date.now()
+      };
+      if (!data.title && !data.message && !data.image) return toast('מלאו כותרת, הודעה או תמונה', true);
+      try {
+        const id = item?.id ?? String(Date.now());
+        await state.backend.saveThanks(id, data);
+        await state.backend.log('thanks', `thanks/${id}`, { title: data.title });
+        toast('התודה נשמרה 💚');
+        renderThanks(el);
+      } catch (err) {
+        toast(`השמירה נכשלה: ${err.message}`, true);
+      }
+    });
+    $('#t-editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  $('#t-new').addEventListener('click', () => openEditor(null));
+  $$('.thanks-row', el).forEach((row) => row.addEventListener('click', async (e) => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (!act) return;
+    const item = items.find((x) => x.id === row.dataset.id);
+    try {
+      if (act === 'edit') return openEditor(item);
+      if (act === 'toggle') {
+        const { real, id, ...rest } = item;
+        await state.backend.saveThanks(id, { ...rest, active: !item.active });
+        await state.backend.log('thanks', `thanks/${id}`, { title: item.title, active: !item.active });
+      } else if (act === 'delete') {
+        if (!confirm(`למחוק את התודה "${item.title || 'ללא כותרת'}"?`)) return;
+        await state.backend.deleteThanks(item.id);
+        await state.backend.log('thanks-delete', `thanks/${item.id}`, { title: item.title });
+        toast('התודה נמחקה');
+      }
+      renderThanks(el);
+    } catch (err) {
+      toast(`הפעולה נכשלה: ${err.message}`, true);
+    }
+  }));
+}
+
+/* =========================================================
+   שיתופי פעולה – מעקב פניות לערוצים
+   ========================================================= */
+
+const COLLAB_STATUS = {
+  new: { label: 'עוד לא נשלח', color: '#475569', bg: '#e2e8f0' },
+  sent: { label: 'נשלח', color: '#1d4ed8', bg: '#dbeafe' },
+  unread: { label: 'לא נקרא', color: '#a16207', bg: '#fef9c3' },
+  read: { label: 'נקרא ולא התקבלה תשובה', color: '#c2410c', bg: '#ffedd5' },
+  replied: { label: 'התקבלה תשובה', color: '#6d28d9', bg: '#ede9fe' },
+  agreed: { label: 'הסכימו לשת"פ', color: '#166534', bg: '#dcfce7' },
+  declined: { label: 'סירבו', color: '#b91c1c', bg: '#fee2e2' }
+};
+
+async function renderCollabs(el) {
+  const items = await state.backend.listCollabs();
+  const f = state.collabFilter ?? 'all';
+  const shown = items.filter((x) => f === 'all' || x.status === f);
+  const badgeStyle = (s) => `color:${COLLAB_STATUS[s]?.color};background:${COLLAB_STATUS[s]?.bg}`;
+  const options = (cur) => Object.entries(COLLAB_STATUS).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${v.label}</option>`).join('');
+
+  el.innerHTML = `
+    <div class="card">
+      <h2 id="c-form-title">הוספת ערוץ</h2>
+      <form id="c-form" class="grid" style="gap:12px" novalidate>
+        <div class="form-grid">
+          <label class="field"><span>שם הערוץ</span><input id="c-name" class="input" maxlength="80" required></label>
+          <label class="field"><span>קישור לערוץ</span><input id="c-url" class="input" dir="ltr" placeholder="https://" maxlength="300"></label>
+          <label class="field"><span>סטטוס</span><select id="c-status" class="input">${options('new')}</select></label>
+        </div>
+        <label class="field"><span>הערות</span><textarea id="c-notes" class="input" maxlength="1000" rows="2"></textarea></label>
+        <div class="actions">
+          <button id="c-save" class="btn btn-primary" type="submit">➕ הוסף ערוץ</button>
+          <button id="c-cancel" class="btn btn-ghost" type="button" hidden>ביטול עריכה</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <div class="chips" style="margin-bottom:12px">
+        <button type="button" data-cfilter="all" class="${f === 'all' ? 'is-active' : ''}">הכל<b>${items.length}</b></button>
+        ${Object.entries(COLLAB_STATUS).map(([k, v]) => `<button type="button" data-cfilter="${k}" class="${f === k ? 'is-active' : ''}">${v.label}<b>${items.filter((x) => x.status === k).length}</b></button>`).join('')}
+      </div>
+      ${shown.length ? `<div class="table-wrap"><table class="collab-table">
+        <thead><tr><th>ערוץ</th><th>סטטוס</th><th>הערות</th><th>עודכן</th><th></th></tr></thead>
+        <tbody>${shown.map((x) => `<tr data-id="${esc(x.id)}" style="cursor:default">
+          <td><strong>${esc(x.name)}</strong>${x.url ? `<br><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer" dir="ltr" class="collab-link">${esc(x.url)}</a>` : ''}</td>
+          <td><select class="input collab-status" data-status="${esc(x.id)}" style="${badgeStyle(x.status)}">${options(x.status)}</select></td>
+          <td class="collab-notes">${esc(x.notes || '—')}</td>
+          <td>${fmtDateTime(x.updatedAt)}</td>
+          <td><div class="actions-cell"><button class="btn btn-ghost btn-sm" data-cact="edit" type="button">✏️ עריכה</button><button class="btn btn-danger btn-sm" data-cact="delete" type="button">🗑️ מחיקה</button></div></td>
+        </tr>`).join('')}</tbody></table></div>` : `<div class="empty">${items.length ? 'אין ערוצים בסטטוס הזה' : 'עדיין לא נוספו ערוצים'}</div>`}
+    </div>`;
+
+  let editing = null;
+  const form = $('#c-form', el);
+  const reset = () => {
+    editing = null;
+    form.reset();
+    $('#c-form-title', el).textContent = 'הוספת ערוץ';
+    $('#c-save', el).textContent = '➕ הוסף ערוץ';
+    $('#c-cancel', el).hidden = true;
+  };
+  $('#c-cancel', el).addEventListener('click', reset);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('#c-name', el).value.trim();
+    let url = $('#c-url', el).value.trim();
+    if (!name) return toast('חסר שם ערוץ', true);
+    if (url) {
+      if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = `https://${url}`;
+      let ok = false;
+      try { const u = new URL(url); ok = /^https?:$/.test(u.protocol) && u.hostname.includes('.'); } catch { /* לא תקין */ }
+      if (!ok) return toast('הקישור לא תקין (למשל https://youtube.com/@channel)', true);
+    }
+    const data = { name, url, status: $('#c-status', el).value, notes: $('#c-notes', el).value.trim() };
+    try {
+      const id = await state.backend.saveCollab(editing, data);
+      await state.backend.log('collab', `collabs/${id}`, { name, status: data.status });
+      toast(editing ? 'הערוץ עודכן' : 'הערוץ נוסף 🤝');
+      renderCollabs(el);
+    } catch (err) {
+      toast(`השמירה נכשלה: ${err.message}`, true);
+    }
+  });
+
+  $$('[data-cfilter]', el).forEach((b) => b.addEventListener('click', () => {
+    state.collabFilter = b.dataset.cfilter;
+    renderCollabs(el);
+  }));
+
+  $$('[data-status]', el).forEach((s) => s.addEventListener('change', async () => {
+    const x = items.find((i) => i.id === s.dataset.status);
+    try {
+      await state.backend.saveCollab(x.id, { status: s.value });
+      await state.backend.log('collab', `collabs/${x.id}`, { name: x.name, status: s.value });
+      toast('הסטטוס עודכן');
+      renderCollabs(el);
+    } catch (err) {
+      toast(`העדכון נכשל: ${err.message}`, true);
+    }
+  }));
+
+  $$('[data-cact]', el).forEach((b) => b.addEventListener('click', async () => {
+    const x = items.find((i) => i.id === b.closest('tr').dataset.id);
+    if (b.dataset.cact === 'edit') {
+      editing = x.id;
+      $('#c-name', el).value = x.name ?? '';
+      $('#c-url', el).value = x.url ?? '';
+      $('#c-status', el).value = x.status;
+      $('#c-notes', el).value = x.notes ?? '';
+      $('#c-form-title', el).textContent = `עריכת ערוץ: ${x.name}`;
+      $('#c-save', el).textContent = '💾 שמור שינויים';
+      $('#c-cancel', el).hidden = false;
+      $('#c-name', el).focus();
+      return form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (!confirm(`למחוק את הערוץ "${x.name}"?`)) return;
+    try {
+      await state.backend.deleteCollab(x.id);
+      await state.backend.log('collab-delete', `collabs/${x.id}`, { name: x.name });
+      toast('הערוץ נמחק');
+      renderCollabs(el);
+    } catch (err) {
+      toast(`המחיקה נכשלה: ${err.message}`, true);
+    }
+  }));
+}
+
+/* =========================================================
    מנהלים ויומן
    ========================================================= */
 
@@ -738,6 +787,10 @@ const ACTIONS = {
   limits: 'עדכון מגבלות',
   announce: 'פרסום הודעה',
   'announce-off': 'כיבוי הודעה',
+  thanks: 'עדכון תודה',
+  'thanks-delete': 'מחיקת תודה',
+  collab: 'עדכון ערוץ שת"פ',
+  'collab-delete': 'מחיקת ערוץ שת"פ',
   ban: 'חסימה',
   unban: 'ביטול חסימה',
   broadcast: 'שליחת הודעה',

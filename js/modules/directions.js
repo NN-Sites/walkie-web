@@ -1,11 +1,11 @@
 // כותרת "מסלול": מוצא -> יעד, לשוניות (תחבורה ציבורית / הליכה), זמן יציאה/הגעה, החלפת כיוון.
 // מתזמר בין RouteController (הליכה) ל-TransitController (תחבורה ציבורית).
 
-import { distanceMeters } from './geo.js?v=1.6.0-mvn1g0s1';
-import { showToast } from './ui.js?v=1.6.0-mvn1g0s1';
-import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js?v=1.6.0-mvn1g0s1';
-import { STAR_ON, STAR_OFF } from './favorites-ui.js?v=1.6.0-mvn1g0s1';
-import { t as tr, LOCALE } from './i18n.js?v=1.6.0-mvn1g0s1';
+import { distanceMeters } from './geo.js?v=1.8.0-mvo8e244';
+import { showToast } from './ui.js?v=1.8.0-mvo8e244';
+import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js?v=1.8.0-mvo8e244';
+import { STAR_ON, STAR_OFF } from './favorites-ui.js?v=1.8.0-mvo8e244';
+import { t as tr, LOCALE } from './i18n.js?v=1.8.0-mvo8e244';
 
 export const MY_LOCATION = Object.freeze({ id: 'my-location', kind: 'mylocation', name: tr('המיקום שלי') });
 
@@ -229,7 +229,7 @@ export class DirectionsController {
     const place = this.dest?.kind === 'mylocation' ? this.origin : this.dest;
     if (!place || place.kind === 'mylocation') return;
     const saved = togglePlace(place);
-    if (saved === null) return; // מגבלת החשבון החינמי – נפתח מסך הפרימיום
+    if (saved === null) return; // השמירה בוטלה (למשל כשצריך להתחבר)
     showToast(saved ? tr('{name} נשמר במועדפים ⭐', { name: place.name }) : tr('הוסר מהמועדפים'));
   }
 
