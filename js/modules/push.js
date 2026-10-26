@@ -4,11 +4,11 @@
 // { tokens, lines, lang }. השרת (functions/lib/push-alerts.js) מנטר את הקווים ושולח הודעה כשיש איחור של 10 דק' ומעלה או ביטול.
 // בדפדפן אין פוש: הקו נשמר ב"הקווים שלי" בלבד.
 
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.9.0-mvpredcv';
-import { getFavorites, onFavoritesChange } from './favorites.js?v=1.9.0-mvpredcv';
-import { getSettings, onSettingsChange } from './settings.js?v=1.9.0-mvpredcv';
-import { showToast } from './ui.js?v=1.9.0-mvpredcv';
-import { t, LANG } from './i18n.js?v=1.9.0-mvpredcv';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.9.1-mvprvblb';
+import { getFavorites, onFavoritesChange } from './favorites.js?v=1.9.1-mvprvblb';
+import { getSettings, onSettingsChange } from './settings.js?v=1.9.1-mvprvblb';
+import { showToast } from './ui.js?v=1.9.1-mvprvblb';
+import { t, LANG } from './i18n.js?v=1.9.1-mvprvblb';
 
 const CHANNEL = 'line-alerts';
 const TOKEN_KEY = 'walkie:pushToken';

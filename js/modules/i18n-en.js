@@ -47,6 +47,7 @@ export const EN = {
   'הכי פחות הליכה': 'Least walking',
   'הכי פחות החלפות': 'Fewest transfers',
   'הבאים בקו:': 'Next on this line:',
+  'הבאים:': 'Next:',
   'אפשר גם:': 'Also:',
   'התראות לגבי הקו': 'Line alerts',
   'עוקבים אחרי הקו': 'Following this line',

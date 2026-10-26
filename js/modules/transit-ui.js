@@ -1,13 +1,13 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.9.0-mvpredcv';
-import { lineColor, operatorColor } from './stops.js?v=1.9.0-mvpredcv';
-import { formatNavDistance } from './route-ui.js?v=1.9.0-mvpredcv';
-import { WHATSAPP_ICON } from './share.js?v=1.9.0-mvpredcv';
-import { t, tn, LOCALE } from './i18n.js?v=1.9.0-mvpredcv';
-import { serviceNoticeHtml } from './ui.js?v=1.9.0-mvpredcv';
-import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.0-mvpredcv';
-import { isLineSaved } from './favorites.js?v=1.9.0-mvpredcv';
+import { escapeHtml } from './ui.js?v=1.9.1-mvprvblb';
+import { lineColor, operatorColor } from './stops.js?v=1.9.1-mvprvblb';
+import { formatNavDistance } from './route-ui.js?v=1.9.1-mvprvblb';
+import { WHATSAPP_ICON } from './share.js?v=1.9.1-mvprvblb';
+import { t, tn, LOCALE } from './i18n.js?v=1.9.1-mvprvblb';
+import { serviceNoticeHtml } from './ui.js?v=1.9.1-mvprvblb';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.1-mvprvblb';
+import { isLineSaved } from './favorites.js?v=1.9.1-mvprvblb';
 
 const TZ = 'Asia/Jerusalem';
 
@@ -108,8 +108,12 @@ export function modeIcon(mode, size = 18) {
   return icon(mode === 'rail' ? 'rail' : mode === 'lightrail' ? 'lightrail' : mode === 'walk' ? 'walk' : 'bus', size);
 }
 
-export function lineBadge(leg, { small = false } = {}) {
-  const label = leg.line === 'רכבת' ? t('רכבת') : leg.line || (MODE_NAMES[leg.mode] ? t(MODE_NAMES[leg.mode]) : '');
+function lineLabel(leg) {
+  return leg.line === 'רכבת' ? t('רכבת') : leg.line || (MODE_NAMES[leg.mode] ? t(MODE_NAMES[leg.mode]) : '');
+}
+
+export function lineBadge(leg, { small = false, label: forced = null } = {}) {
+  const label = forced ?? lineLabel(leg);
   return `<span class="line-pill${small ? ' is-small' : ''}" style="--c:${legColor(leg)}">${modeIcon(leg.mode, small ? 14 : 16)}<b>${escapeHtml(label)}</b></span>`;
 }
 
@@ -138,15 +142,17 @@ function liveBadge(info) {
 
 const CHEVRON = `<span class="leg-sep">${icon('chevron', 14)}</span>`;
 
-export function legChips(it, activeIndex = -1) {
+export function legChips(it, activeIndex = -1, variants = null) {
   const parts = [];
+  let ride = 0;
   it.legs.forEach((leg, i) => {
     const active = i === activeIndex ? ' is-active' : '';
     if (leg.mode === 'walk') {
       if (leg.duration < 60 && i !== activeIndex) return;
       parts.push(`<span class="leg-walk${active}">${icon('walk', 15)}${Math.max(1, Math.round(leg.duration / 60))}</span>`);
     } else {
-      parts.push(`<span class="leg-ride${active}">${lineBadge(leg, { small: true })}</span>`);
+      parts.push(`<span class="leg-ride${active}">${lineBadge(leg, { small: true, label: variants?.[ride] || null })}</span>`);
+      ride++;
     }
   });
   return `<div class="itin-legs">${parts.join(CHEVRON)}</div>`;
@@ -199,14 +205,56 @@ export function pickPrimary(list, routeType = 'best') {
   return [...list].sort(cmp)[0];
 }
 
-function itineraryCard(it, index, now, badge) {
+const rideLegs = (it) => it.legs.filter((l) => l.mode !== 'walk');
+
+// אותו מסלול (אותן תחנות עלייה וירידה בכל קטע נסיעה), גם אם הקו או השעה שונים
+const rideSignature = (it) => rideLegs(it).map((l) => `${l.mode}|${l.from.code ?? l.from.name}|${l.to.code ?? l.to.name}`).join('>');
+
+/** מקבצים מסלולים זהים לכרטיס אחד, כמו ב-Moovit: "5 / 2" וכמה שעות יציאה */
+function groupItineraries(visible) {
+  const groups = new Map();
+  for (const v of visible) {
+    const key = rideSignature(v.it);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(v);
+  }
+  return [...groups.values()];
+}
+
+/** לכל קטע נסיעה: הקווים שמגיעים באותו מסלול ("5 / 2") */
+function rideVariants(it, group) {
+  return rideLegs(it).map((_, k) => {
+    const labels = [];
+    for (const m of group) {
+      const leg = rideLegs(m)[k];
+      const label = leg && lineLabel(leg);
+      if (label && !labels.includes(label)) labels.push(label);
+    }
+    return labels.slice(0, 3).join(' / ');
+  });
+}
+
+/** יציאות נוספות באותו מסלול בשעתיים הקרובות (בדקות) */
+function nextDepartures(it, group, now) {
+  const mins = group
+    .filter((m) => m !== it)
+    .map((m) => rideLegs(m)[0])
+    .filter(Boolean)
+    .map((l) => minutesUntil(l.live?.eta ?? l.start, now))
+    .filter((n) => n >= 0 && n <= 120);
+  return [...new Set(mins)].sort((a, b) => a - b).slice(0, 3);
+}
+
+function itineraryCard(it, index, now, badge, group = [it]) {
+  const variants = rideVariants(it, group);
+  const next = nextDepartures(it, group, now);
   // badge === undefined: ההמלצה של השרת. אחרת: התגית של המסלול הראשון בסדר שנבחר (או בלי תגית)
   const rec = badge === undefined ? it.recommended : !!badge;
   const label = badge ? t(badge) : t('מומלץ');
   const first = it.legs.find((l) => l.mode !== 'walk');
   const dep = first ? departureText(first, now) : null;
   const departLine = first
-    ? `<div class="itin-depart">${lineBadge(first, { small: true })} ${liveBadge(dep)}<span class="itin-stop"> · ${escapeHtml(first.from.name)}</span></div>`
+    ? `<div class="itin-depart">${lineBadge(first, { small: true })} ${liveBadge(dep)}${next.length ? `<span class="sched-text"> · ${t('הבאים:')} ${next.map(minsLabel).join(', ')}</span>` : ''}<span class="itin-stop"> · ${escapeHtml(first.from.name)}</span></div>`
     : '';
 
   return `
@@ -217,7 +265,7 @@ function itineraryCard(it, index, now, badge) {
         ${rec ? `<span class="chip chip-rec">${label}</span>` : ''}
         ${it.fare ? `<span class="itin-price">${fmtPrice(it.fare.total)}</span>` : ''}
       </div>
-      ${legChips(it)}
+      ${legChips(it, -1, variants)}
       ${departLine}
       <div class="itin-meta">${icon('walk', 14)} ${t('{dist} הליכה', { dist: formatNavDistance(it.walkMeters) })} · ${transfersText(it.transfers)}</div>
     </button>`;
@@ -279,7 +327,7 @@ export function listHtml(result, { loadingMore = false, now = Date.now(), restri
     parts.push(walkCard(result.walk));
   }
 
-  parts.push(visible.map(({ it, index }, i) => itineraryCard(it, index, now, sortFn ? (i === 0 ? ROUTE_BADGES[routeType] : null) : undefined)).join(''));
+  parts.push(groupItineraries(visible).map((g, i) => itineraryCard(g[0].it, g[0].index, now, sortFn ? (i === 0 ? ROUTE_BADGES[routeType] : null) : undefined, g.map((v) => v.it))).join(''));
 
   if (result.nextCursor) {
     parts.push(`
