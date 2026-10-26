@@ -1,18 +1,18 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.8.0-mvoa2j6c';
-import { t, LANG, setLanguage } from './i18n.js?v=1.8.0-mvoa2j6c';
-import { showToast } from './ui.js?v=1.8.0-mvoa2j6c';
-import { modeIcon, icon } from './transit-ui.js?v=1.8.0-mvoa2j6c';
-import { escapeHtml } from './ui.js?v=1.8.0-mvoa2j6c';
-import { APP_VERSION } from '../config.js?v=1.8.0-mvoa2j6c';
-import { sessionStatus } from './session.js?v=1.8.0-mvoa2j6c';
-import { celebrate, stagger } from './fx.js?v=1.8.0-mvoa2j6c';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.8.0-mvoa2j6c';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.8.0-mvpj3lro';
+import { t, LANG, setLanguage } from './i18n.js?v=1.8.0-mvpj3lro';
+import { showToast } from './ui.js?v=1.8.0-mvpj3lro';
+import { modeIcon, icon } from './transit-ui.js?v=1.8.0-mvpj3lro';
+import { escapeHtml } from './ui.js?v=1.8.0-mvpj3lro';
+import { APP_VERSION } from '../config.js?v=1.8.0-mvpj3lro';
+import { sessionStatus } from './session.js?v=1.8.0-mvpj3lro';
+import { celebrate, stagger } from './fx.js?v=1.8.0-mvpj3lro';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.8.0-mvpj3lro';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.8.0-mvoa2j6c';
+} from './favorites.js?v=1.8.0-mvpj3lro';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -325,8 +325,9 @@ export class SettingsView {
           <span class="set-icon">🔒</span>
           <span class="set-text"><span class="set-label">${t('מדיניות פרטיות')}</span><span class="set-hint">${t('מה נשמר, ולאן נשלח המיקום')}</span></span>
         </button>
+        ${toggleRow('shareBusPosition', 'דיוק מיקום האוטובוס', 'כשאני נוסע על מסלול קו, המיקום שלי עוזר לאחרים לראות איפה האוטובוס', '🚌')}
         ${toggleRow('analytics', 'נתוני שימוש אנונימיים', 'מסכים שנפתחו ותקלות, בלי מיקום ובלי מזהה אישי', '📊')}
-        <p class="set-note">${t('המיקום שלך משמש רק במכשיר ובבקשות למסלול, ולא נשמר אצלנו.')}</p>
+        <p class="set-note">${t('המיקום שלך משמש רק במכשיר ובבקשות למסלול. מיקום נשמר אצלנו רק בשיתוף בלייב, ובזמן שנראה שאתה נוסע באוטובוס על קו (אם "דיוק מיקום האוטובוס" פעיל), ונמחק בסיום הנסיעה.')}</p>
       </section>
 
       <section class="set-group">

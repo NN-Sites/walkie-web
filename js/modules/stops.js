@@ -9,10 +9,10 @@ import {
   STOP_CACHE_TTL_MS,
   MAX_STOPS,
   STORAGE_KEYS
-} from '../config.js?v=1.8.0-mvoa2j6c';
-import { offsetMeters } from './geo.js?v=1.8.0-mvoa2j6c';
-import { t } from './i18n.js?v=1.8.0-mvoa2j6c';
-import { fetchNearbyFromApi, fetchWithTimeout } from './api.js?v=1.8.0-mvoa2j6c';
+} from '../config.js?v=1.8.0-mvpj3lro';
+import { offsetMeters } from './geo.js?v=1.8.0-mvpj3lro';
+import { t } from './i18n.js?v=1.8.0-mvpj3lro';
+import { fetchNearbyFromApi, fetchWithTimeout } from './api.js?v=1.8.0-mvpj3lro';
 
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',

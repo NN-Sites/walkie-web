@@ -1,19 +1,21 @@
 // לשונית "קווים": קווים באזור, חיפוש קו (מספר או יעד), ופרטי קו עם כל התחנות והמסלול על המפה.
 
-import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.8.0-mvoa2j6c';
-import { escapeHtml } from './ui.js?v=1.8.0-mvoa2j6c';
-import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.8.0-mvoa2j6c';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.8.0-mvoa2j6c';
-import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.8.0-mvoa2j6c';
-import { starButton } from './favorites-ui.js?v=1.8.0-mvoa2j6c';
-import { showToast } from './ui.js?v=1.8.0-mvoa2j6c';
-import { getSettings } from './settings.js?v=1.8.0-mvoa2j6c';
-import { t, LANG } from './i18n.js?v=1.8.0-mvoa2j6c';
-import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml } from './community.js?v=1.8.0-mvoa2j6c';
-import { openReportSheet } from './community-ui.js?v=1.8.0-mvoa2j6c';
-import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.8.0-mvoa2j6c';
+import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.8.0-mvpj3lro';
+import { escapeHtml } from './ui.js?v=1.8.0-mvpj3lro';
+import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.8.0-mvpj3lro';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.8.0-mvpj3lro';
+import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.8.0-mvpj3lro';
+import { starButton } from './favorites-ui.js?v=1.8.0-mvpj3lro';
+import { showToast } from './ui.js?v=1.8.0-mvpj3lro';
+import { getSettings } from './settings.js?v=1.8.0-mvpj3lro';
+import { t, LANG } from './i18n.js?v=1.8.0-mvpj3lro';
+import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml, setBusCandidate, fetchBusFixes } from './community.js?v=1.8.0-mvpj3lro';
+import { fuseBusFixes } from './bus-inference.js?v=1.8.0-mvpj3lro';
+import { openReportSheet } from './community-ui.js?v=1.8.0-mvpj3lro';
+import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.8.0-mvpj3lro';
 
 const SEARCH_DEBOUNCE_MS = 400;
+const CROWD_REFRESH_MS = 10000;    // מיקומי נוסעים על האוטובוס (מדויקים מ-SIRI, מתעדכנים כל כמה שניות)
 const DETAIL_REFRESH_MS = 30000;   // פרטי קו פתוחים: זמן אמת + מיקומי האוטובוסים
 
 const MODE_NAMES = { bus: 'אוטובוס', rail: 'רכבת', lightrail: 'רכבת קלה' };
@@ -90,6 +92,8 @@ export class LinesView {
     this.layer.clear();
     this.vehicles?.clear();
     setPresence('view', null);
+    setBusCandidate('view', null);
+    this.crowd = [];
   }
 
   handleAction(action, data) {
@@ -143,6 +147,8 @@ export class LinesView {
     if (!d) return;
     const key = this.#lineKey(d);
     setPresence('view', { lineKey: key, line: d.line });
+    if (d.mode === 'bus') setBusCandidate('view', { lineKey: key, line: d.line, path: d.geometry });
+    this.#refreshCrowd(d);
     const n = await fetchLineUsers(key);
     if (this.detail && this.#lineKey(this.detail) === key && n != null) {
       this.users = n;
@@ -154,11 +160,24 @@ export class LinesView {
     }
   }
 
+  /** נוסעים של Walkie שנמצאים עכשיו על האוטובוס בקו הזה – לדיוק מיקום האוטובוס על המפה */
+  async #refreshCrowd(d = this.detail) {
+    if (!d || d.mode !== 'bus') return;
+    const key = this.#lineKey(d);
+    const fixes = await fetchBusFixes(key);
+    if (!this.detail || this.#lineKey(this.detail) !== key) return;
+    if (!fixes.length && !this.crowd?.length) return;
+    this.crowd = fixes;
+    this.#drawVehicles();
+  }
+
   #showList() {
     this.mode = 'list';
     this.detail = null;
     this.users = null;
     setPresence('view', null);
+    setBusCandidate('view', null);
+    this.crowd = [];
     this.#stopRefresh();
     this.layer.clear();
     this.vehicles?.clear();
@@ -335,6 +354,7 @@ export class LinesView {
       if (controller.signal.aborted || !this.active) return;
       this.detail = d;
       this.users = null;
+      this.crowd = [];
       this.#renderDetail();
       this.#drawLine();
       this.#startRefresh();
@@ -482,7 +502,11 @@ export class LinesView {
     for (const x of d.departures ?? []) {
       if (x.live?.vehicle) add(x.live.vehicle, { recordedAt: x.live.recordedAt, etaMin: Math.max(0, minutesUntil(x.eta)), motion: along(x.eta) });
     }
-    this.vehicles.render(list);
+    // נוסעים שזוהו על האוטובוס (תנועה על מסלול הקו במהירות אוטובוס) מדייקים את המיקום של SIRI
+    const fused = fuseBusFixes(list, this.crowd, d.geometry, {
+      template: { line: d.line, mode: d.mode, color, destination: endName(d.to), motion: along(null) }
+    });
+    this.vehicles.render(fused);
   }
 
   #startRefresh() {
@@ -491,11 +515,17 @@ export class LinesView {
       if (!this.active || this.mode !== 'detail' || !this.detail || document.visibilityState !== 'visible') return;
       this.#reloadDetail(this.detail.lineRef);
     }, DETAIL_REFRESH_MS);
+    this.crowdTimer = setInterval(() => {
+      if (!this.active || this.mode !== 'detail' || document.visibilityState !== 'visible') return;
+      this.#refreshCrowd();
+    }, CROWD_REFRESH_MS);
   }
 
   #stopRefresh() {
     clearInterval(this.refreshTimer);
+    clearInterval(this.crowdTimer);
     this.refreshTimer = null;
+    this.crowdTimer = null;
   }
 
   /** רענון שקט של פרטי הקו (זמן אמת + מיקומים), בלי לצייר מחדש את המסלול ובלי להזיז את המפה */

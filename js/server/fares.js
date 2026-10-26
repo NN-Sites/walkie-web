@@ -12,7 +12,7 @@
 //    מעבר מאוטובוס לרכבת קלה – השלמה למחיר הרכבת הקלה.
 //  - מעל 15 ק"מ: מחיר נסיעה בודדת, בלי מעבר חינם. אין הסדר 90 דק' בשילוב רכבת ישראל.
 
-import { distanceMeters } from './geo.js?v=1.8.0-mvoa2j6c';
+import { distanceMeters } from './geo.js?v=1.8.0-mvpj3lro';
 
 export const FARES_SOURCE = {
   url: 'https://s3-eu-west-1.amazonaws.com/static.hopon.co.il/mot/ravPassPrices.html',

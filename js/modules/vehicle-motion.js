@@ -36,7 +36,7 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 const pathCache = new WeakMap();
 
-function pathIndex(path) {
+export function pathIndex(path) {
   let idx = pathCache.get(path);
   if (idx) return idx;
   const proj = projector(path[0][0]);
@@ -49,7 +49,7 @@ function pathIndex(path) {
 }
 
 /** הנקודה הקרובה ביותר על המסלול: { along, dist, index } (from = אינדקס התחלה לחיפוש קדימה) */
-function snap(idx, lat, lng, from = 0) {
+export function snap(idx, lat, lng, from = 0) {
   const [px, py] = idx.proj.to(lat, lng);
   let best = { along: 0, dist: Infinity, index: 0 };
   for (let i = Math.max(0, from); i < idx.xy.length - 1; i++) {
@@ -65,7 +65,7 @@ function snap(idx, lat, lng, from = 0) {
   return best;
 }
 
-function pointAt(idx, along) {
+export function pointAt(idx, along) {
   const s = clamp(along, 0, idx.length);
   let lo = 0;
   let hi = idx.cum.length - 1;

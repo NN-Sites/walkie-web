@@ -1,6 +1,6 @@
 // הגדרות משתמש: נשמרות במכשיר (localStorage), משפיעות על תכנון המסלולים ועל התצוגה.
 
-import { STORAGE_KEYS } from '../config.js?v=1.8.0-mvoa2j6c';
+import { STORAGE_KEYS } from '../config.js?v=1.8.0-mvpj3lro';
 
 const KEY = 'walkie:settings';
 
@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   vibrate: true,                                      // רטט לפני פנייה / ירידה
   showStops: true,                                    // סמני תחנות במפה (מסך הבית)
   showBuses: true,                                    // אוטובוסים בזמן אמת על המפה
+  shareBusPosition: true,                             // לדייק מיקום אוטובוס: אם אני נוסע על מסלול קו במהירות אוטובוס, מיקומי משמש אחרים
   analytics: true,                                    // נתוני שימוש אנונימיים לשיפור האפליקציה
   theme: 'system',                                 // system | light | dark
   lang: null                                          // he | en | null = עברית

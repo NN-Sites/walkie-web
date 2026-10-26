@@ -1,18 +1,18 @@
 // מחבר את הקהילה לאפליקציה: חסימה, הודעות מהמנהל, סקרים בין לשוניות,
 // נוכחות על הקו בזמן נסיעה, דיווחים ושיתוף נסיעה בלייב.
 
-import { t } from './i18n.js?v=1.8.0-mvoa2j6c';
-import { showToast } from './ui.js?v=1.8.0-mvoa2j6c';
-import { getFavorites } from './favorites.js?v=1.8.0-mvoa2j6c';
-import { requireSignIn } from './auth-gate.js?v=1.8.0-mvoa2j6c';
+import { t } from './i18n.js?v=1.8.0-mvpj3lro';
+import { showToast } from './ui.js?v=1.8.0-mvpj3lro';
+import { getFavorites } from './favorites.js?v=1.8.0-mvpj3lro';
+import { requireSignIn } from './auth-gate.js?v=1.8.0-mvpj3lro';
 import {
-  checkBan, fetchBroadcasts, fetchActiveSurvey, fetchLineUsers, lineKeyOf, setPresence
-} from './community.js?v=1.8.0-mvoa2j6c';
+  checkBan, fetchBroadcasts, fetchActiveSurvey, fetchLineUsers, lineKeyOf, setPresence, setBusCandidate
+} from './community.js?v=1.8.0-mvpj3lro';
 import {
   showBanScreen, showBroadcast, showSurvey, openShareChooser, openReportSheet
-} from './community-ui.js?v=1.8.0-mvoa2j6c';
-import { startLiveShare, stopLiveShare, isLiveSharing, liveShareUrl, sendLiveShareLink } from './live-share.js?v=1.8.0-mvoa2j6c';
-import { setTripUsers } from './transit-ui.js?v=1.8.0-mvoa2j6c';
+} from './community-ui.js?v=1.8.0-mvpj3lro';
+import { startLiveShare, stopLiveShare, isLiveSharing, liveShareUrl, sendLiveShareLink } from './live-share.js?v=1.8.0-mvpj3lro';
+import { setTripUsers } from './transit-ui.js?v=1.8.0-mvpj3lro';
 
 const SURVEY_LAST_KEY = 'walkie:survey:last';
 const SURVEY_MIN_GAP_MS = 20 * 3600 * 1000;   // סקר אחד ביום, לא יותר
@@ -118,6 +118,7 @@ export class CommunityController {
     if (leg) {
       const key = lineKeyOf({ mode: leg.mode, line: leg.line, agency: leg.agency ?? '' });
       setPresence('trip', { lineKey: key, line: leg.line });
+      setBusCandidate('trip', leg.mode === 'bus' ? { lineKey: key, line: leg.line, path: leg.geometry } : null);
       if (Date.now() - this.lastUsersFetch > TRIP_USERS_MS) {
         this.lastUsersFetch = Date.now();
         const n = await fetchLineUsers(key);
@@ -125,6 +126,7 @@ export class CommunityController {
       }
     } else {
       setPresence('trip', null);
+      setBusCandidate('trip', null);
       setTripUsers(null);
     }
     if (isLiveSharing() && !this.routes.isNavigating && !this.transit.isTripping) stopLiveShare();

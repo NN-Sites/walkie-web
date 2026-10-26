@@ -1,9 +1,11 @@
 // קהילה: כמה משתמשי Walkie על כל קו, דיווחים על אוטובוסים, חסימות, הודעות מהמנהל וסקרים.
 // כל הפונקציות שקטות: אם השרת לא זמין האפליקציה ממשיכה לעבוד כרגיל.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvoa2j6c';
-import { track, safeKey } from './analytics.js?v=1.8.0-mvoa2j6c';
-import { t } from './i18n.js?v=1.8.0-mvoa2j6c';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvpj3lro';
+import { track, safeKey } from './analytics.js?v=1.8.0-mvpj3lro';
+import { t } from './i18n.js?v=1.8.0-mvpj3lro';
+import { getSettings } from './settings.js?v=1.8.0-mvpj3lro';
+import { BusRideDetector } from './bus-inference.js?v=1.8.0-mvpj3lro';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -24,7 +26,7 @@ export function lineUsersHtml(n) {
 }
 
 
-export { lineKeyOf } from './keys.js?v=1.8.0-mvoa2j6c';
+export { lineKeyOf } from './keys.js?v=1.8.0-mvpj3lro';
 
 const presenceSources = { view: null, trip: null };
 let presenceTimer = null;
@@ -102,7 +104,7 @@ export async function fetchLineUsers(lineKey) {
 
 // ---------- דיווחים ----------
 
-export { REPORT_TYPES } from './report-types.js?v=1.8.0-mvoa2j6c';
+export { REPORT_TYPES } from './report-types.js?v=1.8.0-mvpj3lro';
 
 const REPORT_COOLDOWN_MS = 60000;
 let lastReportAt = 0;
@@ -246,5 +248,99 @@ export async function answerSurvey(survey, choice) {
     track('survey.answered');
   } catch {
     // התשובה לא נשמרה (למשל כבר ענה) – לא מציגים שוב
+  }
+}
+
+// ---------- אוטובוס לפי נוסעים ----------
+// משתמש שנע על מסלול של קו במהירות של אוטובוס (bus-inference.js) מדווח את מיקומו, וכך אפשר לדייק את מיקום האוטובוס.
+// המסמך busFixes/{uid} אחד למשתמש, נכתב רק בזמן שזוהתה נסיעה, ונמחק כשהיא נגמרת.
+
+const BUS_PUBLISH_MS = 6000;
+const BUS_FIX_TTL_MS = 45000;
+
+const busCandidates = { view: null, trip: null };
+const rideDetector = new BusRideDetector();
+let busKey = null;
+let busPublishedAt = 0;
+let busPublished = false;
+
+const busCandidate = () => busCandidates.trip ?? busCandidates.view;
+
+/** source: 'view' (קו פתוח) | 'trip' (נסיעה). info = { lineKey, line, path } או null */
+export function setBusCandidate(source, info) {
+  busCandidates[source] = info?.path?.length > 1 ? info : null;
+  const c = busCandidate();
+  if (!c) {
+    rideDetector.setPath(null);
+    stopBusFix();
+    return;
+  }
+  const p = c.path;
+  rideDetector.setPath(p, `${c.lineKey}|${p.length}|${p[0]}|${p[p.length - 1]}`);
+  if (busKey && busKey !== c.lineKey) stopBusFix();
+}
+
+/** נקרא בכל מיקום GPS: מזהה נסיעה על הקו שפתוח / שנוסעים בו, ומדווח כל כמה שניות */
+export function onBusPosition(p) {
+  const c = busCandidate();
+  if (!c || !isFirebaseConfigured() || p.simulated || document.hidden || !getSettings().shareBusPosition) return;
+  const fix = rideDetector.update(p);
+  if (!fix) {
+    if (busPublished && !rideDetector.riding) stopBusFix();
+    return;
+  }
+  const now = Date.now();
+  if (now - busPublishedAt < BUS_PUBLISH_MS) return;
+  busPublishedAt = now;
+  busKey = c.lineKey;
+  publishBusFix(c, fix, now);
+}
+
+async function publishBusFix(c, fix, now) {
+  try {
+    const user = await ensureSignedIn();
+    const { firestore, modules } = await getFirebase();
+    const { doc, setDoc } = modules.firestore;
+    await setDoc(doc(firestore, 'busFixes', user.uid), {
+      lineKey: c.lineKey, line: String(c.line).slice(0, 12),
+      lat: +fix.lat.toFixed(5), lng: +fix.lng.toFixed(5),
+      speed: fix.speed, heading: fix.heading, ts: now
+    });
+    busPublished = true;
+  } catch {
+    // לא חשוב
+  }
+}
+
+export async function stopBusFix() {
+  busKey = null;
+  busPublishedAt = 0;
+  if (!busPublished || !isFirebaseConfigured()) return;
+  busPublished = false;
+  try {
+    const user = await ensureSignedIn();
+    const { firestore, modules } = await getFirebase();
+    await modules.firestore.deleteDoc(modules.firestore.doc(firestore, 'busFixes', user.uid));
+  } catch {
+    // ignore
+  }
+}
+
+/** דיווחי נוסעים טריים על הקו: [{ uid, lat, lng, speed, heading, ts }]. של המשתמש עצמו לא נכללים */
+export async function fetchBusFixes(lineKey) {
+  if (!isFirebaseConfigured() || !getSettings().showBuses) return [];
+  try {
+    const user = await ensureSignedIn();
+    const { firestore, modules } = await getFirebase();
+    const { collection, query, where, limit, getDocs } = modules.firestore;
+    const snap = await getDocs(query(
+      collection(firestore, 'busFixes'),
+      where('lineKey', '==', lineKey),
+      where('ts', '>=', Date.now() - BUS_FIX_TTL_MS),
+      limit(30)
+    ));
+    return snap.docs.filter((d) => d.id !== user.uid).map((d) => ({ uid: d.id, ...d.data() }));
+  } catch {
+    return [];
   }
 }
