@@ -1,13 +1,13 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.9.1-mvprvblb';
-import { lineColor, operatorColor } from './stops.js?v=1.9.1-mvprvblb';
-import { formatNavDistance } from './route-ui.js?v=1.9.1-mvprvblb';
-import { WHATSAPP_ICON } from './share.js?v=1.9.1-mvprvblb';
-import { t, tn, LOCALE } from './i18n.js?v=1.9.1-mvprvblb';
-import { serviceNoticeHtml } from './ui.js?v=1.9.1-mvprvblb';
-import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.1-mvprvblb';
-import { isLineSaved } from './favorites.js?v=1.9.1-mvprvblb';
+import { escapeHtml } from './ui.js?v=1.9.2-mvprzu4a';
+import { lineColor, operatorColor } from './stops.js?v=1.9.2-mvprzu4a';
+import { formatNavDistance } from './route-ui.js?v=1.9.2-mvprzu4a';
+import { WHATSAPP_ICON } from './share.js?v=1.9.2-mvprzu4a';
+import { t, tn, LOCALE } from './i18n.js?v=1.9.2-mvprzu4a';
+import { serviceNoticeHtml } from './ui.js?v=1.9.2-mvprzu4a';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.2-mvprzu4a';
+import { isLineSaved } from './favorites.js?v=1.9.2-mvprzu4a';
 
 const TZ = 'Asia/Jerusalem';
 

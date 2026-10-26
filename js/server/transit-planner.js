@@ -11,9 +11,9 @@
 //
 // להחלפת מנוע (למשל MOTIS/OTP עצמאי עם אותו GTFS) – מחליפים רק את #fetchPlan.
 
-import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.9.1-mvprvblb';
-import { decodePolyline } from './polyline.js?v=1.9.1-mvprvblb';
-import { computeFare } from './fares.js?v=1.9.1-mvprvblb';
+import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.9.2-mvprzu4a';
+import { decodePolyline } from './polyline.js?v=1.9.2-mvprzu4a';
+import { computeFare } from './fares.js?v=1.9.2-mvprzu4a';
 
 const TRANSITOUS_BASE = 'https://api.transitous.org/api/v1/plan';
 const USER_AGENT = 'Walkie/0.4 (pedestrian & public transport navigation; contact: walkie-app)';
@@ -22,6 +22,10 @@ const FEED_PREFIX = 'il-Israel-MOT_';
 const CACHE_TTL_MS = 60 * 1000;      // לוחות זמנים + זמן אמת – דקה
 const MAX_CACHE = 300;
 const MAX_RESULTS = 6;
+// קווים מקבילים (אותן תחנות עלייה וירידה, קו אחר): נשארים ברשימה גם כשהם "נשלטים", והלקוח מקבץ אותם ל"10 / 15"
+const SIBLING_MAX = 8;
+const SIBLING_WINDOW_MS = 30 * 60 * 1000;
+const SIBLING_LATE_ARRIVAL_MS = 15 * 60 * 1000;
 // התאמה לפי קו+שעה כשאין trip_id זהה: אוטובוס יכול להקדים מעט או לאחר,
 // אבל לא "להקדים ב-13 דק'" – זה כבר האוטובוס הקודם באותו קו
 const LIVE_MATCH_EARLY_MIN = 2;
@@ -190,6 +194,14 @@ function dominates(a, b) {
   return notWorse && better;
 }
 
+/** אותן תחנות עלייה וירידה בכל קטע נסיעה (בלי קשר לקו ולשעה) */
+function rideSignature(it) {
+  return it.legs
+    .filter((l) => l.mode !== 'walk')
+    .map((l) => `${l.mode}|${l.from?.code ?? l.from?.name}|${l.to?.code ?? l.to?.name}`)
+    .join('>');
+}
+
 /**
  * protect(it) – מסלולים שלא מסננים החוצה גם אם הם "נשלטים" (למשל חלופת רכבת שמשתמשים רוצים לראות),
  * כל עוד הם לא גרועים בהרבה (עד 60 דק' מהטוב ביותר).
@@ -220,7 +232,26 @@ export function filterItineraries(list, arriveBy = false, { protect = () => fals
   const keep = reasonable.filter(protect).slice(0, 2);
   const rest = reasonable.filter((it) => !keep.includes(it)).slice(0, MAX_RESULTS - keep.length);
   const shown = [...rest, ...keep].sort((a, b) => Date.parse(a.start) - Date.parse(b.start) || score(a) - score(b));
-  return shown.map((it) => ({ ...it, recommended: it.id === recommendedId }));
+
+  // הסינון למעלה מסיר מסלול שנוסע באותם מקומות כמו מסלול אחר אבל יוצא מוקדם יותר באותה הגעה (למשל קו 10 מול קו 15).
+  // מי שרוצה לעלות על קו 10 צריך לראות אותו, ולכן מחזירים אותם כ"אחים" של המסלולים שמוצגים
+  const shownSet = new Set(shown);
+  const bySignature = new Map();
+  for (const it of shown) if (!bySignature.has(rideSignature(it))) bySignature.set(rideSignature(it), it);
+  const siblings = unique
+    .filter((it) => {
+      if (shownSet.has(it) || it.legs.every((l) => l.mode === 'walk')) return false;
+      const base = bySignature.get(rideSignature(it));
+      return !!base
+        && Math.abs(Date.parse(it.start) - Date.parse(base.start)) <= SIBLING_WINDOW_MS
+        && Date.parse(it.end) <= Date.parse(base.end) + SIBLING_LATE_ARRIVAL_MS;
+    })
+    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start))
+    .slice(0, SIBLING_MAX);
+
+  return [...shown, ...siblings]
+    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start) || score(a) - score(b))
+    .map((it) => ({ ...it, recommended: it.id === recommendedId }));
 }
 
 // ---------- זמן אמת ----------

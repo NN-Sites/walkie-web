@@ -5,11 +5,11 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.9.1-mvprvblb';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.9.1-mvprvblb';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.9.1-mvprvblb';
-import { t } from './i18n.js?v=1.9.1-mvprvblb';
-import { disablePushForThisDevice, deletePushData } from './push.js?v=1.9.1-mvprvblb';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.9.2-mvprzu4a';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.9.2-mvprzu4a';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.9.2-mvprzu4a';
+import { t } from './i18n.js?v=1.9.2-mvprzu4a';
+import { disablePushForThisDevice, deletePushData } from './push.js?v=1.9.2-mvprzu4a';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
