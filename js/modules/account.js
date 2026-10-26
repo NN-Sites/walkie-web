@@ -5,10 +5,11 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvpjcz4s';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.8.0-mvpjcz4s';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.8.0-mvpjcz4s';
-import { t } from './i18n.js?v=1.8.0-mvpjcz4s';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.9.0-mvpredcv';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.9.0-mvpredcv';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.9.0-mvpredcv';
+import { t } from './i18n.js?v=1.9.0-mvpredcv';
+import { disablePushForThisDevice, deletePushData } from './push.js?v=1.9.0-mvpredcv';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -147,6 +148,7 @@ export async function signInWithGoogle() {
 /** התנתקות: המכשיר חוזר להיות אנונימי. המועדפים נשארים במכשיר. */
 export async function signOutGoogle() {
   const { auth, modules } = await getFirebase();
+  await disablePushForThisDevice().catch(() => {});
   await globalThis.Capacitor?.Plugins?.FirebaseAuthentication?.signOut?.().catch(() => {});
   await modules.auth.signOut(auth);
   location.reload();
@@ -174,6 +176,7 @@ export async function deleteAccount() {
     await Promise.all(thanks.docs.map((d) => quiet(f.deleteDoc(f.doc(firestore, 'thanksHearts', `${d.id}_${uid}`)))));
   } catch { /* אין לבבות למחוק */ }
   await quiet(f.deleteDoc(f.doc(firestore, 'linePresence', uid)));
+  await quiet(deletePushData());
   await f.deleteDoc(f.doc(firestore, 'users', uid));
   await a.deleteUser(user);
 

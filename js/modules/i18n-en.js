@@ -36,6 +36,34 @@ export const EN = {
   'חזרה': 'Back',
   'ניקוי': 'Clear',
 
+  // ---------- העדפות מסלול, שיתוף, קווים חלופיים ----------
+  'העדפות מסלול': 'Route options',
+  'שיתוף המסלול': 'Share route',
+  'סוג מסלול': 'Route type',
+  'הכי מומלץ': 'Best route',
+  'הליכה מינימלית': 'Least walking',
+  'החלפות מינימליות': 'Fewest transfers',
+  'אמצעי תחבורה': 'Transport modes',
+  'הכי פחות הליכה': 'Least walking',
+  'הכי פחות החלפות': 'Fewest transfers',
+  'הבאים בקו:': 'Next on this line:',
+  'אפשר גם:': 'Also:',
+  'התראות לגבי הקו': 'Line alerts',
+  'עוקבים אחרי הקו': 'Following this line',
+  'הקו נוסף ל"הקווים שלי"': 'Line added to "My lines"',
+  'הקו הוסר מ"הקווים שלי"': 'Line removed from "My lines"',
+  'מסלול: {from} ➜ {to}': 'Route: {from} ➜ {to}',
+
+  // ---------- התראות פוש ----------
+  'התראות על קווים שמורים': 'Saved line alerts',
+  'איחור של 10 דק\' ומעלה או ביטול נסיעה (באפליקציה)': 'Delays of 10+ min or cancelled trips (in the app)',
+  'התראות על קווים': 'Line alerts',
+  'איחור או ביטול בקווים ששמרתם': 'Delays or cancellations on lines you saved',
+  'הקו נוסף ל"הקווים שלי". ההתראות כבויות בהגדרות': 'Line added to "My lines". Alerts are off in settings',
+  'הקו נשמר. נתריע על איחור של 10 דק\' ומעלה או על ביטול': 'Line saved. We will alert you about delays of 10+ min or cancellations',
+  'הקו נוסף ל"הקווים שלי". ההתראות חסומות – אפשר להפעיל אותן בהגדרות המכשיר': 'Line added to "My lines". Notifications are blocked – you can enable them in your device settings',
+  'הקו נוסף ל"הקווים שלי". התראות פוש זמינות באפליקציית אנדרואיד': 'Line added to "My lines". Push alerts are available in the Android app',
+
   // ---------- כללי ----------
   'עכשיו': 'Now',
   'דק\'': 'min',

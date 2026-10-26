@@ -91,7 +91,35 @@ body.navigating .directions { display: none !important; }
 .dir-options {
   margin-top: 8px;
   justify-content: space-between;
+  gap: 2px;
 }
+
+.dir-options .dir-time { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dir-pref-btn { flex: none; width: 36px; height: 36px; color: var(--text-2); }
+.dir-pref-btn.is-set { color: var(--user); background: #eff6ff; }
+.dir-pref-title { font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+.dir-mode-chips .filter-chip { min-height: 34px; }
+
+.tl-alts { display: grid; gap: 6px; margin-top: 6px; }
+.tl-alt-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.tl-alt { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+
+.tl-watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tl-watch.is-on { border-color: var(--brand-700); color: var(--brand-700); }
 
 .dir-tabs {
   display: flex;

@@ -1,18 +1,18 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.8.0-mvpjcz4s';
-import { t, LANG, setLanguage } from './i18n.js?v=1.8.0-mvpjcz4s';
-import { showToast } from './ui.js?v=1.8.0-mvpjcz4s';
-import { modeIcon, icon } from './transit-ui.js?v=1.8.0-mvpjcz4s';
-import { escapeHtml } from './ui.js?v=1.8.0-mvpjcz4s';
-import { APP_VERSION } from '../config.js?v=1.8.0-mvpjcz4s';
-import { sessionStatus } from './session.js?v=1.8.0-mvpjcz4s';
-import { celebrate, stagger } from './fx.js?v=1.8.0-mvpjcz4s';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.8.0-mvpjcz4s';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.9.0-mvpredcv';
+import { t, LANG, setLanguage } from './i18n.js?v=1.9.0-mvpredcv';
+import { showToast } from './ui.js?v=1.9.0-mvpredcv';
+import { modeIcon, icon } from './transit-ui.js?v=1.9.0-mvpredcv';
+import { escapeHtml } from './ui.js?v=1.9.0-mvpredcv';
+import { APP_VERSION } from '../config.js?v=1.9.0-mvpredcv';
+import { sessionStatus } from './session.js?v=1.9.0-mvpredcv';
+import { celebrate, stagger } from './fx.js?v=1.9.0-mvpredcv';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.9.0-mvpredcv';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.8.0-mvpjcz4s';
+} from './favorites.js?v=1.9.0-mvpredcv';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -290,6 +290,7 @@ export class SettingsView {
         <h2 class="set-title">${t('נגישות')}</h2>
         ${toggleRow('wheelchair', 'מסלולים נגישים', 'בלי מדרגות, עדיפות לקווים נגישים', '♿')}
         ${toggleRow('vibrate', 'רטט בניווט', 'לפני פנייה ולפני ירידה מהאוטובוס', '📳')}
+        ${toggleRow('linePush', 'התראות על קווים שמורים', 'איחור של 10 דק\' ומעלה או ביטול נסיעה (באפליקציה)', '🔔')}
       </section>
 
       <section class="set-group">

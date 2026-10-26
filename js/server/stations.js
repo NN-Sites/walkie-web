@@ -3,8 +3,8 @@
 // מקור: Transitous (MOTIS) מעל ה-GTFS הרשמי של משרד התחבורה – מחזיר תחנות עם סוג התחבורה,
 // ויציאות לפי לוח זמנים לכל אמצעי. לאוטובוסים מוסיפים זמן אמת מ-SIRI.
 
-import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.8.0-mvpjcz4s';
-import { MODE_FAMILY, formatHeadsign, stripFeed, matchLiveArrival, tripStartOf } from './transit-planner.js?v=1.8.0-mvpjcz4s';
+import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.9.0-mvpredcv';
+import { MODE_FAMILY, formatHeadsign, stripFeed, matchLiveArrival, tripStartOf } from './transit-planner.js?v=1.9.0-mvpredcv';
 
 const MOTIS = 'https://api.transitous.org/api/v1';
 const USER_AGENT = 'Walkie/0.6 (pedestrian & public transport navigation)';
@@ -192,8 +192,9 @@ export class StationsService {
 }
 
 /** רשומת stoptime של MOTIS -> יציאה של Walkie */
-export function normalizeStopTime(t) {
-  if (t.cancelled || t.tripCancelled) return null;
+export function normalizeStopTime(t, { keepCancelled = false } = {}) {
+  const cancelled = !!(t.cancelled || t.tripCancelled);
+  if (cancelled && !keepCancelled) return null;
   if (t.place?.pickupType === 'NOT_ALLOWED') return null; // תחנה סופית – רק ירידה
   const mode = familyOf(t.mode);
   if (!mode) return null;
@@ -216,6 +217,7 @@ export function normalizeStopTime(t) {
     scheduled,
     eta: t.place?.departure ?? scheduled,
     live: null,
+    cancelled,
     stopName: t.place?.name ?? null,
     accessible: t.wheelchairAccessible === 'ACCESSIBLE'
   };

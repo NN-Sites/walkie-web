@@ -1,7 +1,7 @@
 // שיתוף מיקום בוואטסאפ: המיקום הנוכחי, או "אני בדרך – אגיע בערך ב-…" בזמן ניווט/נסיעה.
 // שיתוף חד-פעמי (קישור למיקום ברגע השליחה) – לא מעקב רציף, ורק אחרי לחיצה של המשתמש.
 
-import { t, LOCALE } from './i18n.js?v=1.8.0-mvpjcz4s';
+import { t, LOCALE } from './i18n.js?v=1.9.0-mvpredcv';
 
 const TZ = 'Asia/Jerusalem';
 
@@ -22,6 +22,24 @@ export function openWhatsApp(text) {
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
   const win = window.open(url, '_blank', 'noopener');
   if (!win) window.location.href = url; // חסימת חלונות קופצים
+}
+
+function minutesText(seconds) {
+  const m = Math.max(1, Math.round(seconds / 60));
+  return m < 60 ? t('{n} דק\'', { n: m }) : t('{h} ש\' {m} דק\'', { h: Math.floor(m / 60), m: m % 60 });
+}
+
+/** שיתוף מסלול מתוכנן (לפני היציאה): מוצא, יעד, שעות והקווים */
+export function shareRoute({ originName, destName, it = null }) {
+  const lines = [`🧭 ${t('מסלול: {from} ➜ {to}', { from: originName, to: destName })}`];
+  if (it) {
+    lines.push(`⏱️ ${minutesText(it.duration)} · ${clock(it.start)} – ${clock(it.end)}`);
+    const rides = it.legs.filter((l) => l.mode !== 'walk').map((l) => (l.line === 'רכבת' ? t('רכבת') : l.line)).filter(Boolean);
+    if (rides.length) lines.push(`🚌 ${rides.join(' › ')}`);
+    if (it.fare) lines.push(`💳 ₪${it.fare.total.toFixed(2)}`);
+  }
+  lines.push('Walkie');
+  openWhatsApp(lines.join('\n'));
 }
 
 export function shareMyLocation(position) {

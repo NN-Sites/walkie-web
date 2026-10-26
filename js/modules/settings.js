@@ -1,6 +1,6 @@
 // הגדרות משתמש: נשמרות במכשיר (localStorage), משפיעות על תכנון המסלולים ועל התצוגה.
 
-import { STORAGE_KEYS } from '../config.js?v=1.8.0-mvpjcz4s';
+import { STORAGE_KEYS } from '../config.js?v=1.9.0-mvpredcv';
 
 const KEY = 'walkie:settings';
 
@@ -9,6 +9,8 @@ export const DEFAULT_SETTINGS = Object.freeze({
   maxWalkMin: 30,                                     // הליכה מקסימלית לתחנה/מתחנה
   walkSpeed: 'normal',                                // slow | normal | fast
   wheelchair: false,                                  // מסלולים נגישים
+  linePush: true,                                     // התראות פוש על איחור / ביטול בקווים שמורים
+  routeType: 'best',                                  // best | minWalk | minTransfers: סדר המסלולים ברשימה
   vibrate: true,                                      // רטט לפני פנייה / ירידה
   showStops: true,                                    // סמני תחנות במפה (מסך הבית)
   showBuses: true,                                    // אוטובוסים בזמן אמת על המפה

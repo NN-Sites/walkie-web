@@ -1,7 +1,7 @@
 // הגדרות גלובליות של Walkie – מקום אחד לכל המספרים הקסומים.
 
 // לעדכן יחד עם versionName ב-android/app/build.gradle
-export const APP_VERSION = '1.8.0';
+export const APP_VERSION = '1.9.0';
 
 // מרכז ברירת מחדל (תל אביב, עזריאלי) – בשימוש רק אם אין מיקום שמור ואין עדיין GPS
 export const DEFAULT_CENTER = [32.0741, 34.7922];

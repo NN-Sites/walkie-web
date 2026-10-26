@@ -1,11 +1,13 @@
 // כותרת "מסלול": מוצא -> יעד, לשוניות (תחבורה ציבורית / הליכה), זמן יציאה/הגעה, החלפת כיוון.
 // מתזמר בין RouteController (הליכה) ל-TransitController (תחבורה ציבורית).
 
-import { distanceMeters } from './geo.js?v=1.8.0-mvpjcz4s';
-import { showToast } from './ui.js?v=1.8.0-mvpjcz4s';
-import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js?v=1.8.0-mvpjcz4s';
-import { STAR_ON, STAR_OFF } from './favorites-ui.js?v=1.8.0-mvpjcz4s';
-import { t as tr, LOCALE } from './i18n.js?v=1.8.0-mvpjcz4s';
+import { distanceMeters } from './geo.js?v=1.9.0-mvpredcv';
+import { showToast } from './ui.js?v=1.9.0-mvpredcv';
+import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js?v=1.9.0-mvpredcv';
+import { STAR_ON, STAR_OFF } from './favorites-ui.js?v=1.9.0-mvpredcv';
+import { t as tr, LOCALE } from './i18n.js?v=1.9.0-mvpredcv';
+import { getSettings, updateSettings } from './settings.js?v=1.9.0-mvpredcv';
+import { shareRoute } from './share.js?v=1.9.0-mvpredcv';
 
 export const MY_LOCATION = Object.freeze({ id: 'my-location', kind: 'mylocation', name: tr('המיקום שלי') });
 
@@ -48,6 +50,10 @@ export class DirectionsController {
       timeBtn: root.querySelector('#dir-time'),
       timePanel: root.querySelector('#dir-time-panel'),
       timeInput: root.querySelector('#dir-time-input'),
+      prefsPanel: root.querySelector('#dir-prefs-panel'),
+      prefsBtn: root.querySelector('#dir-prefs-btn'),
+      routeTypeBtns: [...root.querySelectorAll('[data-routetype]')],
+      modeBtns: [...root.querySelectorAll('[data-pmode]')],
       tabs: [...root.querySelectorAll('[data-tab]')],
       whenBtns: [...root.querySelectorAll('[data-when]')],
       favBtn: root.querySelector('[data-dir="fav"]')
@@ -56,8 +62,10 @@ export class DirectionsController {
     this.pendingWhenType = 'depart';
 
     root.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-dir], [data-tab], [data-when]');
+      const btn = e.target.closest('[data-dir], [data-tab], [data-when], [data-routetype], [data-pmode]');
       if (!btn) return;
+      if (btn.dataset.routetype) return this.#setRouteType(btn.dataset.routetype);
+      if (btn.dataset.pmode) return this.#toggleMode(btn.dataset.pmode);
       if (btn.dataset.tab) return this.setTab(btn.dataset.tab);
       if (btn.dataset.when) return this.#setPendingWhen(btn.dataset.when);
       switch (btn.dataset.dir) {
@@ -67,6 +75,8 @@ export class DirectionsController {
         case 'swap': return this.swap();
         case 'fav': return this.#toggleFav();
         case 'time': return this.#toggleTimePanel();
+        case 'prefs': return this.#togglePrefs();
+        case 'share': return this.#share();
         case 'time-now': return this.#applyTime(null);
         case 'time-apply': return this.#applyTime(this.el.timeInput.value);
         default: return undefined;
@@ -110,6 +120,7 @@ export class DirectionsController {
     this.transit.exit({ silent: true });
     this.root.hidden = true;
     this.el.timePanel.hidden = true;
+    this.el.prefsPanel.hidden = true;
     document.body.classList.remove('has-route');
     this.onClose?.();
   }
@@ -186,11 +197,49 @@ export class DirectionsController {
 
   #toggleTimePanel() {
     const panel = this.el.timePanel;
+    this.el.prefsPanel.hidden = true;
     panel.hidden = !panel.hidden;
     if (!panel.hidden) {
       this.#setPendingWhen(this.when.type);
       this.el.timeInput.value = toLocalInputValue(this.when.time ?? new Date());
     }
+  }
+
+  #togglePrefs() {
+    const panel = this.el.prefsPanel;
+    this.el.timePanel.hidden = true;
+    panel.hidden = !panel.hidden;
+    this.#renderPrefs();
+  }
+
+  #setRouteType(type) {
+    updateSettings({ routeType: type });
+    this.#renderPrefs();
+    this.transit.setRouteType();
+  }
+
+  #toggleMode(mode) {
+    updateSettings({ modes: { [mode]: !getSettings().modes[mode] } });
+    this.#renderPrefs();
+    if (this.tab === 'transit') this.run();
+  }
+
+  #renderPrefs() {
+    const s = getSettings();
+    for (const b of this.el.routeTypeBtns) b.classList.toggle('is-active', b.dataset.routetype === s.routeType);
+    for (const b of this.el.modeBtns) {
+      const on = !!s.modes[b.dataset.pmode];
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
+    const custom = s.routeType !== 'best' || Object.values(s.modes).some((on) => !on);
+    this.el.prefsBtn.classList.toggle('is-set', custom);
+    this.el.prefsBtn.setAttribute('aria-expanded', String(!this.el.prefsPanel.hidden));
+  }
+
+  #share() {
+    const it = this.tab === 'transit' ? this.transit.shareItinerary : null;
+    shareRoute({ originName: this.origin?.name ?? '', destName: this.dest?.name ?? '', it });
   }
 
   #setPendingWhen(type) {
@@ -256,6 +305,7 @@ export class DirectionsController {
       t.classList.toggle('is-active', on);
       t.setAttribute('aria-selected', String(on));
     }
+    this.#renderPrefs();
     this.el.timeBtn.textContent = this.#timeLabel();
     this.el.timeBtn.classList.toggle('is-set', !!this.when.time);
   }

@@ -1,15 +1,17 @@
 // זרימת תחבורה ציבורית: חיפוש מסלולים -> רשימה -> פירוט -> ליווי נסיעה -> הגעה.
 // מצבים: idle | loading | error | list | detail | trip | arrived
 
-import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.8.0-mvpjcz4s';
-import { RouteSimulator } from './navigation.js?v=1.8.0-mvpjcz4s';
-import { buildTripModel, TripSession } from './transit-trip.js?v=1.8.0-mvpjcz4s';
-import { focusPoint } from './map.js?v=1.8.0-mvpjcz4s';
-import { showToast } from './ui.js?v=1.8.0-mvpjcz4s';
-import { vibrate, transitPrefsParams } from './settings.js?v=1.8.0-mvpjcz4s';
-import * as tpl from './transit-ui.js?v=1.8.0-mvpjcz4s';
-import { t } from './i18n.js?v=1.8.0-mvpjcz4s';
-import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.8.0-mvpjcz4s';
+import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.9.0-mvpredcv';
+import { RouteSimulator } from './navigation.js?v=1.9.0-mvpredcv';
+import { buildTripModel, TripSession } from './transit-trip.js?v=1.9.0-mvpredcv';
+import { focusPoint } from './map.js?v=1.9.0-mvpredcv';
+import { showToast } from './ui.js?v=1.9.0-mvpredcv';
+import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.9.0-mvpredcv';
+import { toggleLine } from './favorites.js?v=1.9.0-mvpredcv';
+import { onLineWatched } from './push.js?v=1.9.0-mvpredcv';
+import * as tpl from './transit-ui.js?v=1.9.0-mvpredcv';
+import { t } from './i18n.js?v=1.9.0-mvpredcv';
+import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.9.0-mvpredcv';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה
@@ -97,7 +99,7 @@ export class TransitController {
       this.#setMode('list');
       this.onPlanned?.(result);
       // ההצעה המומלצת מוצגת על המפה כבר ברשימה
-      const rec = result.itineraries.find((it) => it.recommended) ?? result.itineraries[0];
+      const rec = tpl.pickPrimary(result.itineraries, getSettings().routeType);
       if (rec) this.#showOnMap(rec);
       this.#render(true);
       this.#startListRefresh();
@@ -142,10 +144,25 @@ export class TransitController {
     this.#refreshSelectedLive();
   }
 
+  /** המסלול שמשתפים: הנבחר, או הראשון ברשימה לפי סוג המסלול */
+  get shareItinerary() {
+    if (this.selected) return this.selected;
+    return this.result ? tpl.pickPrimary(this.result.itineraries ?? [], getSettings().routeType) ?? null : null;
+  }
+
+  /** סוג המסלול (הכי מומלץ / הליכה מינימלית / החלפות מינימליות) השתנה: סידור מחדש של הרשימה */
+  setRouteType() {
+    if (this.mode !== 'list' || !this.result) return;
+    const keep = tpl.ITINERARY_FILTERS[this.listFilter] ?? tpl.ITINERARY_FILTERS.all;
+    const show = tpl.pickPrimary(this.result.itineraries.filter(keep), getSettings().routeType);
+    if (show) this.#showOnMap(show);
+    this.#render(true);
+  }
+
   back() {
     this.selected = null;
     this.#setMode('list');
-    const rec = this.result?.itineraries.find((it) => it.recommended) ?? this.result?.itineraries[0];
+    const rec = tpl.pickPrimary(this.result?.itineraries ?? [], getSettings().routeType);
     if (rec) this.#showOnMap(rec);
     this.#render(true);
   }
@@ -163,8 +180,17 @@ export class TransitController {
         // המפה מציגה את המסלול הראשון במסנן שנבחר (למשל את חלופת הרכבת)
         const keep = tpl.ITINERARY_FILTERS[data.filter] ?? tpl.ITINERARY_FILTERS.all;
         const visible = this.result?.itineraries.filter(keep) ?? [];
-        const show = visible.find((it) => it.recommended) ?? visible[0];
+        const show = tpl.pickPrimary(visible, getSettings().routeType);
         if (show) this.#showOnMap(show);
+        this.#render();
+        return true;
+      }
+      case 'line-watch': {
+        if (!data.route) return true;
+        const on = toggleLine({ lineRef: data.route, line: data.line, mode: data.mode, agency: data.agency || null, headsign: data.to || null });
+        if (on === null) return true;
+        if (on) onLineWatched().then(showToast);
+        else showToast(t('הקו הוסר מ"הקווים שלי"'));
         this.#render();
         return true;
       }
@@ -271,6 +297,7 @@ export class TransitController {
           loadingMore: this.loadingMore,
           now,
           filter: this.listFilter,
+          routeType: getSettings().routeType,
           // האם ההגדרות מצמצמות את החיפוש (להסבר כשאין תוצאות)
           restricted: Object.keys(transitPrefsParams()).length > 0,
           // שבת / חג בזמן המבוקש (יציאה עכשיו או בשעה שנבחרה)
@@ -283,6 +310,7 @@ export class TransitController {
         tpl.detailHtml(this.selected, {
           originName: this.request.origin.name ?? t('נקודת מוצא'),
           destName: this.request.dest.name ?? t('יעד'),
+          itineraries: this.result?.itineraries ?? [],
           now
         }),
         isNew ? `transit-detail:${this.selected.id}` : this.sheet.lastFocusKey

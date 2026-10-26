@@ -5,10 +5,10 @@
 //  - הנסיעה הבאה של הקו (תחנות, שעות, מסלול): Transitous (MOTIS)
 //  line_ref של Stride = route_id ב-GTFS = routeId ב-MOTIS, ולכן ההתאמה בין המקורות מדויקת.
 
-import { fetchWithTimeout, distanceMeters, israelDate } from './geo.js?v=1.8.0-mvpjcz4s';
-import { decodePolyline } from './polyline.js?v=1.8.0-mvpjcz4s';
-import { normalizeStopTime, MAX_AHEAD_MS } from './stations.js?v=1.8.0-mvpjcz4s';
-import { matchLiveArrival, stripFeed, tripStartOf } from './transit-planner.js?v=1.8.0-mvpjcz4s';
+import { fetchWithTimeout, distanceMeters, israelDate } from './geo.js?v=1.9.0-mvpredcv';
+import { decodePolyline } from './polyline.js?v=1.9.0-mvpredcv';
+import { normalizeStopTime, MAX_AHEAD_MS } from './stations.js?v=1.9.0-mvpredcv';
+import { matchLiveArrival, stripFeed, tripStartOf } from './transit-planner.js?v=1.9.0-mvpredcv';
 
 const STRIDE = 'https://open-bus-stride-api.hasadna.org.il';
 const MOTIS = 'https://api.transitous.org/api/v1';
@@ -240,26 +240,7 @@ export class LinesService {
     const ref = String(lineRef);
     if (!/^\d{1,9}$/.test(ref)) throw new LinesError('invalid line', 'invalid');
 
-    const base = await this.#cached(`d|${ref}`, DETAILS_TTL_MS, async () => {
-      const rows = await this.#stride('/gtfs_routes/list', { line_refs: ref, date_from: israelDate(), date_to: israelDate(), limit: '1' });
-      if (!rows.length) throw new LinesError('line not found', 'not_found');
-      const route = normalizeRoute(rows[0]);
-
-      // כיוון נגדי של אותו קו (אותו מק"ט, כיוון אחר)
-      let otherDirections = [];
-      if (rows[0].route_mkt) {
-        const siblings = await this.#stride('/gtfs_routes/list', {
-          route_mkt: rows[0].route_mkt, date_from: israelDate(), date_to: israelDate(), limit: '10'
-        }).catch(() => []);
-        otherDirections = siblings
-          .map(normalizeRoute)
-          .filter((r) => r.lineRef !== route.lineRef && r.agency === route.agency)
-          .map((r) => ({ lineRef: r.lineRef, from: r.from, to: r.to, alternative: r.alternative }));
-      }
-
-      const origins = await this.#resolveOrigins(route, near);
-      return { route, otherDirections, origins };
-    });
+    const base = await this.#base(ref, near);
 
     const { route, otherDirections, origins } = base;
     const nearKey = near ? `${near.lat.toFixed(3)},${near.lng.toFixed(3)}` : '';
@@ -346,6 +327,64 @@ export class LinesService {
           : null
       };
     });
+  }
+
+  /** פרטי הקו הסטטיים (שם, כיוונים, תחנות מוצא), במטמון */
+  #base(ref, near = null) {
+    return this.#cached(`d|${ref}`, DETAILS_TTL_MS, async () => {
+        const rows = await this.#stride('/gtfs_routes/list', { line_refs: ref, date_from: israelDate(), date_to: israelDate(), limit: '1' });
+        if (!rows.length) throw new LinesError('line not found', 'not_found');
+        const route = normalizeRoute(rows[0]);
+
+        // כיוון נגדי של אותו קו (אותו מק"ט, כיוון אחר)
+        let otherDirections = [];
+        if (rows[0].route_mkt) {
+          const siblings = await this.#stride('/gtfs_routes/list', {
+            route_mkt: rows[0].route_mkt, date_from: israelDate(), date_to: israelDate(), limit: '10'
+          }).catch(() => []);
+          otherDirections = siblings
+            .map(normalizeRoute)
+            .filter((r) => r.lineRef !== route.lineRef && r.agency === route.agency)
+            .map((r) => ({ lineRef: r.lineRef, from: r.from, to: r.to, alternative: r.alternative }));
+        }
+
+        const origins = await this.#resolveOrigins(route, near);
+        return { route, otherDirections, origins };
+    });
+  }
+
+  /**
+   * ניטור קו להתראות: היציאות הקרובות מתחנת המוצא, עם איחור לפי זמן אמת וסימון נסיעות מבוטלות.
+   * מחזיר { lineRef, line, mode, to, origin, trips: [{ tripId, scheduled, eta, delayMin|null, cancelled }] }
+   */
+  async monitor(lineRef) {
+    const ref = String(lineRef);
+    if (!/^\d{1,9}$/.test(ref)) throw new LinesError('invalid line', 'invalid');
+    const { route, origins } = await this.#base(ref);
+
+    let origin = null;
+    let departures = [];
+    for (const o of origins) {
+      departures = await this.#lineDepartures(o, ref, { keepCancelled: true });
+      if (departures.length) {
+        origin = o;
+        break;
+      }
+    }
+    if (!origin) return { lineRef: ref, line: route.line, mode: route.mode, to: route.to?.name ?? null, origin: null, trips: [] };
+
+    const cancelled = departures.filter((d) => d.cancelled);
+    const active = await this.#withLive(origin.code, departures.filter((d) => !d.cancelled), route);
+    const trips = [...active, ...cancelled]
+      .map((d) => ({
+        tripId: d.tripId,
+        scheduled: d.scheduled,
+        eta: d.eta,
+        delayMin: d.live ? Math.round((Date.parse(d.eta) - Date.parse(d.scheduled)) / 60000) : null,
+        cancelled: !!d.cancelled
+      }))
+      .sort((x, y) => Date.parse(x.scheduled) - Date.parse(y.scheduled));
+    return { lineRef: ref, line: route.line, mode: route.mode, to: route.to?.name ?? null, origin: { name: origin.name, code: origin.code }, trips };
   }
 
   #safeTrip(motisTripId) {
@@ -444,10 +483,10 @@ export class LinesService {
     return out;
   }
 
-  async #lineDepartures(station, lineRef) {
+  async #lineDepartures(station, lineRef, { keepCancelled = false } = {}) {
     // קו תדיר נמצא מיד; קו נדיר – מחפשים בחלון ארוך יותר
     for (const n of [80, 250]) {
-      const lists = await Promise.all(station.stopIds.slice(0, 3).map((id) => this.#stopTimes(id, n)));
+      const lists = await Promise.all(station.stopIds.slice(0, 3).map((id) => this.#stopTimes(id, n, undefined, keepCancelled)));
       // אותה נסיעה חוזרת מכמה רציפים של תחנת המוצא – מסירים כפולים לפי מזהה נסיעה
       const seen = new Set();
       const mine = lists
@@ -460,13 +499,13 @@ export class LinesService {
     return [];
   }
 
-  async #stopTimes(stopId, n, fromMs = Date.now() - 60000) {
+  async #stopTimes(stopId, n, fromMs = Date.now() - 60000, keepCancelled = false) {
     const params = new URLSearchParams({ stopId, n: String(n), time: new Date(fromMs).toISOString() });
     const res = await fetchWithTimeout(`${MOTIS}/stoptimes?${params}`, { headers: { 'User-Agent': USER_AGENT } }, 15000);
     if (!res.ok) throw new LinesError(`stoptimes HTTP ${res.status}`);
     const json = await res.json();
     // MOTIS מצרף גם תחנות "שקולות" סמוכות – כאן זה רצוי (רציף אחר של תחנת המוצא); הסינון לפי lineRef שומר על הכיוון
-    return (json.stopTimes ?? []).map(normalizeStopTime).filter(Boolean);
+    return (json.stopTimes ?? []).map((t) => normalizeStopTime(t, { keepCancelled })).filter(Boolean);
   }
 
   async #trip(motisTripId) {

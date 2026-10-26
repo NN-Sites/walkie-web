@@ -36,18 +36,18 @@
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
   <!-- Leaflet והפונט ארוזים עם האפליקציה: המפה עולה גם כשהרשת איטית, ובלי בקשות ל-CDN -->
-  <link rel="stylesheet" href="vendor/heebo/heebo.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/style.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/navigation.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/transit.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/tabs.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/ads.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/announce.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/motion.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/community.css?v=1.8.0-mvpjcz4s">
-  <link rel="stylesheet" href="css/theme.css?v=1.8.0-mvpjcz4s">
+  <link rel="stylesheet" href="vendor/heebo/heebo.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/style.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/navigation.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/transit.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/tabs.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/ads.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/announce.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/motion.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/community.css?v=1.9.0-mvpredcv">
+  <link rel="stylesheet" href="css/theme.css?v=1.9.0-mvpredcv">
   <!-- אנימציית פתיחה (~1.5 שנ'): הלוגו מצטייר, ואז עיגול נפתח מהלוגו אל האפליקציה.
        בתוך ה-HTML כדי שתופיע מהפריים הראשון, בהמשך ישיר למסך הפתיחה של אנדרואיד (אותו צבע).
        כל האנימציות כאן הן transform/opacity בלבד – רצות על ה-GPU (compositor), ולכן נשארות חלקות
@@ -243,6 +243,12 @@
         </button>
       </div>
       <button id="dir-time" class="dir-time" type="button" data-dir="time">יציאה עכשיו</button>
+      <button id="dir-prefs-btn" class="dir-icon-btn dir-pref-btn" type="button" data-dir="prefs" aria-label="העדפות מסלול" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M3 17v2h6v-2H3ZM3 5v2h10V5H3Zm10 16v-2h8v-2h-8v-2h-2v6h2ZM7 9v2H3v2h4v2h2V9H7Zm14 4v-2H11v2h10Zm-6-4h2V7h4V5h-4V3h-2v6Z"/></svg>
+      </button>
+      <button class="dir-icon-btn dir-pref-btn" type="button" data-dir="share" aria-label="שיתוף המסלול">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M18 16.1c-.8 0-1.4.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.2c.5.5 1.2.8 2 .8 1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .2 0 .5.1.7L8 9.8C7.5 9.3 6.8 9 6 9c-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 1.5-.3 2-.8l7.1 4.2c0 .2-.1.4-.1.6 0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9-1.3-2.9-2.9-2.9Z"/></svg>
+      </button>
     </div>
     <div id="dir-time-panel" class="dir-time-panel" hidden>
       <div class="seg" role="group" aria-label="סוג זמן">
@@ -253,6 +259,20 @@
       <div class="dir-time-actions">
         <button class="btn-secondary" type="button" data-dir="time-now">עכשיו</button>
         <button class="btn" type="button" data-dir="time-apply">אישור</button>
+      </div>
+    </div>
+    <div id="dir-prefs-panel" class="dir-time-panel" hidden>
+      <span class="dir-pref-title">סוג מסלול</span>
+      <div class="seg" role="group" aria-label="סוג מסלול">
+        <button type="button" data-routetype="best">הכי מומלץ</button>
+        <button type="button" data-routetype="minWalk">הליכה מינימלית</button>
+        <button type="button" data-routetype="minTransfers">החלפות מינימליות</button>
+      </div>
+      <span class="dir-pref-title">אמצעי תחבורה</span>
+      <div class="filter-chips dir-mode-chips" role="group" aria-label="אמצעי תחבורה">
+        <button class="filter-chip" type="button" data-pmode="bus">אוטובוס</button>
+        <button class="filter-chip" type="button" data-pmode="rail">רכבת</button>
+        <button class="filter-chip" type="button" data-pmode="lightrail">רכבת קלה</button>
       </div>
     </div>
   </section>
@@ -357,10 +377,10 @@
     <div id="search-results" class="search-results"></div>
   </div>
 
-  <script src="js/runtime-config.js?v=1.8.0-mvpjcz4s"></script>
-  <script src="vendor/leaflet/leaflet.js?v=1.8.0-mvpjcz4s"></script>
-  <script src="vendor/maplibre/maplibre-gl.js?v=1.8.0-mvpjcz4s"></script>
-  <script src="vendor/maplibre/leaflet-maplibre-gl.js?v=1.8.0-mvpjcz4s"></script>
-  <script type="module" src="js/app.js?v=1.8.0-mvpjcz4s"></script>
+  <script src="js/runtime-config.js?v=1.9.0-mvpredcv"></script>
+  <script src="vendor/leaflet/leaflet.js?v=1.9.0-mvpredcv"></script>
+  <script src="vendor/maplibre/maplibre-gl.js?v=1.9.0-mvpredcv"></script>
+  <script src="vendor/maplibre/leaflet-maplibre-gl.js?v=1.9.0-mvpredcv"></script>
+  <script type="module" src="js/app.js?v=1.9.0-mvpredcv"></script>
 </body>
 </html>
