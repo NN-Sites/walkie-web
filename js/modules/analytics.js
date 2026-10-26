@@ -5,10 +5,10 @@
 // המונים נצברים בזיכרון ונשלחים בקבוצה, ואם האפליקציה נסגרת לפני השליחה הם נשמרים במכשיר לפתיחה הבאה.
 // אפשר לכבות בהגדרות ← פרטיות.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.9.2-mvprzu4a';
-import { getSettings } from './settings.js?v=1.9.2-mvprzu4a';
-import { nearestCity } from './cities.js?v=1.9.2-mvprzu4a';
-import { safeKey } from './keys.js?v=1.9.2-mvprzu4a';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.9.3-mvps6z6v';
+import { getSettings } from './settings.js?v=1.9.3-mvps6z6v';
+import { nearestCity } from './cities.js?v=1.9.3-mvps6z6v';
+import { safeKey } from './keys.js?v=1.9.3-mvps6z6v';
 
 const QUEUE_KEY = 'walkie:analytics:q';
 const ATTR_KEY = 'walkie:attr';

@@ -1,13 +1,13 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.9.2-mvprzu4a';
-import { lineColor, operatorColor } from './stops.js?v=1.9.2-mvprzu4a';
-import { formatNavDistance } from './route-ui.js?v=1.9.2-mvprzu4a';
-import { WHATSAPP_ICON } from './share.js?v=1.9.2-mvprzu4a';
-import { t, tn, LOCALE } from './i18n.js?v=1.9.2-mvprzu4a';
-import { serviceNoticeHtml } from './ui.js?v=1.9.2-mvprzu4a';
-import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.2-mvprzu4a';
-import { isLineSaved } from './favorites.js?v=1.9.2-mvprzu4a';
+import { escapeHtml } from './ui.js?v=1.9.3-mvps6z6v';
+import { lineColor, operatorColor } from './stops.js?v=1.9.3-mvps6z6v';
+import { formatNavDistance } from './route-ui.js?v=1.9.3-mvps6z6v';
+import { WHATSAPP_ICON } from './share.js?v=1.9.3-mvps6z6v';
+import { t, tn, LOCALE } from './i18n.js?v=1.9.3-mvps6z6v';
+import { serviceNoticeHtml } from './ui.js?v=1.9.3-mvps6z6v';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.3-mvps6z6v';
+import { isLineSaved } from './favorites.js?v=1.9.3-mvps6z6v';
 
 const TZ = 'Asia/Jerusalem';
 
@@ -31,6 +31,15 @@ function fmtMinutes(seconds) {
   const h = Math.floor(m / 60);
   const r = m % 60;
   return r ? t('{h} ש\' {m} דק\'', { h, m: r }) : t('{h} ש\'', { h });
+}
+
+/** "1 שע' 3 דק'" – כמו בכרטיס המסלול של Moovit */
+function fmtDurationLong(seconds) {
+  const m = Math.max(1, Math.round(seconds / 60));
+  if (m < 60) return t('{n} דק\'', { n: m });
+  const h = Math.floor(m / 60);
+  const r = m % 60;
+  return r ? t('{h} שע\' {m} דק\'', { h, m: r }) : t('{h} שע\'', { h });
 }
 
 function transfersText(n) {
@@ -253,21 +262,22 @@ function itineraryCard(it, index, now, badge, group = [it]) {
   const label = badge ? t(badge) : t('מומלץ');
   const first = it.legs.find((l) => l.mode !== 'walk');
   const dep = first ? departureText(first, now) : null;
+  // "יוצא ב-05:42 מהאלון/האשל": שעה מוחלטת, ובזמן אמת גם האיחור
+  const lateNote = dep?.live && first.live.delayMin >= 2 ? ` · ${t('איחור {n} דק\'', { n: first.live.delayMin })}` : '';
   const departLine = first
-    ? `<div class="itin-depart">${lineBadge(first, { small: true })} ${liveBadge(dep)}${next.length ? `<span class="sched-text"> · ${t('הבאים:')} ${next.map(minsLabel).join(', ')}</span>` : ''}<span class="itin-stop"> · ${escapeHtml(first.from.name)}</span></div>`
+    ? `<div class="itin-depart">${dep.live ? '<span class="live-dot"></span>' : ''}<span>${t('יוצא ב-{time} מ{stop}', { time: fmtTime(first.live?.eta ?? first.start), stop: escapeHtml(first.from.name) })}${lateNote}${next.length ? ` · ${t('הבאים:')} ${next.map(minsLabel).join(', ')}` : ''}</span></div>`
     : '';
 
   return `
     <button class="itin-card${rec ? ' is-recommended' : ''}" type="button" data-action="transit-select" data-index="${index}">
       <div class="itin-top">
-        <span class="itin-duration">${fmtMinutes(it.duration)}</span>
-        <span class="itin-times">${fmtTime(it.start)} – ${fmtTime(it.end)}</span>
+        <span class="itin-duration">${fmtDurationLong(it.duration)}</span>
+        <span class="itin-arrive">• ${t('הגעה ב-{time}', { time: fmtTime(it.end) })}</span>
         ${rec ? `<span class="chip chip-rec">${label}</span>` : ''}
         ${it.fare ? `<span class="itin-price">${fmtPrice(it.fare.total)}</span>` : ''}
       </div>
       ${legChips(it, -1, variants)}
       ${departLine}
-      <div class="itin-meta">${icon('walk', 14)} ${t('{dist} הליכה', { dist: formatNavDistance(it.walkMeters) })} · ${transfersText(it.transfers)}</div>
     </button>`;
 }
 

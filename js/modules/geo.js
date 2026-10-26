@@ -5,8 +5,8 @@ import {
   HEADING_MIN_MOVE_METERS,
   WALK_SPEED_MPS,
   DETOUR_FACTOR
-} from '../config.js?v=1.9.2-mvprzu4a';
-import { t } from './i18n.js?v=1.9.2-mvprzu4a';
+} from '../config.js?v=1.9.3-mvps6z6v';
+import { t } from './i18n.js?v=1.9.3-mvps6z6v';
 
 const EARTH_RADIUS_M = 6371000;
 const toRad = (deg) => (deg * Math.PI) / 180;

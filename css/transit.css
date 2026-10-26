@@ -242,15 +242,39 @@ body.navigating .directions { display: none !important; }
 
 .itin-top {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 10px;
+  gap: 4px 10px;
 }
 
+.itin-top .itin-duration, .itin-top .itin-arrive { white-space: nowrap; }
+
 .itin-duration {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.4px;
 }
+
+.itin-arrive {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* צ'יפ קו בכרטיס מסלול כמו ב-Moovit: רקע בהיר, קו תחתון בצבע הקו, והאייקון בצבע הקו */
+.itin-card .line-pill {
+  gap: 5px;
+  padding: 4px 7px 3px;
+  border: 1px solid var(--border);
+  border-bottom: 3px solid var(--c);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+}
+
+.itin-card .line-pill svg { color: var(--c); }
+.itin-card .itin-legs { gap: 6px; margin-top: 4px; }
 
 .itin-times {
   font-size: 14px;

@@ -1,8 +1,8 @@
 // לשונית "תודות": רשימת תודות (כותרת, הודעה, תמונה, קישור ולב) שהמנהל מנהל בדף הניהול (אוסף thanks).
 
-import { t } from './i18n.js?v=1.9.2-mvprzu4a';
-import { escapeHtml, showToast } from './ui.js?v=1.9.2-mvprzu4a';
-import { isFirebaseConfigured, getFirebase } from '../firebase-config.js?v=1.9.2-mvprzu4a';
+import { t } from './i18n.js?v=1.9.3-mvps6z6v';
+import { escapeHtml, showToast } from './ui.js?v=1.9.3-mvps6z6v';
+import { isFirebaseConfigured, getFirebase } from '../firebase-config.js?v=1.9.3-mvps6z6v';
 
 const CACHE_KEY = 'walkie:thanks-list';
 
