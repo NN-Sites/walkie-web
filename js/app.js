@@ -12,8 +12,8 @@ import {
   NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
-} from './config.js?v=1.8.0-mvpj3lro';
-import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.8.0-mvpj3lro';
+} from './config.js?v=1.8.0-mvpjcz4s';
+import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.8.0-mvpjcz4s';
 import {
   createMap,
   focusPoint,
@@ -24,38 +24,38 @@ import {
   TransitLayer,
   VehiclesLayer,
   MapRotator
-} from './modules/map.js?v=1.8.0-mvpj3lro';
-import { fetchNearbyStops } from './modules/stops.js?v=1.8.0-mvpj3lro';
-import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.8.0-mvpj3lro';
-import { Sheet, showToast } from './modules/ui.js?v=1.8.0-mvpj3lro';
-import { SearchOverlay } from './modules/search.js?v=1.8.0-mvpj3lro';
-import { RouteController } from './modules/route-controller.js?v=1.8.0-mvpj3lro';
-import { TransitController } from './modules/transit-controller.js?v=1.8.0-mvpj3lro';
-import { DirectionsController } from './modules/directions.js?v=1.8.0-mvpj3lro';
-import { initSessionWhenIdle } from './modules/session.js?v=1.8.0-mvpj3lro';
-import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.8.0-mvpj3lro';
-import { TabBar } from './modules/tabs.js?v=1.8.0-mvpj3lro';
-import { LinesView } from './modules/lines-view.js?v=1.8.0-mvpj3lro';
-import { StationsView } from './modules/stations-view.js?v=1.8.0-mvpj3lro';
-import { ThanksView } from './modules/thanks-view.js?v=1.8.0-mvpj3lro';
-import { SettingsView } from './modules/settings-view.js?v=1.8.0-mvpj3lro';
-import { getSettings, onSettingsChange } from './modules/settings.js?v=1.8.0-mvpj3lro';
-import { shareMyLocation, shareTrip } from './modules/share.js?v=1.8.0-mvpj3lro';
-import { QuickBar } from './modules/favorites-ui.js?v=1.8.0-mvpj3lro';
-import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.8.0-mvpj3lro';
-import { loadDepartures } from './modules/arrivals.js?v=1.8.0-mvpj3lro';
-import { AdBanner } from './modules/ad-banner.js?v=1.8.0-mvpj3lro';
-import { recordWalk, recordTrip } from './modules/stats.js?v=1.8.0-mvpj3lro';
+} from './modules/map.js?v=1.8.0-mvpjcz4s';
+import { fetchNearbyStops } from './modules/stops.js?v=1.8.0-mvpjcz4s';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.8.0-mvpjcz4s';
+import { Sheet, showToast } from './modules/ui.js?v=1.8.0-mvpjcz4s';
+import { SearchOverlay } from './modules/search.js?v=1.8.0-mvpjcz4s';
+import { RouteController } from './modules/route-controller.js?v=1.8.0-mvpjcz4s';
+import { TransitController } from './modules/transit-controller.js?v=1.8.0-mvpjcz4s';
+import { DirectionsController } from './modules/directions.js?v=1.8.0-mvpjcz4s';
+import { initSessionWhenIdle } from './modules/session.js?v=1.8.0-mvpjcz4s';
+import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.8.0-mvpjcz4s';
+import { TabBar } from './modules/tabs.js?v=1.8.0-mvpjcz4s';
+import { LinesView } from './modules/lines-view.js?v=1.8.0-mvpjcz4s';
+import { StationsView } from './modules/stations-view.js?v=1.8.0-mvpjcz4s';
+import { ThanksView } from './modules/thanks-view.js?v=1.8.0-mvpjcz4s';
+import { SettingsView } from './modules/settings-view.js?v=1.8.0-mvpjcz4s';
+import { getSettings, onSettingsChange } from './modules/settings.js?v=1.8.0-mvpjcz4s';
+import { shareMyLocation, shareTrip } from './modules/share.js?v=1.8.0-mvpjcz4s';
+import { QuickBar } from './modules/favorites-ui.js?v=1.8.0-mvpjcz4s';
+import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.8.0-mvpjcz4s';
+import { loadDepartures } from './modules/arrivals.js?v=1.8.0-mvpjcz4s';
+import { AdBanner } from './modules/ad-banner.js?v=1.8.0-mvpjcz4s';
+import { recordWalk, recordTrip } from './modules/stats.js?v=1.8.0-mvpjcz4s';
 import {
   captureAttribution, trackOnce, trackPerf, trackRegion, trackFeature
-} from './modules/analytics.js?v=1.8.0-mvpj3lro';
-import { CommunityController } from './modules/community-controller.js?v=1.8.0-mvpj3lro';
-import { onBusPosition } from './modules/community.js?v=1.8.0-mvpj3lro';
-import { supportId } from './modules/session.js?v=1.8.0-mvpj3lro';
-import { escapeHtml } from './modules/ui.js?v=1.8.0-mvpj3lro';
-import { t, translateDom } from './modules/i18n.js?v=1.8.0-mvpj3lro';
-import { initTheme } from './modules/theme.js?v=1.8.0-mvpj3lro';
-import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.8.0-mvpj3lro';
+} from './modules/analytics.js?v=1.8.0-mvpjcz4s';
+import { CommunityController } from './modules/community-controller.js?v=1.8.0-mvpjcz4s';
+import { onBusPosition } from './modules/community.js?v=1.8.0-mvpjcz4s';
+import { supportId } from './modules/session.js?v=1.8.0-mvpjcz4s';
+import { escapeHtml } from './modules/ui.js?v=1.8.0-mvpjcz4s';
+import { t, translateDom } from './modules/i18n.js?v=1.8.0-mvpjcz4s';
+import { initTheme } from './modules/theme.js?v=1.8.0-mvpjcz4s';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.8.0-mvpjcz4s';
 
 // טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
 translateDom();

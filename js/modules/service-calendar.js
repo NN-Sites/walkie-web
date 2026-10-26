@@ -7,7 +7,7 @@
 // התאריך העברי מגיע מ-Intl (לוח "hebrew" של ICU, קיים באנדרואיד ובכל דפדפן מודרני).
 // אם הוא לא זמין – מזהים רק שבת.
 
-import { t, LOCALE } from './i18n.js?v=1.8.0-mvpj3lro';
+import { t, LOCALE } from './i18n.js?v=1.8.0-mvpjcz4s';
 
 const TZ = 'Asia/Jerusalem';
 const DAY_MS = 24 * 3600 * 1000;

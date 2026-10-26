@@ -1,12 +1,12 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.8.0-mvpj3lro';
-import { lineColor, operatorColor } from './stops.js?v=1.8.0-mvpj3lro';
-import { formatNavDistance } from './route-ui.js?v=1.8.0-mvpj3lro';
-import { WHATSAPP_ICON } from './share.js?v=1.8.0-mvpj3lro';
-import { t, tn, LOCALE } from './i18n.js?v=1.8.0-mvpj3lro';
-import { serviceNoticeHtml } from './ui.js?v=1.8.0-mvpj3lro';
-import { lineKeyOf, lineUsersHtml } from './community.js?v=1.8.0-mvpj3lro';
+import { escapeHtml } from './ui.js?v=1.8.0-mvpjcz4s';
+import { lineColor, operatorColor } from './stops.js?v=1.8.0-mvpjcz4s';
+import { formatNavDistance } from './route-ui.js?v=1.8.0-mvpjcz4s';
+import { WHATSAPP_ICON } from './share.js?v=1.8.0-mvpjcz4s';
+import { t, tn, LOCALE } from './i18n.js?v=1.8.0-mvpjcz4s';
+import { serviceNoticeHtml } from './ui.js?v=1.8.0-mvpjcz4s';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.8.0-mvpjcz4s';
 
 const TZ = 'Asia/Jerusalem';
 
@@ -434,7 +434,75 @@ function tripToolsHtml(state) {
     </div>`;
 }
 
-export function tripPanelHtml(state, it) {
+export const TRIP_TABS = [
+  ['overview', 'סקירה'],
+  ['stops', 'תחנות'],
+  ['route', 'מסלול']
+];
+
+function tripTabsHtml(tab) {
+  return `
+    <div class="trip-tabs" role="tablist">
+      ${TRIP_TABS.map(([id, label]) => `<button type="button" role="tab" class="trip-tab${id === tab ? ' is-active' : ''}" aria-selected="${id === tab}" data-action="trip-tab" data-tab-id="${id}">${t(label)}</button>`).join('')}
+    </div>`;
+}
+
+/** תחנות הקו הנוכחי (או הבא בתור): עברנו / אתם כאן / בהמשך, עם שעות לפי לוח הזמנים */
+function tripStopsHtml(state) {
+  const leg = state.phase === 'riding' ? state.leg
+    : state.phase === 'waiting' ? (state.boardLeg ?? state.leg)
+    : [state.leg, state.next].find((l) => l && l.mode !== 'walk');
+  if (!leg || leg.mode === 'walk') return `<p class="trip-empty">${t('אין תחנות להצגה')}</p>`;
+
+  const riding = state.phase === 'riding' && leg === state.leg;
+  const here = riding ? state.stopIndex ?? 0 : -1;
+  const items = [
+    { name: leg.from.name, time: leg.start, tag: t('עלייה') },
+    ...(leg.stops ?? []).map((s) => ({ name: s.name, time: s.departure ?? s.arrival })),
+    { name: leg.to.name, time: leg.end, tag: t('ירידה') }
+  ];
+  const lastIdx = items.length - 1;
+  const rows = items.map((s, i) => {
+    const cls = i < here ? 'is-done' : i === here ? 'is-now' : i === state.stopIndex + 1 && riding ? 'is-next' : '';
+    const tag = i === here ? t('אתם כאן') : i === lastIdx ? (riding ? t('רדו כאן') : s.tag) : i === 0 ? s.tag : '';
+    return `
+      <li class="trip-stop ${cls}${i === lastIdx ? ' is-last' : ''}">
+        <span class="trip-stop-time">${escapeHtml(fmtTime(s.time))}</span>
+        <span class="trip-stop-dot"></span>
+        <span class="trip-stop-name">${escapeHtml(s.name)}${tag ? `<small>${escapeHtml(tag)}</small>` : ''}</span>
+      </li>`;
+  }).join('');
+  return `
+    <div class="trip-stops-head" style="--c:${legColor(leg)}">${lineBadge(leg)}<span>${leg.headsign ? t('לכיוון {dest}', { dest: escapeHtml(leg.headsign) }) : ''}</span></div>
+    <ol class="trip-stops" style="--c:${legColor(leg)}">${rows}</ol>`;
+}
+
+/** כל שלבי המסלול: הליכה / נסיעה, עם סימון מה כבר בוצע ומה עכשיו */
+function tripRouteHtml(state, it) {
+  const rows = it.legs.map((leg, i) => {
+    const cls = i < state.legIndex ? 'is-done' : i === state.legIndex ? 'is-now' : '';
+    if (leg.mode === 'walk') {
+      const label = t(i === 0 ? 'הליכה לתחנה' : i === it.legs.length - 1 ? 'הליכה ליעד' : 'הליכה להחלפה');
+      return `
+        <li class="trip-step is-walk ${cls}">
+          <span class="trip-step-icon">${icon('walk', 16)}</span>
+          <span class="trip-step-text"><b>${label}</b><small>${fmtMinutes(leg.duration)} · ${formatNavDistance(leg.distance)}</small></span>
+        </li>`;
+    }
+    const stops = (leg.stops?.length ?? 0) + 1;
+    return `
+      <li class="trip-step ${cls}" style="--c:${legColor(leg)}">
+        <span class="trip-step-icon">${modeIcon(leg.mode, 16)}</span>
+        <span class="trip-step-text">
+          <b>${lineBadge(leg, { small: true })} ${escapeHtml(leg.from.name)}</b>
+          <small>${fmtTime(leg.start)} · ${tn(stops, 'תחנה אחת', '{n} תחנות')} · ${t('רדו ב{stop}', { stop: escapeHtml(leg.to.name) })}</small>
+        </span>
+      </li>`;
+  }).join('');
+  return `<ol class="trip-steps">${rows}</ol>`;
+}
+
+export function tripPanelHtml(state, it, tab = 'overview') {
   const transitCount = it.legs.filter((l) => l.mode !== 'walk').length;
   const doneTransit = it.legs.slice(0, state.legIndex).filter((l) => l.mode !== 'walk').length;
   return `
@@ -446,9 +514,12 @@ export function tripPanelHtml(state, it) {
       <button class="btn-share-trip" type="button" data-action="share-trip" aria-label="${t('שיתוף הנסיעה')}">${WHATSAPP_ICON}</button>
       <button class="btn-end" type="button" data-action="transit-end">${t('סיום')}</button>
     </div>
-    ${tripHereHtml(state)}
-    ${tripToolsHtml(state)}
-    ${legChips(it, state.legIndex)}`;
+    ${tripTabsHtml(tab)}
+    <div class="trip-tab-body" role="tabpanel">
+      ${tab === 'stops' ? tripStopsHtml(state)
+        : tab === 'route' ? tripRouteHtml(state, it)
+        : `${tripHereHtml(state)}${tripToolsHtml(state)}${legChips(it, state.legIndex)}`}
+    </div>`;
 }
 
 export function tripArrivedHtml(destName) {

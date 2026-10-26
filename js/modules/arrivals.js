@@ -1,10 +1,10 @@
 // זמני הגעה בצד הלקוח: קאש קצר לכל תחנה, ביטול בקשות ישנות, וקיבוץ לפי קו.
 
-import { ARRIVALS_CLIENT_TTL_MS, ARRIVALS_GROUP_LIMIT, ARRIVALS_MAX_AHEAD_MIN, ARRIVAL_GONE_MS } from '../config.js?v=1.8.0-mvpj3lro';
-import { fetchArrivals, fetchDepartures } from './api.js?v=1.8.0-mvpj3lro';
-import { demoArrivals, lineColor } from './stops.js?v=1.8.0-mvpj3lro';
-import { t } from './i18n.js?v=1.8.0-mvpj3lro';
-import { trackPerf } from './analytics.js?v=1.8.0-mvpj3lro';
+import { ARRIVALS_CLIENT_TTL_MS, ARRIVALS_GROUP_LIMIT, ARRIVALS_MAX_AHEAD_MIN, ARRIVAL_GONE_MS } from '../config.js?v=1.8.0-mvpjcz4s';
+import { fetchArrivals, fetchDepartures } from './api.js?v=1.8.0-mvpjcz4s';
+import { demoArrivals, lineColor } from './stops.js?v=1.8.0-mvpjcz4s';
+import { t } from './i18n.js?v=1.8.0-mvpjcz4s';
+import { trackPerf } from './analytics.js?v=1.8.0-mvpjcz4s';
 
 /**
  * מצב לכל תחנה:

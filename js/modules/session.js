@@ -5,12 +5,12 @@
 // מה לא נשלח: מיקום וחיפושים. מועדפים והגדרות – רק אם המשתמש התחבר עם Google (account.js).
 // מה מתקבל: הודעה למשתמשים (config/announcement).
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvpj3lro';
-import { APP_VERSION } from '../config.js?v=1.8.0-mvpj3lro';
-import { getStats } from './stats.js?v=1.8.0-mvpj3lro';
-import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.8.0-mvpj3lro';
-import { showToast } from './ui.js?v=1.8.0-mvpj3lro';
-import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.8.0-mvpj3lro';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.8.0-mvpjcz4s';
+import { APP_VERSION } from '../config.js?v=1.8.0-mvpjcz4s';
+import { getStats } from './stats.js?v=1.8.0-mvpjcz4s';
+import { initAccount, markAccountUnavailable, markSignedOut, markSessionFailed, onAccountChange } from './account.js?v=1.8.0-mvpjcz4s';
+import { showToast } from './ui.js?v=1.8.0-mvpjcz4s';
+import { getAttribution, track, trackDeviceSession } from './analytics.js?v=1.8.0-mvpjcz4s';
 
 let session = null;
 

@@ -1,12 +1,12 @@
 // חובת התחברות עם Google.
 // בפתיחה: מסך "ברוכים הבאים" עם התחברות עם Google, והוא חוסם את האפליקציה עד שנכנסים (אין דילוג ואין חיבור אנונימי).
 
-import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.8.0-mvpj3lro';
-import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.8.0-mvpj3lro';
-import { setFavoritesGuard } from './favorites.js?v=1.8.0-mvpj3lro';
-import { showToast, escapeHtml } from './ui.js?v=1.8.0-mvpj3lro';
-import { t } from './i18n.js?v=1.8.0-mvpj3lro';
-import { track, trackOnce } from './analytics.js?v=1.8.0-mvpj3lro';
+import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.8.0-mvpjcz4s';
+import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.8.0-mvpjcz4s';
+import { setFavoritesGuard } from './favorites.js?v=1.8.0-mvpjcz4s';
+import { showToast, escapeHtml } from './ui.js?v=1.8.0-mvpjcz4s';
+import { t } from './i18n.js?v=1.8.0-mvpjcz4s';
+import { track, trackOnce } from './analytics.js?v=1.8.0-mvpjcz4s';
 
 const FLAG = 'walkie:google';   // מחובר עם Google במכשיר הזה (ידוע מיד בפתיחה, לפני ש-Firebase נטען)
 

@@ -295,6 +295,11 @@ export const EN = {
   'הבאה: {stop}': 'Next: {stop}',
   'עוד {time}': '{time} left',
   'נסיעה {i} מתוך {n}': 'ride {i} of {n}',
+  'סקירה': 'Overview',
+  'אין תחנות להצגה': 'No stops to show',
+  'עלייה': 'Board',
+  'אתם כאן': 'You are here',
+  'רדו כאן': 'Get off here',
 
   // ---------- לשונית קווים ----------
   'הקו נשמר ב"הקווים שלי" ⭐': 'Line saved to "My lines" ⭐',

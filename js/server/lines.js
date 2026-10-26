@@ -5,10 +5,10 @@
 //  - הנסיעה הבאה של הקו (תחנות, שעות, מסלול): Transitous (MOTIS)
 //  line_ref של Stride = route_id ב-GTFS = routeId ב-MOTIS, ולכן ההתאמה בין המקורות מדויקת.
 
-import { fetchWithTimeout, distanceMeters, israelDate } from './geo.js?v=1.8.0-mvpj3lro';
-import { decodePolyline } from './polyline.js?v=1.8.0-mvpj3lro';
-import { normalizeStopTime, MAX_AHEAD_MS } from './stations.js?v=1.8.0-mvpj3lro';
-import { matchLiveArrival, stripFeed, tripStartOf } from './transit-planner.js?v=1.8.0-mvpj3lro';
+import { fetchWithTimeout, distanceMeters, israelDate } from './geo.js?v=1.8.0-mvpjcz4s';
+import { decodePolyline } from './polyline.js?v=1.8.0-mvpjcz4s';
+import { normalizeStopTime, MAX_AHEAD_MS } from './stations.js?v=1.8.0-mvpjcz4s';
+import { matchLiveArrival, stripFeed, tripStartOf } from './transit-planner.js?v=1.8.0-mvpjcz4s';
 
 const STRIDE = 'https://open-bus-stride-api.hasadna.org.il';
 const MOTIS = 'https://api.transitous.org/api/v1';

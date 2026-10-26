@@ -417,6 +417,114 @@ body.navigating .topbar { display: none; }
   font-size: 16px;
 }
 
+/* ---------- כרטיסיות בזמן נסיעה (סקירה / תחנות / מסלול) ---------- */
+
+.trip-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 10px 0 8px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.trip-tab {
+  flex: 1;
+  min-height: 38px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.trip-tab.is-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.12));
+}
+
+.trip-empty { margin: 14px 0; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+.trip-stops-head { display: flex; align-items: center; gap: 8px; margin: 2px 0 8px; font-size: 14px; font-weight: 600; color: var(--text-2); }
+
+.trip-stops { list-style: none; margin: 0; padding: 0; }
+.trip-stop {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px 18px 1fr;
+  align-items: center;
+  column-gap: 8px;
+  min-height: 40px;
+  color: var(--text);
+}
+.trip-stop-time { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-muted); text-align: end; }
+.trip-stop-dot {
+  position: relative;
+  justify-self: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--c, var(--brand));
+  z-index: 1;
+}
+.trip-stop::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(48px + 8px + 9px - 2px);
+  width: 4px;
+  background: var(--c, var(--brand));
+  opacity: 0.35;
+}
+.trip-stop:first-child::before { top: 50%; }
+.trip-stop.is-last::before { bottom: 50%; }
+.trip-stop-name { display: flex; flex-direction: column; font-size: 15px; font-weight: 600; }
+.trip-stop-name small { font-size: 12px; font-weight: 700; color: var(--c, var(--brand)); }
+.trip-stop.is-done { color: var(--text-muted); }
+.trip-stop.is-done::before { opacity: 1; }
+.trip-stop.is-done .trip-stop-dot { background: var(--c, var(--brand)); }
+.trip-stop.is-now .trip-stop-dot {
+  width: 16px;
+  height: 16px;
+  background: var(--c, var(--brand));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c, var(--brand)) 25%, transparent);
+}
+.trip-stop.is-now .trip-stop-name,
+.trip-stop.is-next .trip-stop-name { font-weight: 800; }
+.trip-stop.is-last .trip-stop-dot { border-radius: 3px; }
+
+.trip-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.trip-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.trip-step-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--c, var(--surface-3));
+  color: var(--text-2);
+}
+.trip-step.is-walk .trip-step-icon { background: var(--surface-3); color: var(--text-2); }
+.trip-step:not(.is-walk) .trip-step-icon { color: #fff; }
+.trip-step-text { display: flex; flex-direction: column; min-width: 0; font-size: 14.5px; }
+.trip-step-text b { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+.trip-step-text small { font-size: 12.5px; color: var(--text-muted); }
+.trip-step.is-done { opacity: 0.55; }
+.trip-step.is-now { border-color: var(--brand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 20%, transparent); }
+
 .arrived {
   padding: 8px 0 4px;
   text-align: center;

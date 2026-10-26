@@ -1,15 +1,15 @@
 // זרימת תחבורה ציבורית: חיפוש מסלולים -> רשימה -> פירוט -> ליווי נסיעה -> הגעה.
 // מצבים: idle | loading | error | list | detail | trip | arrived
 
-import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.8.0-mvpj3lro';
-import { RouteSimulator } from './navigation.js?v=1.8.0-mvpj3lro';
-import { buildTripModel, TripSession } from './transit-trip.js?v=1.8.0-mvpj3lro';
-import { focusPoint } from './map.js?v=1.8.0-mvpj3lro';
-import { showToast } from './ui.js?v=1.8.0-mvpj3lro';
-import { vibrate, transitPrefsParams } from './settings.js?v=1.8.0-mvpj3lro';
-import * as tpl from './transit-ui.js?v=1.8.0-mvpj3lro';
-import { t } from './i18n.js?v=1.8.0-mvpj3lro';
-import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.8.0-mvpj3lro';
+import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.8.0-mvpjcz4s';
+import { RouteSimulator } from './navigation.js?v=1.8.0-mvpjcz4s';
+import { buildTripModel, TripSession } from './transit-trip.js?v=1.8.0-mvpjcz4s';
+import { focusPoint } from './map.js?v=1.8.0-mvpjcz4s';
+import { showToast } from './ui.js?v=1.8.0-mvpjcz4s';
+import { vibrate, transitPrefsParams } from './settings.js?v=1.8.0-mvpjcz4s';
+import * as tpl from './transit-ui.js?v=1.8.0-mvpjcz4s';
+import { t } from './i18n.js?v=1.8.0-mvpjcz4s';
+import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.8.0-mvpjcz4s';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה
@@ -37,6 +37,7 @@ export class TransitController {
     this.controller = null;
     this.loadingMore = false;
     this.listFilter = 'all';
+    this.tripTab = 'overview';  // כרטיסייה פעילה בזמן נסיעה: overview | stops | route
     this.lastPos = null;
     this.refreshTimer = null;
     this.liveTimer = null;
@@ -179,6 +180,11 @@ export class TransitController {
       case 'transit-end':
         this.exit();
         return true;
+      case 'trip-tab':
+        if (this.mode !== 'trip') return false;
+        this.tripTab = data.tabId;
+        if (this.trip?.session.state) this.#renderTrip(this.trip.session.state);
+        return true;
       default:
         return false;
     }
@@ -201,6 +207,7 @@ export class TransitController {
       onOffRoute: () => showToast(t('נראה שסטית מהמסלול. אפשר לחפש מסלול חדש מהמיקום הנוכחי.'))
     });
     this.trip = { model, session };
+    this.tripTab = 'overview';
 
     this.#setMode('trip');
     document.body.classList.add('navigating');
@@ -291,7 +298,7 @@ export class TransitController {
     if (this.banner.innerHTML !== html) this.banner.innerHTML = html;
     this.banner.dataset.tone = tone;
     this.banner.hidden = false;
-    this.sheet.renderCustom(tpl.tripPanelHtml(state, this.trip.model.itinerary), 'transit-trip');
+    this.sheet.renderCustom(tpl.tripPanelHtml(state, this.trip.model.itinerary, this.tripTab), 'transit-trip');
   }
 
   #arrive() {

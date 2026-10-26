@@ -1,18 +1,18 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.8.0-mvpj3lro';
-import { t, LANG, setLanguage } from './i18n.js?v=1.8.0-mvpj3lro';
-import { showToast } from './ui.js?v=1.8.0-mvpj3lro';
-import { modeIcon, icon } from './transit-ui.js?v=1.8.0-mvpj3lro';
-import { escapeHtml } from './ui.js?v=1.8.0-mvpj3lro';
-import { APP_VERSION } from '../config.js?v=1.8.0-mvpj3lro';
-import { sessionStatus } from './session.js?v=1.8.0-mvpj3lro';
-import { celebrate, stagger } from './fx.js?v=1.8.0-mvpj3lro';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.8.0-mvpj3lro';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.8.0-mvpjcz4s';
+import { t, LANG, setLanguage } from './i18n.js?v=1.8.0-mvpjcz4s';
+import { showToast } from './ui.js?v=1.8.0-mvpjcz4s';
+import { modeIcon, icon } from './transit-ui.js?v=1.8.0-mvpjcz4s';
+import { escapeHtml } from './ui.js?v=1.8.0-mvpjcz4s';
+import { APP_VERSION } from '../config.js?v=1.8.0-mvpjcz4s';
+import { sessionStatus } from './session.js?v=1.8.0-mvpjcz4s';
+import { celebrate, stagger } from './fx.js?v=1.8.0-mvpjcz4s';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.8.0-mvpjcz4s';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.8.0-mvpj3lro';
+} from './favorites.js?v=1.8.0-mvpjcz4s';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
