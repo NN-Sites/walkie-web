@@ -1,13 +1,13 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.9.3-mvps6z6v';
-import { lineColor, operatorColor } from './stops.js?v=1.9.3-mvps6z6v';
-import { formatNavDistance } from './route-ui.js?v=1.9.3-mvps6z6v';
-import { WHATSAPP_ICON } from './share.js?v=1.9.3-mvps6z6v';
-import { t, tn, LOCALE } from './i18n.js?v=1.9.3-mvps6z6v';
-import { serviceNoticeHtml } from './ui.js?v=1.9.3-mvps6z6v';
-import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.3-mvps6z6v';
-import { isLineSaved } from './favorites.js?v=1.9.3-mvps6z6v';
+import { escapeHtml } from './ui.js?v=1.9.4-mvqskghg';
+import { lineColor, operatorColor } from './stops.js?v=1.9.4-mvqskghg';
+import { formatNavDistance } from './route-ui.js?v=1.9.4-mvqskghg';
+import { WHATSAPP_ICON } from './share.js?v=1.9.4-mvqskghg';
+import { t, tn, LOCALE } from './i18n.js?v=1.9.4-mvqskghg';
+import { serviceNoticeHtml } from './ui.js?v=1.9.4-mvqskghg';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.4-mvqskghg';
+import { isLineSaved } from './favorites.js?v=1.9.4-mvqskghg';
 
 const TZ = 'Asia/Jerusalem';
 
@@ -391,49 +391,94 @@ function watchHtml(leg) {
         </button>`;
 }
 
-export function detailHtml(it, { originName, destName, itineraries = [], now = Date.now() }) {
-  const rows = [];
-  const first = it.legs[0];
-  rows.push(point('origin', fmtTime(first.start), originName));
+/** כרטיס רגל במסלול (כמו ב-Moovit): כותרת אפורה "סוג · משך" וגוף לבן עם התחנה */
+function legCard(kind, index, { title, side = '', color = null, body }) {
+  return `
+    <section class="leg-card is-${kind}" data-action="transit-leg" data-leg="${index}" role="button" tabindex="0"${color ? ` style="--c:${color}"` : ''}>
+      <header class="leg-card-head"><span>${title}</span>${side ? `<span class="leg-card-side">${side}</span>` : ''}</header>
+      <div class="leg-card-body">${body}</div>
+    </section>`;
+}
+
+function stopRow(stop, mode, extra = '') {
+  const id = stop.code ? t('מס\' תחנה {code}', { code: escapeHtml(String(stop.code)) }) : '';
+  return `
+    <div class="leg-stop">
+      <span class="leg-stop-icon">${icon(mode === 'walk' ? 'flag' : mode, 18)}</span>
+      <span class="leg-stop-text"><b>${escapeHtml(stop.name)}</b>${id ? `<small>${id}</small>` : ''}</span>
+      ${extra}
+    </div>`;
+}
+
+/** כרטיסי השלבים של מסלול: [{ leg, kind, html }] – משמש גם את פירוט המסלול וגם את קרוסלת השלבים בנסיעה */
+function buildLegCards(it, { destName, itineraries = [], now = Date.now() }) {
+  const cards = [];
+  const last = it.legs.length - 1;
+  const push = (leg, kind, html) => cards.push({ leg, kind, html });
 
   it.legs.forEach((leg, i) => {
-    const isLast = i === it.legs.length - 1;
-
     if (leg.mode === 'walk') {
       if (leg.duration < 30 && leg.distance < 40) return;
-      const label = t(i === 0 ? 'הליכה לתחנה' : isLast ? 'הליכה ליעד' : 'הליכה להחלפה');
-      rows.push(`
-        <li class="tl-leg is-walk">
-          <span class="tl-icon">${icon('walk', 16)}</span>
-          <span>${label} · ${fmtMinutes(leg.duration)} · ${formatNavDistance(leg.distance)}</span>
-        </li>`);
+      const target = i === last ? { name: destName } : (it.legs[i + 1]?.from ?? { name: destName });
+      push(i, 'walk', legCard('walk', i, {
+        title: t('הליכה {time} אל', { time: fmtMinutes(leg.duration) }),
+        side: formatNavDistance(leg.distance),
+        body: stopRow(target, i === last ? 'walk' : 'bus')
+      }));
       return;
     }
 
     const color = legColor(leg);
     const dep = departureText(leg, now);
     const rideStops = (leg.stops?.length ?? 0) + 1;
-    const rideTime = Math.round((Date.parse(leg.end) - Date.parse(leg.start)) / 60000);
+    const rideTime = Math.max(1, Math.round((Date.parse(leg.end) - Date.parse(leg.start)) / 60000));
 
-    // ציר הזמן לפי לוח הזמנים (עקבי עם תחנות הביניים); זמן האמת מוצג בתג נפרד
-    rows.push(point('board', fmtTime(leg.start), leg.from.name, leg.from.code ? t('תחנה {code}', { code: leg.from.code }) : t(MODE_NAMES[leg.mode] ?? ''), color));
-    rows.push(`
-      <li class="tl-leg is-ride" style="--c:${color}">
-        <div class="tl-line">${lineBadge(leg)} <span class="tl-head">${leg.headsign ? t('לכיוון {dest}', { dest: escapeHtml(leg.headsign) }) : ''}</span></div>
-        <div class="tl-sub">${[leg.agency, leg.trainNumber ? t('רכבת {n}', { n: leg.trainNumber }) : ''].filter(Boolean).map(escapeHtml).join(' · ')}</div>
-        <div class="tl-sub">${liveBadge(dep)}</div>${altLinesHtml(leg, itineraries, now)}
+    // המתנה לקו בתחנה (אחרי הליכה או החלפה)
+    push(i, 'wait', legCard('wait', i, {
+      title: t('המתנה ל'),
+      side: fmtTime(leg.start),
+      color,
+      body: `
+        <div class="leg-wait">
+          ${lineBadge(leg)}
+          <span class="leg-wait-head">${leg.headsign ? escapeHtml(leg.headsign) : ''}</span>
+          <span class="leg-wait-live">${liveBadge(dep)}</span>
+        </div>
+        <div class="leg-sub">${escapeHtml(leg.from.name)}${leg.from.code ? ` · ${t('מס\' תחנה {code}', { code: escapeHtml(String(leg.from.code)) })}` : ''}</div>
+        ${[leg.agency, leg.trainNumber ? t('רכבת {n}', { n: leg.trainNumber }) : ''].filter(Boolean).length ? `<div class="leg-sub">${[leg.agency, leg.trainNumber ? t('רכבת {n}', { n: leg.trainNumber }) : ''].filter(Boolean).map(escapeHtml).join(' · ')}</div>` : ''}
+        ${altLinesHtml(leg, itineraries, now)}`
+    }));
+
+    // הנסיעה עצמה
+    push(i, 'ride', legCard('ride', i, {
+      title: t('נסיעה של {stops} עד', { stops: tn(rideStops, 'תחנה אחת', '{n} תחנות') }),
+      side: fmtMinutes(rideTime * 60),
+      color,
+      body: `
+        ${stopRow(leg.to, leg.mode)}
         <details class="tl-stops">
-          <summary>${tn(rideStops, 'תחנה אחת', '{n} תחנות')} · ${t('{n} דק\' נסיעה', { n: Math.max(1, rideTime) })}</summary>
+          <summary>${t('תחנות בדרך')}</summary>
           <ol>
+            <li><span class="tl-stop-time">${fmtTime(leg.start)}</span>${escapeHtml(leg.from.name)}</li>
             ${(leg.stops ?? []).map((s) => `<li><span class="tl-stop-time">${fmtTime(s.departure ?? s.arrival)}</span>${escapeHtml(s.name)}</li>`).join('')}
+            <li><span class="tl-stop-time">${fmtTime(leg.end)}</span>${escapeHtml(leg.to.name)}</li>
           </ol>
         </details>
-        ${watchHtml(leg)}
-      </li>`);
-    rows.push(point('alight', fmtTime(leg.end), leg.to.name, t('ירידה'), color));
+        ${watchHtml(leg)}`
+    }));
   });
 
-  rows.push(point('dest', fmtTime(it.end), destName));
+  push(null, 'arrive', `
+    <section class="leg-card is-arrive">
+      <header class="leg-card-head"><span>${t('הגעה ב-{time}', { time: fmtTime(it.end) })}</span></header>
+      <div class="leg-card-body"><div class="leg-stop"><span class="leg-stop-icon is-dest">${icon('flag', 16)}</span><span class="leg-stop-text"><b>${escapeHtml(destName)}</b></span></div></div>
+    </section>`);
+
+  return cards;
+}
+
+export function detailHtml(it, { originName, destName, itineraries = [], now = Date.now() }) {
+  const cards = buildLegCards(it, { destName, itineraries, now }).map((c) => c.html);
 
   return `
     <button class="btn-secondary btn-back" type="button" data-action="transit-back">${icon('back', 16)} ${t('כל המסלולים')}</button>
@@ -444,18 +489,9 @@ export function detailHtml(it, { originName, destName, itineraries = [], now = D
     ${legChips(it)}
     <div class="itin-meta" style="margin-top:6px">${icon('walk', 14)} ${t('{dist} הליכה', { dist: formatNavDistance(it.walkMeters) })} · ${transfersText(it.transfers)}${it.fare ? ` · ${t('<strong>{price}</strong> ברב-קו', { price: fmtPrice(it.fare.total) })}` : ''}</div>
     <button class="btn-go" type="button" data-action="transit-start">${icon('walk', 22)} ${t('יציאה')}</button>
-    <ol class="timeline">${rows.join('')}</ol>
+    <div class="leg-cards">${cards.join('')}</div>
     ${fareHtml(it.fare)}
     <p class="attribution">${ATTRIBUTION()}</p>`;
-}
-
-function point(kind, time, name, sub = '', color = null) {
-  return `
-    <li class="tl-point is-${kind}"${color ? ` style="--c:${color}"` : ''}>
-      <span class="tl-time">${escapeHtml(time)}</span>
-      <span class="tl-dot">${kind === 'dest' ? icon('flag', 14) : ''}</span>
-      <span class="tl-text"><span class="tl-name">${escapeHtml(name)}</span>${sub ? `<span class="tl-sub">${escapeHtml(sub)}</span>` : ''}</span>
-    </li>`;
 }
 
 // ---------- ליווי נסיעה ----------
@@ -556,6 +592,7 @@ function tripToolsHtml(state) {
 }
 
 export const TRIP_TABS = [
+  ['cards', 'שלבים'],
   ['overview', 'סקירה'],
   ['stops', 'תחנות'],
   ['route', 'מסלול']
@@ -623,7 +660,34 @@ function tripRouteHtml(state, it) {
   return `<ol class="trip-steps">${rows}</ol>`;
 }
 
-export function tripPanelHtml(state, it, tab = 'overview') {
+/** כרטיסי השלבים בנסיעה (כמו ב-Moovit): הליכה / המתנה / נסיעה / הגעה */
+export function tripCardSteps(it, destName, now = Date.now()) {
+  return buildLegCards(it, { destName, now });
+}
+
+/** איזה כרטיס מתאים עכשיו למצב הנסיעה */
+export function currentCardStep(steps, state) {
+  const kind = state.phase === 'walking' ? 'walk' : state.phase === 'waiting' ? 'wait' : 'ride';
+  const exact = steps.findIndex((c) => c.leg === state.legIndex && c.kind === kind);
+  if (exact >= 0) return exact;
+  const after = steps.findIndex((c) => c.leg === null || c.leg >= state.legIndex);
+  return after >= 0 ? after : steps.length - 1;
+}
+
+function tripCardsHtml(steps, index) {
+  const dots = steps.map((c, i) => `<button type="button" class="trip-dot${i === index ? ' is-active' : ''}" data-action="trip-card" data-step="${i}" aria-label="${t('שלב {n}', { n: i + 1 })}"></button>`).join('');
+  return `
+    <div class="trip-cards">
+      <div class="trip-cards-nav">
+        <button type="button" class="trip-cards-arrow" data-action="trip-card" data-dir="-1" aria-label="${t('השלב הקודם')}">›</button>
+        <div class="trip-dots">${dots}</div>
+        <button type="button" class="trip-cards-arrow" data-action="trip-card" data-dir="1" aria-label="${t('השלב הבא')}">‹</button>
+      </div>
+      <div class="trip-cards-strip">${steps.map((c) => `<div class="trip-card-slide">${c.html}</div>`).join('')}</div>
+    </div>`;
+}
+
+export function tripPanelHtml(state, it, tab = 'cards', { steps = [], cardIndex = 0 } = {}) {
   const transitCount = it.legs.filter((l) => l.mode !== 'walk').length;
   const doneTransit = it.legs.slice(0, state.legIndex).filter((l) => l.mode !== 'walk').length;
   return `
@@ -637,7 +701,8 @@ export function tripPanelHtml(state, it, tab = 'overview') {
     </div>
     ${tripTabsHtml(tab)}
     <div class="trip-tab-body" role="tabpanel">
-      ${tab === 'stops' ? tripStopsHtml(state)
+      ${tab === 'cards' ? tripCardsHtml(steps, cardIndex)
+        : tab === 'stops' ? tripStopsHtml(state)
         : tab === 'route' ? tripRouteHtml(state, it)
         : `${tripHereHtml(state)}${tripToolsHtml(state)}${legChips(it, state.legIndex)}`}
     </div>`;

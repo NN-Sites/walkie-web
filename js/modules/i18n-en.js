@@ -3,6 +3,11 @@
 // שמות של תחנות, קווים ומקומות מגיעים מהנתונים (GTFS / OSM) ונשארים כמו שהם.
 
 export const EN = {
+  'הליכה {time} אל': 'Walk {time} to',
+  'המתנה ל': 'Wait for',
+  'נסיעה של {stops} עד': 'Ride {stops} to',
+  'מס\' תחנה {code}': 'Stop ID {code}',
+  'תחנות בדרך': 'Stops along the way',
   'למחוק את החשבון וכל הנתונים שלך? אי אפשר לשחזר. המועדפים וההגדרות יימחקו גם מהמכשיר.': 'Delete your account and all your data? This can\'t be undone. Favorites and settings will also be erased from this device.',
   'מחיקת החשבון והנתונים': 'Delete account and data',
   'מוחק את החשבון, המועדפים וכל מה שנשמר עליך': 'Deletes your account, favorites and everything stored about you',
@@ -552,4 +557,8 @@ export const EN = {
   'נקודות': 'points',
   'תיקו': 'Draw',
   'נוסע': 'Rider',
+  'שלבים': 'Steps',
+  'שלב {n}': 'Step {n}',
+  'השלב הקודם': 'Previous step',
+  'השלב הבא': 'Next step',
 };

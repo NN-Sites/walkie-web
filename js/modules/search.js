@@ -5,12 +5,12 @@ import {
   SEARCH_MIN_CHARS,
   RECENT_SEARCHES_MAX,
   STORAGE_KEYS
-} from '../config.js?v=1.9.3-mvps6z6v';
-import { fetchSearch } from './api.js?v=1.9.3-mvps6z6v';
-import { formatDistance } from './geo.js?v=1.9.3-mvps6z6v';
-import { escapeHtml } from './ui.js?v=1.9.3-mvps6z6v';
-import { t, IS_EN } from './i18n.js?v=1.9.3-mvps6z6v';
-import { trackFailedSearch } from './analytics.js?v=1.9.3-mvps6z6v';
+} from '../config.js?v=1.9.4-mvqskghg';
+import { fetchSearch } from './api.js?v=1.9.4-mvqskghg';
+import { formatDistance } from './geo.js?v=1.9.4-mvqskghg';
+import { escapeHtml } from './ui.js?v=1.9.4-mvqskghg';
+import { t, IS_EN } from './i18n.js?v=1.9.4-mvqskghg';
+import { trackFailedSearch } from './analytics.js?v=1.9.4-mvqskghg';
 
 /** כותרת משנה מהשרת ("תחנה 1234 · תל אביב", "מסעדה · חיפה") – מתרגמים את מה שאפשר, שמות נשארים */
 function localizeSubtitle(sub) {

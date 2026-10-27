@@ -615,3 +615,46 @@ body.map-gesture #map { transition: none; }
 
   .topbar { width: 400px; }
 }
+
+/* ---------- קרוסלת שלבים בנסיעה (כמו ב-Moovit) ---------- */
+
+.trip-cards-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px; }
+.trip-cards-arrow {
+  flex: none;
+  width: 34px; height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.trip-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+.trip-dot {
+  width: 22px; height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid; place-items: center;
+}
+.trip-dot::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong, #c4c8cf);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.trip-dot.is-active::before { background: var(--live, #16a34a); transform: scale(1.35); }
+
+.trip-cards-strip {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.trip-cards-strip::-webkit-scrollbar { display: none; }
+.trip-card-slide { flex: 0 0 100%; min-width: 0; box-sizing: border-box; padding: 0 2px; scroll-snap-align: center; scroll-snap-stop: always; }
+.trip-card-slide .leg-card { height: 100%; }

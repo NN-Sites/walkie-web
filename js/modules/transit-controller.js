@@ -1,17 +1,17 @@
 // זרימת תחבורה ציבורית: חיפוש מסלולים -> רשימה -> פירוט -> ליווי נסיעה -> הגעה.
 // מצבים: idle | loading | error | list | detail | trip | arrived
 
-import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.9.3-mvps6z6v';
-import { RouteSimulator } from './navigation.js?v=1.9.3-mvps6z6v';
-import { buildTripModel, TripSession } from './transit-trip.js?v=1.9.3-mvps6z6v';
-import { focusPoint } from './map.js?v=1.9.3-mvps6z6v';
-import { showToast } from './ui.js?v=1.9.3-mvps6z6v';
-import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.9.3-mvps6z6v';
-import { toggleLine } from './favorites.js?v=1.9.3-mvps6z6v';
-import { onLineWatched } from './push.js?v=1.9.3-mvps6z6v';
-import * as tpl from './transit-ui.js?v=1.9.3-mvps6z6v';
-import { t } from './i18n.js?v=1.9.3-mvps6z6v';
-import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.9.3-mvps6z6v';
+import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.9.4-mvqskghg';
+import { RouteSimulator } from './navigation.js?v=1.9.4-mvqskghg';
+import { buildTripModel, TripSession } from './transit-trip.js?v=1.9.4-mvqskghg';
+import { focusPoint } from './map.js?v=1.9.4-mvqskghg';
+import { showToast } from './ui.js?v=1.9.4-mvqskghg';
+import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.9.4-mvqskghg';
+import { toggleLine } from './favorites.js?v=1.9.4-mvqskghg';
+import { onLineWatched } from './push.js?v=1.9.4-mvqskghg';
+import * as tpl from './transit-ui.js?v=1.9.4-mvqskghg';
+import { t } from './i18n.js?v=1.9.4-mvqskghg';
+import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.9.4-mvqskghg';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה
@@ -39,11 +39,22 @@ export class TransitController {
     this.controller = null;
     this.loadingMore = false;
     this.listFilter = 'all';
-    this.tripTab = 'overview';  // כרטיסייה פעילה בזמן נסיעה: overview | stops | route
+    this.tripTab = 'cards';     // כרטיסייה פעילה בזמן נסיעה: cards | overview | stops | route
+    this.cardPick = null;     // כרטיס שבחרו ידנית בקרוסלה: { step, key } (key = השלב בנסיעה שבו נבחר)
+    this.stripBusy = false;   // גוללים את הקרוסלה עכשיו – לא מרנדרים מחדש מתחתם
+    this.stripTimer = null;
     this.lastPos = null;
     this.refreshTimer = null;
     this.liveTimer = null;
     this.wakeLock = null;
+
+    // החלקה בקרוסלת השלבים: הכרטיס שנעצר עליו הופך לנבחר והמפה מתמקדת בו
+    document.addEventListener('scroll', (e) => {
+      if (this.mode !== 'trip' || !e.target.classList?.contains('trip-cards-strip')) return;
+      this.stripBusy = true;
+      clearTimeout(this.stripTimer);
+      this.stripTimer = setTimeout(() => this.#onStripSettled(e.target), 140);
+    }, true);
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
@@ -172,6 +183,9 @@ export class TransitController {
       case 'transit-select':
         this.select(Number(data.index));
         return true;
+      case 'transit-leg':
+        if (this.mode === 'detail') this.layer.fitLeg(Number(data.leg), this.getOcclusion());
+        return true;
       case 'transit-back':
         this.back();
         return true;
@@ -206,6 +220,15 @@ export class TransitController {
       case 'transit-end':
         this.exit();
         return true;
+      case 'trip-card': {
+        if (this.mode !== 'trip' || !this.trip?.session.state) return false;
+        const steps = this.#cardSteps();
+        const cur = this.#cardIndex(this.trip.session.state, steps);
+        const to = data.dir !== undefined ? cur + Number(data.dir) : Number(data.step);
+        this.#pickCard(Math.max(0, Math.min(steps.length - 1, to)), steps);
+        this.#syncStrip(true);
+        return true;
+      }
       case 'trip-tab':
         if (this.mode !== 'trip') return false;
         this.tripTab = data.tabId;
@@ -233,7 +256,8 @@ export class TransitController {
       onOffRoute: () => showToast(t('נראה שסטית מהמסלול. אפשר לחפש מסלול חדש מהמיקום הנוכחי.'))
     });
     this.trip = { model, session };
-    this.tripTab = 'overview';
+    this.tripTab = 'cards';
+    this.cardPick = null;
 
     this.#setMode('trip');
     document.body.classList.add('navigating');
@@ -259,7 +283,8 @@ export class TransitController {
     const state = this.trip.session.update(pos);
     if (this.mode !== 'trip') return; // הגעה ליעד בתוך update
 
-    focusPoint(this.map, [pos.lat, pos.lng], { zoom: TRIP_ZOOM, occlusion: this.getOcclusion() });
+    // כשבוחרים כרטיס אחר מהשלב הנוכחי – המפה נשארת על השלב שבחרו
+    if (!this.#cardPicked(state)) focusPoint(this.map, [pos.lat, pos.lng], { zoom: TRIP_ZOOM, occlusion: this.getOcclusion() });
     this.#renderTrip(state);
   }
 
@@ -326,7 +351,60 @@ export class TransitController {
     if (this.banner.innerHTML !== html) this.banner.innerHTML = html;
     this.banner.dataset.tone = tone;
     this.banner.hidden = false;
-    this.sheet.renderCustom(tpl.tripPanelHtml(state, this.trip.model.itinerary, this.tripTab), 'transit-trip');
+    const cards = this.tripTab === 'cards';
+    if (cards && this.stripBusy) return;
+    const steps = cards ? this.#cardSteps() : [];
+    this.sheet.renderCustom(
+      tpl.tripPanelHtml(state, this.trip.model.itinerary, this.tripTab, { steps, cardIndex: cards ? this.#cardIndex(state, steps) : 0 }),
+      'transit-trip'
+    );
+    if (cards) this.#syncStrip(false);
+  }
+
+  // ---------- קרוסלת שלבים ----------
+
+  #cardSteps() {
+    return tpl.tripCardSteps(this.trip.model.itinerary, this.request.dest.name ?? t('יעד'));
+  }
+
+  #cardKey(state) {
+    return `${state.legIndex}:${state.phase}`;
+  }
+
+  /** האם המשתמש בחר ידנית כרטיס שאינו הנוכחי (הבחירה פגה כשהנסיעה עוברת לשלב אחר) */
+  #cardPicked(state) {
+    return this.tripTab === 'cards' && !!this.cardPick && this.cardPick.key === this.#cardKey(state);
+  }
+
+  #cardIndex(state, steps) {
+    return this.#cardPicked(state) ? Math.min(this.cardPick.step, steps.length - 1) : tpl.currentCardStep(steps, state);
+  }
+
+  #pickCard(step, steps) {
+    const state = this.trip.session.state;
+    this.cardPick = { step, key: this.#cardKey(state) };
+    const leg = steps[step]?.leg;
+    if (leg != null) this.layer.fitLeg(leg, this.getOcclusion());
+    else this.layer.fit(this.getOcclusion());
+    document.querySelectorAll('.trip-dot').forEach((d, i) => d.classList.toggle('is-active', i === step));
+  }
+
+  /** מיישר את הפס לכרטיס הנבחר (אחרי רינדור או לחיצה על חץ / נקודה) */
+  #syncStrip(smooth) {
+    const strip = document.querySelector('.trip-cards-strip');
+    if (!strip || !this.trip?.session.state) return;
+    const index = this.#cardIndex(this.trip.session.state, this.#cardSteps());
+    const dir = getComputedStyle(strip).direction === 'rtl' ? -1 : 1;
+    strip.scrollTo({ left: dir * index * strip.clientWidth, behavior: smooth ? 'smooth' : 'instant' });
+  }
+
+  #onStripSettled(strip) {
+    this.stripBusy = false;
+    if (this.mode !== 'trip' || !this.trip?.session.state || !strip.isConnected || !strip.clientWidth) return;
+    const step = Math.round(Math.abs(strip.scrollLeft) / strip.clientWidth);
+    const steps = this.#cardSteps();
+    if (step === this.#cardIndex(this.trip.session.state, steps)) return;
+    this.#pickCard(Math.min(step, steps.length - 1), steps);
   }
 
   #arrive() {

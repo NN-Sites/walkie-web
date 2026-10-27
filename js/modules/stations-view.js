@@ -1,17 +1,17 @@
 // לשונית "תחנות": תחנות אוטובוס, רכבת ישראל ורכבת קלה סביבך, עם לוח יציאות חי לכל תחנה.
 
-import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js?v=1.9.3-mvps6z6v';
-import { escapeHtml } from './ui.js?v=1.9.3-mvps6z6v';
-import { formatDistance, walkMinutes } from './geo.js?v=1.9.3-mvps6z6v';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js?v=1.9.3-mvps6z6v';
-import { toggleStop, isStopSaved } from './favorites.js?v=1.9.3-mvps6z6v';
-import { starButton } from './favorites-ui.js?v=1.9.3-mvps6z6v';
-import { showToast } from './ui.js?v=1.9.3-mvps6z6v';
-import { vehiclesFromArrivals } from './arrivals.js?v=1.9.3-mvps6z6v';
-import { getSettings } from './settings.js?v=1.9.3-mvps6z6v';
-import { t } from './i18n.js?v=1.9.3-mvps6z6v';
-import { track, trackName, trackFeature, trackFailedSearch, safeKey } from './analytics.js?v=1.9.3-mvps6z6v';
-import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js?v=1.9.3-mvps6z6v';
+import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js?v=1.9.4-mvqskghg';
+import { escapeHtml } from './ui.js?v=1.9.4-mvqskghg';
+import { formatDistance, walkMinutes } from './geo.js?v=1.9.4-mvqskghg';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js?v=1.9.4-mvqskghg';
+import { toggleStop, isStopSaved } from './favorites.js?v=1.9.4-mvqskghg';
+import { starButton } from './favorites-ui.js?v=1.9.4-mvqskghg';
+import { showToast } from './ui.js?v=1.9.4-mvqskghg';
+import { vehiclesFromArrivals } from './arrivals.js?v=1.9.4-mvqskghg';
+import { getSettings } from './settings.js?v=1.9.4-mvqskghg';
+import { t } from './i18n.js?v=1.9.4-mvqskghg';
+import { track, trackName, trackFeature, trackFailedSearch, safeKey } from './analytics.js?v=1.9.4-mvqskghg';
+import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js?v=1.9.4-mvqskghg';
 
 const FILTERS = [
   { id: 'all', label: 'הכל' },

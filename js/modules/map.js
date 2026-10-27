@@ -1,8 +1,8 @@
 // שכבת המפה: Leaflet + מפה וקטורית חינמית של OpenFreeMap (בלי מפתח), עם אריחי OSM כגיבוי. סמן משתמש ותחנות.
 /* global L */
 
-import { STOPS_DETAIL_ZOOM } from '../config.js?v=1.9.3-mvps6z6v';
-import { createMotion } from './vehicle-motion.js?v=1.9.3-mvps6z6v';
+import { STOPS_DETAIL_ZOOM } from '../config.js?v=1.9.4-mvqskghg';
+import { createMotion } from './vehicle-motion.js?v=1.9.4-mvqskghg';
 
 const BUS_SVG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .9.4 1.7 1 2.2V20c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h8v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6v10Zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM18 11H6V6h12v5Z"/></svg>';
@@ -423,6 +423,7 @@ export class TransitLayer {
     this.map = map;
     this.group = L.layerGroup().addTo(map);
     this.latLngs = [];
+    this.legPts = [];
   }
 
   show(itinerary, colorOf) {
@@ -434,6 +435,7 @@ export class TransitLayer {
         ? leg.geometry
         : [[leg.from.lat, leg.from.lng], [leg.to.lat, leg.to.lng]];
       this.latLngs.push(...pts);
+      this.legPts.push(pts);
 
       if (leg.mode === 'walk') {
         L.polyline(pts, { ...lineOpts, color: '#ffffff', weight: 8, opacity: 0.9 }).addTo(this.group);
@@ -486,9 +488,16 @@ export class TransitLayer {
     fitVisible(this.map, this.bounds(), occlusion);
   }
 
+  /** מתמקד ברגל אחת של המסלול (כשלוחצים על כרטיס) */
+  fitLeg(index, occlusion) {
+    const pts = this.legPts[index];
+    if (pts?.length) fitVisible(this.map, L.latLngBounds(pts), occlusion);
+  }
+
   clear() {
     this.group.clearLayers();
     this.latLngs = [];
+    this.legPts = [];
   }
 }
 
