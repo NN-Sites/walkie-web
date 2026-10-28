@@ -1,10 +1,10 @@
 // הזמנת חברים: קוד אישי + קישור, ספירת החברים שנרשמו, ופרס על כל 10 חברים.
 // הכול דרך Firestore בלי שרת (ראו firestore.rules, "הזמנת חברים"): הרישום נוצר פעם אחת בלבד לכל חשבון ולכל אימייל.
 
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvseambo';
-import { SHARE_BASE } from '../config.js?v=1.10.0-mvseambo';
-import { accountInfo, onAccountChange } from './account.js?v=1.10.0-mvseambo';
-import { getAttribution, track } from './analytics.js?v=1.10.0-mvseambo';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvsedwod';
+import { SHARE_BASE } from '../config.js?v=1.10.0-mvsedwod';
+import { accountInfo, onAccountChange } from './account.js?v=1.10.0-mvsedwod';
+import { getAttribution, track } from './analytics.js?v=1.10.0-mvsedwod';
 
 export const INVITES_PER_PRIZE = 10;
 
@@ -35,7 +35,7 @@ export const referralCount = () => Number(read(COUNT_KEY)) || 0;
  * סולם הפרסים: פרס אחד על כל 10 חברים. auto = נפתח באפליקציה מיד; manual = אנחנו שולחים / מטפלים (המנהל רואה את הספירה בדף הניהול).
  */
 export const PRIZES = [
-  { icon: '🚫', title: 'בלי פרסומות', kind: 'auto' },
+  { icon: '🚫', title: 'בלי פרסומות לשבוע', kind: 'auto' },
   { icon: '🎨', title: 'צבע מותג לבחירה', kind: 'auto' },
   { icon: '🏅', title: 'תג שגריר ליד השם', kind: 'auto' },
   { icon: '📍', title: 'צבע נקודת המיקום שלי', kind: 'auto' },
@@ -54,7 +54,24 @@ export function referralProgress(count = referralCount()) {
 }
 
 /** הפרס הראשון (10 חברים): בלי באנר פרסומת, לתמיד */
-export const adFreeUnlocked = () => referralCount() >= INVITES_PER_PRIZE;
+const AD_FREE_KEY = 'walkie:refAdFreeAt';
+export const AD_FREE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** פרס הפרסומות: שבוע אחד מהרגע שהגעת ל-10 חברים */
+export function adFreeUntil() {
+  if (referralCount() < INVITES_PER_PRIZE) return 0;
+  let at = Number(read(AD_FREE_KEY));
+  if (!at) {
+    at = Date.now();
+    write(AD_FREE_KEY, String(at));
+  }
+  return at + AD_FREE_MS;
+}
+
+export const adFreeUnlocked = () => adFreeUntil() > Date.now();
+
+/** כמה ימים נשארו לפרס (0 = פג או עוד לא נפתח) */
+export const adFreeDaysLeft = () => Math.max(0, Math.ceil((adFreeUntil() - Date.now()) / 86400000));
 export const prizeUnlocked = (index) => referralCount() >= (index + 1) * INVITES_PER_PRIZE;
 
 // ---------- הטבות אוטומטיות: צבעים ותג ----------

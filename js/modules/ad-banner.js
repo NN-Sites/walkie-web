@@ -3,8 +3,8 @@
 // כדי להציג מודעה מרשת פרסום, טוענים אותה אל this.root ב-show(). שאר הלוגיקה (מיקום, גובה,
 // הזזת הסרגל והלוח) כבר מוכנה. עד שיחובר ספק פרסום מוצג כאן טקסט זמני.
 
-import { t } from './i18n.js?v=1.10.0-mvseambo';
-import { adFreeUnlocked, onReferralChange } from './referrals.js?v=1.10.0-mvseambo';
+import { t } from './i18n.js?v=1.10.0-mvsedwod';
+import { adFreeUnlocked, onReferralChange } from './referrals.js?v=1.10.0-mvsedwod';
 
 export class AdBanner {
   constructor(root, { onResize }) {
@@ -14,6 +14,11 @@ export class AdBanner {
     new ResizeObserver(() => this.onResize?.()).observe(root);
     this.render();
     onReferralChange(() => this.render());
+    // הפרס פג אחרי שבוע: בודקים מדי דקה אם הבאנר צריך לחזור
+    setInterval(() => {
+      if (adFreeUnlocked() === this.root.hidden) return;
+      this.render();
+    }, 60000);
   }
 
   /** גובה הבאנר בפיקסלים (0 כשהוא מוסתר) */

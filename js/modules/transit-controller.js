@@ -1,19 +1,19 @@
 // זרימת תחבורה ציבורית: חיפוש מסלולים -> רשימה -> פירוט -> ליווי נסיעה -> הגעה.
 // מצבים: idle | loading | error | list | detail | trip | arrived
 
-import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.10.0-mvseambo';
-import { RouteSimulator } from './navigation.js?v=1.10.0-mvseambo';
-import { buildTripModel, TripSession } from './transit-trip.js?v=1.10.0-mvseambo';
-import { focusPoint } from './map.js?v=1.10.0-mvseambo';
-import { showToast } from './ui.js?v=1.10.0-mvseambo';
-import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.10.0-mvseambo';
-import { toggleLine } from './favorites.js?v=1.10.0-mvseambo';
-import { onLineWatched } from './push.js?v=1.10.0-mvseambo';
-import * as tpl from './transit-ui.js?v=1.10.0-mvseambo';
-import { t } from './i18n.js?v=1.10.0-mvseambo';
-import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.10.0-mvseambo';
-import { toggleLeaveReminder, hasLeaveReminder, refreshLeaveReminder, clearLeaveReminder } from './leave-now.js?v=1.10.0-mvseambo';
-import { notifyNow, NOTIFY_ID, cancelNotifications } from './notify.js?v=1.10.0-mvseambo';
+import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.10.0-mvsedwod';
+import { RouteSimulator } from './navigation.js?v=1.10.0-mvsedwod';
+import { buildTripModel, TripSession } from './transit-trip.js?v=1.10.0-mvsedwod';
+import { focusPoint } from './map.js?v=1.10.0-mvsedwod';
+import { showToast } from './ui.js?v=1.10.0-mvsedwod';
+import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.10.0-mvsedwod';
+import { toggleLine } from './favorites.js?v=1.10.0-mvsedwod';
+import { onLineWatched } from './push.js?v=1.10.0-mvsedwod';
+import * as tpl from './transit-ui.js?v=1.10.0-mvsedwod';
+import { t } from './i18n.js?v=1.10.0-mvsedwod';
+import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.10.0-mvsedwod';
+import { toggleLeaveReminder, hasLeaveReminder, refreshLeaveReminder, clearLeaveReminder } from './leave-now.js?v=1.10.0-mvsedwod';
+import { notifyNow, NOTIFY_ID, cancelNotifications } from './notify.js?v=1.10.0-mvsedwod';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה

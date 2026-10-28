@@ -7,8 +7,8 @@ import {
   NAV_ARRIVE_M,
   NAV_APPROACH_M,
   SIM_SPEEDUP
-} from '../config.js?v=1.10.0-mvseambo';
-import { distanceMeters, bearingDeg } from './geo.js?v=1.10.0-mvseambo';
+} from '../config.js?v=1.10.0-mvsedwod';
+import { distanceMeters, bearingDeg } from './geo.js?v=1.10.0-mvsedwod';
 
 const M_PER_DEG = 111320;
 

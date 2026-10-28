@@ -1,13 +1,13 @@
 // כותרת "מסלול": מוצא -> יעד, לשוניות (תחבורה ציבורית / הליכה), זמן יציאה/הגעה, החלפת כיוון.
 // מתזמר בין RouteController (הליכה) ל-TransitController (תחבורה ציבורית).
 
-import { distanceMeters } from './geo.js?v=1.10.0-mvseambo';
-import { showToast } from './ui.js?v=1.10.0-mvseambo';
-import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js?v=1.10.0-mvseambo';
-import { STAR_ON, STAR_OFF } from './favorites-ui.js?v=1.10.0-mvseambo';
-import { t as tr, LOCALE } from './i18n.js?v=1.10.0-mvseambo';
-import { getSettings, updateSettings } from './settings.js?v=1.10.0-mvseambo';
-import { shareRoute } from './share.js?v=1.10.0-mvseambo';
+import { distanceMeters } from './geo.js?v=1.10.0-mvsedwod';
+import { showToast } from './ui.js?v=1.10.0-mvsedwod';
+import { togglePlace, isPlaceSaved, onFavoritesChange } from './favorites.js?v=1.10.0-mvsedwod';
+import { STAR_ON, STAR_OFF } from './favorites-ui.js?v=1.10.0-mvsedwod';
+import { t as tr, LOCALE } from './i18n.js?v=1.10.0-mvsedwod';
+import { getSettings, updateSettings } from './settings.js?v=1.10.0-mvsedwod';
+import { shareRoute } from './share.js?v=1.10.0-mvsedwod';
 
 export const MY_LOCATION = Object.freeze({ id: 'my-location', kind: 'mylocation', name: tr('המיקום שלי') });
 

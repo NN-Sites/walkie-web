@@ -641,4 +641,10 @@ export const EN = {
   'נשלח אליך': "we'll contact you",
   'צבע מותג': "Brand color",
   'צבע הנקודה שלי': "My dot color",
+  'הזמינו חברים וקבלו פרסים': "Invite friends, win prizes",
+  'פרס על כל {n} חברים שמצטרפים': "A prize for every {n} friends who join",
+  'כדי להזמין חברים צריך להתחבר עם Google': "Sign in with Google to invite friends",
+  'בלי פרסומות לשבוע': "No ads for a week",
+  'נשארו {n} ימים': "{n} days left",
+  'הסתיים': "Ended",
 };

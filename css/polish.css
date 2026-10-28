@@ -475,3 +475,86 @@
 }
 
 .invite-swatch.is-on { box-shadow: 0 0 0 2.5px var(--text); }
+
+/* ---------- דף הזמנת חברים ---------- */
+
+.invite-banner {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 20px 18px;
+  border: 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #22c55e 0%, #0d9488 100%);
+  color: #fff;
+  text-align: start;
+  overflow: hidden;
+  box-shadow: 0 10px 26px rgba(13, 148, 136, 0.35);
+}
+
+.invite-banner::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -30px;
+  top: -40px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.invite-banner-icon {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 30px;
+}
+
+.invite-banner-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.invite-banner-text strong { font-size: 18px; font-weight: 800; letter-spacing: -0.2px; }
+.invite-banner-text small { font-size: 13.5px; font-weight: 500; opacity: 0.92; }
+.invite-banner-go { flex: none; opacity: 0.9; }
+[dir="ltr"] .invite-banner-go svg { transform: scaleX(-1); }
+
+.invite-page { background: var(--bg); }
+.invite-page .doc-bar { background: var(--surface); }
+
+.invite-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 14px calc(var(--safe-bottom) + 28px);
+}
+
+.invite-hero {
+  margin: 14px 0 0;
+  padding: 30px 22px 26px;
+  border-radius: 28px;
+  background: linear-gradient(150deg, #22c55e 0%, #0d9488 60%, #0f766e 100%);
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 14px 32px rgba(13, 148, 136, 0.35);
+}
+
+.invite-hero-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: 12px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 46px;
+}
+
+.invite-hero h1 { margin: 0 0 8px; font-size: 24px; font-weight: 800; letter-spacing: -0.4px; }
+.invite-hero p { margin: 0; font-size: 15px; line-height: 1.5; opacity: 0.95; }
+
+.invite-page .invite-card { margin-top: 16px; }
