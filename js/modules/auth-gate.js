@@ -2,12 +2,12 @@
 // בפתיחה: מסך "ברוכים הבאים" עם התחברות עם Google או "המשך כאורח". אורח משתמש בכל מה שרץ במכשיר (מסלולים, ניווט, זמני הגעה, מועדפים),
 // ורק פיצ'רים שצריכים חשבון בשרת (שיתוף נסיעה בלייב, דיווחים, התראות על קווים שמורים) מבקשים להתחבר.
 
-import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.10.0-mvsdq7td';
-import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.10.0-mvsdq7td';
-import { setFavoritesGuard } from './favorites.js?v=1.10.0-mvsdq7td';
-import { showToast, escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
-import { t } from './i18n.js?v=1.10.0-mvsdq7td';
-import { track, trackOnce } from './analytics.js?v=1.10.0-mvsdq7td';
+import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.10.0-mvseambo';
+import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.10.0-mvseambo';
+import { setFavoritesGuard } from './favorites.js?v=1.10.0-mvseambo';
+import { showToast, escapeHtml } from './ui.js?v=1.10.0-mvseambo';
+import { t } from './i18n.js?v=1.10.0-mvseambo';
+import { track, trackOnce } from './analytics.js?v=1.10.0-mvseambo';
 
 const FLAG = 'walkie:google';   // מחובר עם Google במכשיר הזה (ידוע מיד בפתיחה, לפני ש-Firebase נטען)
 const GUEST_FLAG = 'walkie:guest'; // בחר להמשיך כאורח במכשיר הזה

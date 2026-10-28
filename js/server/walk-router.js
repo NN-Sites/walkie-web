@@ -8,8 +8,8 @@
 //
 // גיבוי: אם Valhalla לא זמין, OSRM (פרופיל foot) עם הערכה גסה של זמני חצייה.
 
-import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.10.0-mvsdq7td';
-import { decodePolyline } from './polyline.js?v=1.10.0-mvsdq7td';
+import { fetchWithTimeout, distanceMeters } from './geo.js?v=1.10.0-mvseambo';
+import { decodePolyline } from './polyline.js?v=1.10.0-mvseambo';
 
 const VALHALLA_BASE = 'https://valhalla1.openstreetmap.de';
 const OSRM_FOOT_BASE = 'https://routing.openstreetmap.de/routed-foot';

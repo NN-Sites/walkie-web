@@ -1,13 +1,13 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
-import { lineColor, operatorColor } from './stops.js?v=1.10.0-mvsdq7td';
-import { formatNavDistance } from './route-ui.js?v=1.10.0-mvsdq7td';
-import { WHATSAPP_ICON } from './share.js?v=1.10.0-mvsdq7td';
-import { t, tn, LOCALE } from './i18n.js?v=1.10.0-mvsdq7td';
-import { serviceNoticeHtml } from './ui.js?v=1.10.0-mvsdq7td';
-import { lineKeyOf, lineUsersHtml } from './community.js?v=1.10.0-mvsdq7td';
-import { isLineSaved } from './favorites.js?v=1.10.0-mvsdq7td';
+import { escapeHtml } from './ui.js?v=1.10.0-mvseambo';
+import { lineColor, operatorColor } from './stops.js?v=1.10.0-mvseambo';
+import { formatNavDistance } from './route-ui.js?v=1.10.0-mvseambo';
+import { WHATSAPP_ICON } from './share.js?v=1.10.0-mvseambo';
+import { t, tn, LOCALE } from './i18n.js?v=1.10.0-mvseambo';
+import { serviceNoticeHtml } from './ui.js?v=1.10.0-mvseambo';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.10.0-mvseambo';
+import { isLineSaved } from './favorites.js?v=1.10.0-mvseambo';
 
 const TZ = 'Asia/Jerusalem';
 
@@ -704,7 +704,6 @@ export function tripPanelHtml(state, it, tab = 'cards', { steps = [], cardIndex 
       <button class="btn-end" type="button" data-action="transit-end">${t('סיום')}</button>
     </div>
     <div class="detail-actions trip-actions">
-      <button class="btn-secondary" type="button" data-action="transfer-open">🎟️ ${t('טיימר 90 דקות')}</button>
       <button class="btn-secondary" type="button" data-action="pay-trip">💳 ${t('תשלום על הנסיעה')}</button>
     </div>
     ${tripTabsHtml(tab)}

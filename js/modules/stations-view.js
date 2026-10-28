@@ -1,17 +1,17 @@
 // לשונית "תחנות": תחנות אוטובוס, רכבת ישראל ורכבת קלה סביבך, עם לוח יציאות חי לכל תחנה.
 
-import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js?v=1.10.0-mvsdq7td';
-import { escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
-import { formatDistance, walkMinutes } from './geo.js?v=1.10.0-mvsdq7td';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js?v=1.10.0-mvsdq7td';
-import { toggleStop, isStopSaved } from './favorites.js?v=1.10.0-mvsdq7td';
-import { starButton } from './favorites-ui.js?v=1.10.0-mvsdq7td';
-import { showToast } from './ui.js?v=1.10.0-mvsdq7td';
-import { vehiclesFromArrivals } from './arrivals.js?v=1.10.0-mvsdq7td';
-import { getSettings } from './settings.js?v=1.10.0-mvsdq7td';
-import { t } from './i18n.js?v=1.10.0-mvsdq7td';
-import { track, trackName, trackFeature, trackFailedSearch, safeKey } from './analytics.js?v=1.10.0-mvsdq7td';
-import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js?v=1.10.0-mvsdq7td';
+import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js?v=1.10.0-mvseambo';
+import { escapeHtml } from './ui.js?v=1.10.0-mvseambo';
+import { formatDistance, walkMinutes } from './geo.js?v=1.10.0-mvseambo';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js?v=1.10.0-mvseambo';
+import { toggleStop, isStopSaved } from './favorites.js?v=1.10.0-mvseambo';
+import { starButton } from './favorites-ui.js?v=1.10.0-mvseambo';
+import { showToast } from './ui.js?v=1.10.0-mvseambo';
+import { vehiclesFromArrivals } from './arrivals.js?v=1.10.0-mvseambo';
+import { getSettings } from './settings.js?v=1.10.0-mvseambo';
+import { t } from './i18n.js?v=1.10.0-mvseambo';
+import { track, trackName, trackFeature, trackFailedSearch, safeKey } from './analytics.js?v=1.10.0-mvseambo';
+import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js?v=1.10.0-mvseambo';
 
 const FILTERS = [
   { id: 'all', label: 'הכל' },

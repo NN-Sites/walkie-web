@@ -1,19 +1,20 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvsdq7td';
-import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvsdq7td';
-import { transferActive, toggleTransferTimer } from './transfer-timer.js?v=1.10.0-mvsdq7td';
-import { showToast } from './ui.js?v=1.10.0-mvsdq7td';
-import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvsdq7td';
-import { escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
-import { APP_VERSION } from '../config.js?v=1.10.0-mvsdq7td';
-import { sessionStatus } from './session.js?v=1.10.0-mvsdq7td';
-import { celebrate, stagger } from './fx.js?v=1.10.0-mvsdq7td';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvsdq7td';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvseambo';
+import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvseambo';
+import { showToast } from './ui.js?v=1.10.0-mvseambo';
+import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvseambo';
+import { escapeHtml } from './ui.js?v=1.10.0-mvseambo';
+import { APP_VERSION } from '../config.js?v=1.10.0-mvseambo';
+import { sessionStatus } from './session.js?v=1.10.0-mvseambo';
+import { celebrate, stagger } from './fx.js?v=1.10.0-mvseambo';
+import { ensureMyCode, myReferralCode, inviteLink, referralProgress, refreshReferrals, redeemCode, onReferralChange, INVITES_PER_PRIZE, PRIZES, prizeUnlocked, BRAND_COLORS, DOT_COLORS, chosenBrand, chosenDot, chooseBrand, chooseDot, hasAmbassadorBadge } from './referrals.js?v=1.10.0-mvseambo';
+import { openWhatsApp } from './share.js?v=1.10.0-mvseambo';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvseambo';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.10.0-mvsdq7td';
+} from './favorites.js?v=1.10.0-mvseambo';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -64,9 +65,8 @@ export class SettingsView {
         this.openPrivacy();
       } else if (btn.dataset.action === 'delete-account') {
         this.#deleteAccount(btn);
-      } else if (btn.dataset.action === 'transfer-timer') {
-        toggleTransferTimer();
-        this.render();
+      } else if (btn.dataset.action?.startsWith('invite-')) {
+        this.#onInvite(btn);
       } else if (btn.dataset.action === 'google-signin') {
         this.#signIn(btn);
       } else if (btn.dataset.action === 'google-signout') {
@@ -74,6 +74,9 @@ export class SettingsView {
       }
     });
 
+    onReferralChange(() => {
+      if (!this.root.hidden) this.render();
+    });
     onSettingsChange(() => this.render());
     onAccountChange(() => {
       if (!this.root.hidden) this.render();
@@ -112,6 +115,81 @@ export class SettingsView {
     }
   }
 
+  async #onInvite(btn) {
+    const action = btn.dataset.action;
+    try {
+      if (action === 'invite-redeem') {
+        const input = this.body.querySelector('#invite-code-input');
+        const result = await redeemCode(input?.value);
+        const messages = {
+          ok: 'הקוד התקבל – תודה! החבר שהזמין אותך קיבל נקודה',
+          invalid: 'הקוד לא נמצא. בדקו שהוא בן 6 תווים',
+          self: 'אי אפשר להזמין את עצמך',
+          already: 'כבר מימשת קוד הזמנה',
+          unverified: 'צריך חשבון Google עם אימייל מאומת'
+        };
+        showToast(t(messages[result]));
+        if (result === 'ok' || result === 'already') this.render();
+        return;
+      }
+      if (action === 'invite-brand') return chooseBrand(btn.dataset.value);
+      if (action === 'invite-dot') return chooseDot(btn.dataset.value);
+      const code = await ensureMyCode();
+      const link = inviteLink(code);
+      const text = `${t('בואו לנסות את Walkie – ניווט ותחבורה ציבורית חינמי. הקוד שלי: {code}', { code })}\n${link}`;
+      if (action === 'invite-whatsapp') openWhatsApp(text);
+      else if (action === 'invite-copy') {
+        await navigator.clipboard?.writeText(link);
+        showToast(t('הקישור הועתק'));
+      }
+    } catch {
+      showToast(t('לא הצלחנו לטעון את קוד ההזמנה. נסו שוב'));
+    }
+  }
+
+  #inviteHtml() {
+    if (!accountInfo()?.linked) return '';
+    const code = myReferralCode();
+    const { count, prizes, inGoal, toNext } = referralProgress();
+    if (!code) ensureMyCode().then(() => this.render()).catch(() => {});
+    refreshReferrals();
+    const nextPrize = PRIZES[prizes];
+    const next = nextPrize ? t('הפרס הבא: {prize}', { prize: t(nextPrize.title) }) : t('פתחת את כל הפרסים – תודה ענקית! 🏆');
+    const brand = chosenBrand();
+    const dot = chosenDot();
+    const perks = `${prizeUnlocked(1) ? `<div class="invite-perk"><span>${t('צבע מותג')}</span><span class="invite-swatches">${BRAND_COLORS.map((c) => `<button type="button" class="invite-swatch${brand === c.id ? ' is-on' : ''}" style="background:${c.main}" data-action="invite-brand" data-value="${c.id}" aria-label="${c.id}"></button>`).join('')}</span></div>` : ''}${prizeUnlocked(3) ? `<div class="invite-perk"><span>${t('צבע הנקודה שלי')}</span><span class="invite-swatches">${DOT_COLORS.map((c) => `<button type="button" class="invite-swatch${dot === c ? ' is-on' : ''}" style="background:${c}" data-action="invite-dot" data-value="${c}" aria-label="${c}"></button>`).join('')}</span></div>` : ''}`;
+    const redeemed = localStorage.getItem('walkie:refRedeemed');
+    return `
+      <section class="set-group invite-card">
+        <h2 class="set-title">${t('הזמנת חברים')}</h2>
+        <div class="set-block">
+          <p class="invite-lead">${t('על כל {n} חברים שנרשמים עם הקוד שלך מקבלים פרס', { n: INVITES_PER_PRIZE })}</p>
+          <div class="invite-meter" role="progressbar" aria-valuemin="0" aria-valuemax="${INVITES_PER_PRIZE}" aria-valuenow="${inGoal}">
+            <span style="width:${(inGoal / INVITES_PER_PRIZE) * 100}%"></span>
+          </div>
+          <div class="invite-stats">
+            <span><b>${count}</b> ${t('חברים הצטרפו')}</span>
+            <span>${t('עוד {n} לפרס הבא', { n: toNext })}</span>
+          </div>
+          <ul class="invite-prizes">
+            ${PRIZES.map((p, i) => `<li class="${prizeUnlocked(i) ? 'is-won' : ''}"><span>${p.icon} ${t(p.title)}</span><small>${t('{n} חברים', { n: (i + 1) * INVITES_PER_PRIZE })}${p.kind === 'manual' ? ' · ' + t('נשלח אליך') : ''}</small></li>`).join('')}
+          </ul>
+          ${perks}
+          <p class="set-note">${next}</p>
+          <div class="invite-code">${code ? `<span>${t('הקוד שלך')}</span><strong dir="ltr">${code}</strong>` : t('טוענים את הקוד שלך…')}</div>
+          <div class="invite-actions">
+            <button class="btn" type="button" data-action="invite-whatsapp">${t('שליחה בוואטסאפ')}</button>
+            <button class="btn-secondary" type="button" data-action="invite-copy">${t('העתקת קישור')}</button>
+          </div>
+          ${redeemed ? '' : `
+          <div class="invite-redeem">
+            <input id="invite-code-input" class="invite-input" dir="ltr" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="${t('יש לך קוד מחבר?')}">
+            <button class="btn-secondary" type="button" data-action="invite-redeem">${t('אישור')}</button>
+          </div>`}
+        </div>
+      </section>`;
+  }
+
   #accountHtml() {
     const a = accountInfo();
     const G = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
@@ -122,7 +200,7 @@ export class SettingsView {
           <h2 class="set-title">${t('החשבון שלי')}</h2>
           <div class="account-row">
             ${a.photo ? `<img src="${escapeHtml(a.photo)}" alt="" referrerpolicy="no-referrer">` : `<span class="account-avatar">${initial}</span>`}
-            <span class="account-text"><strong>${escapeHtml(a.name || a.email)}</strong><small>${escapeHtml(a.email)} · ${t('מועדפים והגדרות מסונכרנים')}</small></span>
+            <span class="account-text"><strong>${escapeHtml(a.name || a.email)}${hasAmbassadorBadge() ? ' 🏅' : ''}</strong><small>${escapeHtml(a.email)} · ${t('מועדפים והגדרות מסונכרנים')}</small></span>
           </div>
           <button class="set-row set-button" type="button" data-action="google-signout">
             <span class="set-icon">↩️</span>
@@ -267,6 +345,7 @@ export class SettingsView {
 
     this.body.innerHTML = `
       ${this.#accountHtml()}
+      ${this.#inviteHtml()}
       ${this.#favoritesHtml()}
 
       <section class="set-group">
@@ -298,10 +377,6 @@ export class SettingsView {
         ${toggleRow('vibrate', 'רטט בניווט', 'לפני פנייה ולפני ירידה מהאוטובוס', '📳')}
         ${toggleRow('linePush', 'התראות על קווים שמורים', 'איחור של 10 דק\' ומעלה או ביטול נסיעה (באפליקציה)', '🔔')}
         ${toggleRow('backgroundTrip', 'עבודה ברקע', 'ניווט וליווי נסיעה ממשיכים כשהמסך נעול, עם התראה "רדו בתחנה הבאה" (באפליקציה)', '📍')}
-        <button class="set-row set-button" type="button" data-action="transfer-timer">
-          <span class="set-icon">🎟️</span>
-          <span class="set-text"><span class="set-label">${t('טיימר 90 דקות')}</span><span class="set-hint">${transferActive() ? t('פעיל – לחצו כדי להפסיק') : t('מעבר חינם בין קווים. לחצו אחרי התיקוף')}</span></span>
-        </button>
       </section>
 
       <section class="set-group">

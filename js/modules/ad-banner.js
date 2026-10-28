@@ -3,7 +3,8 @@
 // כדי להציג מודעה מרשת פרסום, טוענים אותה אל this.root ב-show(). שאר הלוגיקה (מיקום, גובה,
 // הזזת הסרגל והלוח) כבר מוכנה. עד שיחובר ספק פרסום מוצג כאן טקסט זמני.
 
-import { t } from './i18n.js?v=1.10.0-mvsdq7td';
+import { t } from './i18n.js?v=1.10.0-mvseambo';
+import { adFreeUnlocked, onReferralChange } from './referrals.js?v=1.10.0-mvseambo';
 
 export class AdBanner {
   constructor(root, { onResize }) {
@@ -12,6 +13,7 @@ export class AdBanner {
     // גובה הבאנר משתנה עם הסתרה / הצגה – הסרגל והלוח צריכים לחשב מחדש
     new ResizeObserver(() => this.onResize?.()).observe(root);
     this.render();
+    onReferralChange(() => this.render());
   }
 
   /** גובה הבאנר בפיקסלים (0 כשהוא מוסתר) */
@@ -20,6 +22,13 @@ export class AdBanner {
   }
 
   render() {
+    // פרס הזמנת חברים: 10 חברים = בלי באנר
+    if (adFreeUnlocked()) {
+      this.root.hidden = true;
+      this.root.innerHTML = '';
+      document.body.classList.remove('has-ad');
+      return;
+    }
     this.root.hidden = false;
     document.body.classList.add('has-ad');
     // מקום זמני עד שמחברים מודעת AdMob: מחליפים את התוכן הזה בטעינת המודעה

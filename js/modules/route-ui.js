@@ -1,8 +1,8 @@
 // תבניות HTML למסלול: תצוגה מקדימה, פאנל ניווט, באנר הוראות, הגעה ליעד.
 
-import { escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
-import { WHATSAPP_ICON } from './share.js?v=1.10.0-mvsdq7td';
-import { t, tn, LOCALE } from './i18n.js?v=1.10.0-mvsdq7td';
+import { escapeHtml } from './ui.js?v=1.10.0-mvseambo';
+import { WHATSAPP_ICON } from './share.js?v=1.10.0-mvseambo';
+import { t, tn, LOCALE } from './i18n.js?v=1.10.0-mvseambo';
 
 // ---------- פורמטים ----------
 
