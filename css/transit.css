@@ -730,3 +730,9 @@ body.has-route:not(.navigating) .toast { top: calc(var(--safe-top) + 150px); }
 .leg-wait { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .leg-wait-head { font-weight: 700; flex: 1; min-width: 0; }
 .leg-wait-live { font-size: 13px; }
+
+/* ---------- פעולות בפירוט מסלול / ליווי נסיעה: תזכורת "צאו עכשיו" ותשלום ---------- */
+.detail-actions { display: flex; gap: 8px; margin: 10px 0 4px; }
+.detail-actions .btn-secondary { flex: 1; min-height: 44px; border-radius: 12px; font-size: 14px; font-weight: 700; padding: 0 8px; }
+.detail-actions .btn-secondary.is-on { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
+.trip-actions { margin-top: 6px; }

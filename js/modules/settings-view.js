@@ -1,18 +1,19 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.9.4-mvqskghg';
-import { t, LANG, setLanguage } from './i18n.js?v=1.9.4-mvqskghg';
-import { showToast } from './ui.js?v=1.9.4-mvqskghg';
-import { modeIcon, icon } from './transit-ui.js?v=1.9.4-mvqskghg';
-import { escapeHtml } from './ui.js?v=1.9.4-mvqskghg';
-import { APP_VERSION } from '../config.js?v=1.9.4-mvqskghg';
-import { sessionStatus } from './session.js?v=1.9.4-mvqskghg';
-import { celebrate, stagger } from './fx.js?v=1.9.4-mvqskghg';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.9.4-mvqskghg';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvsdq7td';
+import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvsdq7td';
+import { transferActive, toggleTransferTimer } from './transfer-timer.js?v=1.10.0-mvsdq7td';
+import { showToast } from './ui.js?v=1.10.0-mvsdq7td';
+import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvsdq7td';
+import { escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
+import { APP_VERSION } from '../config.js?v=1.10.0-mvsdq7td';
+import { sessionStatus } from './session.js?v=1.10.0-mvsdq7td';
+import { celebrate, stagger } from './fx.js?v=1.10.0-mvsdq7td';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvsdq7td';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.9.4-mvqskghg';
+} from './favorites.js?v=1.10.0-mvsdq7td';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -28,7 +29,9 @@ const THEMES = [
 // שם השפה תמיד בשפה עצמה, כדי שמי שלא קורא את השפה הנוכחית ימצא את שלו
 const LANGUAGES = [
   { id: 'he', label: 'עברית' },
-  { id: 'en', label: 'English' }
+  { id: 'en', label: 'English' },
+  { id: 'ru', label: 'Русский' },
+  { id: 'am', label: 'አማርኛ' }
 ];
 
 export class SettingsView {
@@ -61,6 +64,9 @@ export class SettingsView {
         this.openPrivacy();
       } else if (btn.dataset.action === 'delete-account') {
         this.#deleteAccount(btn);
+      } else if (btn.dataset.action === 'transfer-timer') {
+        toggleTransferTimer();
+        this.render();
       } else if (btn.dataset.action === 'google-signin') {
         this.#signIn(btn);
       } else if (btn.dataset.action === 'google-signout') {
@@ -291,6 +297,11 @@ export class SettingsView {
         ${toggleRow('wheelchair', 'מסלולים נגישים', 'בלי מדרגות, עדיפות לקווים נגישים', '♿')}
         ${toggleRow('vibrate', 'רטט בניווט', 'לפני פנייה ולפני ירידה מהאוטובוס', '📳')}
         ${toggleRow('linePush', 'התראות על קווים שמורים', 'איחור של 10 דק\' ומעלה או ביטול נסיעה (באפליקציה)', '🔔')}
+        ${toggleRow('backgroundTrip', 'עבודה ברקע', 'ניווט וליווי נסיעה ממשיכים כשהמסך נעול, עם התראה "רדו בתחנה הבאה" (באפליקציה)', '📍')}
+        <button class="set-row set-button" type="button" data-action="transfer-timer">
+          <span class="set-icon">🎟️</span>
+          <span class="set-text"><span class="set-label">${t('טיימר 90 דקות')}</span><span class="set-hint">${transferActive() ? t('פעיל – לחצו כדי להפסיק') : t('מעבר חינם בין קווים. לחצו אחרי התיקוף')}</span></span>
+        </button>
       </section>
 
       <section class="set-group">
@@ -302,7 +313,7 @@ export class SettingsView {
           </div>
         </div>
         <div class="set-block">
-          <div class="set-label">${LANG === 'en' ? 'Language · שפה' : 'שפה · Language'}</div>
+          <div class="set-label">${LANG === 'he' ? 'שפה · Language' : 'Language · שפה'}</div>
           <div class="seg seg-wide">
             ${LANGUAGES.map((x) => `<button type="button" class="${LANG === x.id ? 'is-active' : ''}" data-set="lang" data-value="${x.id}" lang="${x.id}">${x.label}</button>`).join('')}
           </div>

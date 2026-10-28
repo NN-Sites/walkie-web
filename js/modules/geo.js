@@ -5,8 +5,8 @@ import {
   HEADING_MIN_MOVE_METERS,
   WALK_SPEED_MPS,
   DETOUR_FACTOR
-} from '../config.js?v=1.9.4-mvqskghg';
-import { t } from './i18n.js?v=1.9.4-mvqskghg';
+} from '../config.js?v=1.10.0-mvsdq7td';
+import { t } from './i18n.js?v=1.10.0-mvsdq7td';
 
 const EARTH_RADIUS_M = 6371000;
 const toRad = (deg) => (deg * Math.PI) / 180;
@@ -55,6 +55,8 @@ export function formatDistance(meters) {
  */
 export class LocationTracker {
   #watchId = null;
+  #bgId = null;          // מזהה ה-watcher של שירות המיקום ברקע (Android)
+  #bg = false;
   #last = null;
   #lastForHeading = null;
   #running = false;
@@ -79,11 +81,62 @@ export class LocationTracker {
     this.#running = false;
     document.removeEventListener('visibilitychange', this.#onVisibility);
     this.#clear();
+    if (this.#bg) this.setBackground(false);
   }
 
   restart() {
     this.stop();
     this.start();
+  }
+
+  /** אפשר מעקב ברקע (שירות קדמי עם התראה קבועה) – בזמן ניווט וליווי נסיעה, כדי שימשיכו כשהמסך נעול */
+  get backgroundSupported() {
+    return !!globalThis.Capacitor?.isNativePlatform?.() && !!globalThis.Capacitor?.Plugins?.BackgroundGeolocation;
+  }
+
+  get backgroundActive() {
+    return this.#bg;
+  }
+
+  /**
+   * מפעיל / מכבה מעקב ברקע. כשהוא פעיל, המיקומים מגיעים מהשירות (גם כשהאפליקציה גלויה) ולא מ-navigator.geolocation.
+   * מחזיר true אם המעקב ברקע פעיל אחרי הקריאה.
+   */
+  async setBackground(on, { title = '', message = '' } = {}) {
+    if (!this.backgroundSupported) return false;
+    const BG = globalThis.Capacitor.Plugins.BackgroundGeolocation;
+    if (on === this.#bg) return this.#bg;
+    if (on) {
+      this.#bg = true;
+      this.#clear();
+      try {
+        this.#bgId = await BG.addWatcher(
+          { backgroundTitle: title, backgroundMessage: message, requestPermissions: true, stale: false, distanceFilter: 5 },
+          (loc, err) => {
+            if (err || !loc) {
+              if (err?.code === 'NOT_AUTHORIZED') this.onError?.({ code: 1, message: err.message });
+              return;
+            }
+            this.#onPosition({
+              coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy, heading: loc.bearing, speed: loc.speed },
+              timestamp: loc.time ?? Date.now()
+            });
+          }
+        );
+      } catch (err) {
+        console.warn('[geo] background tracking failed', err);
+        this.#bg = false;
+        this.#bgId = null;
+        if (this.#running && document.visibilityState === 'visible') this.#watch();
+      }
+    } else {
+      this.#bg = false;
+      const id = this.#bgId;
+      this.#bgId = null;
+      if (id !== null) await BG.removeWatcher({ id }).catch(() => {});
+      if (this.#running && document.visibilityState === 'visible') this.#watch();
+    }
+    return this.#bg;
   }
 
   get lastPosition() {
@@ -107,7 +160,7 @@ export class LocationTracker {
   }
 
   #onVisibility = () => {
-    if (!this.#running) return;
+    if (!this.#running || this.#bg) return;   // ברקע המיקום מגיע מהשירות
     if (document.visibilityState === 'visible') this.#watch();
     else this.#clear();
   };

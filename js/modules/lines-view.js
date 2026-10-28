@@ -1,19 +1,19 @@
 // לשונית "קווים": קווים באזור, חיפוש קו (מספר או יעד), ופרטי קו עם כל התחנות והמסלול על המפה.
 
-import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.9.4-mvqskghg';
-import { escapeHtml } from './ui.js?v=1.9.4-mvqskghg';
-import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.9.4-mvqskghg';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.9.4-mvqskghg';
-import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.9.4-mvqskghg';
-import { onLineWatched } from './push.js?v=1.9.4-mvqskghg';
-import { starButton } from './favorites-ui.js?v=1.9.4-mvqskghg';
-import { showToast } from './ui.js?v=1.9.4-mvqskghg';
-import { getSettings } from './settings.js?v=1.9.4-mvqskghg';
-import { t, LANG } from './i18n.js?v=1.9.4-mvqskghg';
-import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml, setBusCandidate, fetchBusFixes } from './community.js?v=1.9.4-mvqskghg';
-import { fuseBusFixes } from './bus-inference.js?v=1.9.4-mvqskghg';
-import { openReportSheet } from './community-ui.js?v=1.9.4-mvqskghg';
-import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.9.4-mvqskghg';
+import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.10.0-mvsdq7td';
+import { escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
+import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.10.0-mvsdq7td';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.10.0-mvsdq7td';
+import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.10.0-mvsdq7td';
+import { onLineWatched } from './push.js?v=1.10.0-mvsdq7td';
+import { starButton } from './favorites-ui.js?v=1.10.0-mvsdq7td';
+import { showToast } from './ui.js?v=1.10.0-mvsdq7td';
+import { getSettings } from './settings.js?v=1.10.0-mvsdq7td';
+import { t, LANG } from './i18n.js?v=1.10.0-mvsdq7td';
+import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml, setBusCandidate, fetchBusFixes } from './community.js?v=1.10.0-mvsdq7td';
+import { fuseBusFixes } from './bus-inference.js?v=1.10.0-mvsdq7td';
+import { openReportSheet } from './community-ui.js?v=1.10.0-mvsdq7td';
+import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.10.0-mvsdq7td';
 
 const SEARCH_DEBOUNCE_MS = 400;
 const CROWD_REFRESH_MS = 10000;    // מיקומי נוסעים על האוטובוס (מדויקים מ-SIRI, מתעדכנים כל כמה שניות)
@@ -313,7 +313,7 @@ export class LinesView {
     const d = g.directions[0];
     const between = g.directions.length > 1
       ? `${escapeHtml(endName(d.from))} ⇄ ${escapeHtml(endName(d.to))}`
-      : `${escapeHtml(endName(d.from))} ${LANG === 'en' ? '→' : '←'} ${escapeHtml(endName(d.to))}`;
+      : `${escapeHtml(endName(d.from))} ${LANG !== 'he' ? '→' : '←'} ${escapeHtml(endName(d.to))}`;
     const dirs = g.directions.map((x) => `
       <button class="dir-chip" type="button" data-action="line-open" data-line-ref="${escapeHtml(x.lineRef)}">
         ${t('לכיוון {dest}', { dest: escapeHtml(x.to?.name ?? '') })}${x.alternative ? ` (${escapeHtml(x.alternative)})` : ''}

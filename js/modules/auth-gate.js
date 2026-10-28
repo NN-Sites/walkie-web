@@ -1,14 +1,16 @@
-// חובת התחברות עם Google.
-// בפתיחה: מסך "ברוכים הבאים" עם התחברות עם Google, והוא חוסם את האפליקציה עד שנכנסים (אין דילוג ואין חיבור אנונימי).
+// התחברות עם Google היא אופציונלית.
+// בפתיחה: מסך "ברוכים הבאים" עם התחברות עם Google או "המשך כאורח". אורח משתמש בכל מה שרץ במכשיר (מסלולים, ניווט, זמני הגעה, מועדפים),
+// ורק פיצ'רים שצריכים חשבון בשרת (שיתוף נסיעה בלייב, דיווחים, התראות על קווים שמורים) מבקשים להתחבר.
 
-import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.9.4-mvqskghg';
-import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.9.4-mvqskghg';
-import { setFavoritesGuard } from './favorites.js?v=1.9.4-mvqskghg';
-import { showToast, escapeHtml } from './ui.js?v=1.9.4-mvqskghg';
-import { t } from './i18n.js?v=1.9.4-mvqskghg';
-import { track, trackOnce } from './analytics.js?v=1.9.4-mvqskghg';
+import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.10.0-mvsdq7td';
+import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.10.0-mvsdq7td';
+import { setFavoritesGuard } from './favorites.js?v=1.10.0-mvsdq7td';
+import { showToast, escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
+import { t } from './i18n.js?v=1.10.0-mvsdq7td';
+import { track, trackOnce } from './analytics.js?v=1.10.0-mvsdq7td';
 
 const FLAG = 'walkie:google';   // מחובר עם Google במכשיר הזה (ידוע מיד בפתיחה, לפני ש-Firebase נטען)
+const GUEST_FLAG = 'walkie:guest'; // בחר להמשיך כאורח במכשיר הזה
 
 export const GOOGLE_ICON = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
 
@@ -32,7 +34,29 @@ function writeFlag(on) {
   }
 }
 
-/** חובה להתחבר עם Google. היחיד שמכבה את החסימה: Firebase לא מוגדר בכלל (פיתוח) */
+function readGuest() {
+  try {
+    return localStorage.getItem(GUEST_FLAG) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeGuest(on) {
+  try {
+    if (on) localStorage.setItem(GUEST_FLAG, '1');
+    else localStorage.removeItem(GUEST_FLAG);
+  } catch {
+    // ignore
+  }
+}
+
+/** אורח: בחר להמשיך בלי חשבון (ולא מחובר בינתיים) */
+export function isGuest() {
+  return readGuest() && !isSignedIn();
+}
+
+/** Firebase לא מוגדר בכלל (פיתוח): אין בקשות התחברות */
 function gateOff() {
   return !isFirebaseConfigured();
 }
@@ -48,8 +72,9 @@ export function isSignedIn() {
  * לפני פעולה: true = אפשר להמשיך עכשיו.
  * false = נפתחה בקשה להתחבר; אחרי התחברות מוצלחת onAllowed() רץ לבד.
  */
-export function requireSignIn(action, onAllowed = null) {
+export function requireSignIn(action, onAllowed = null, { guestOk = false } = {}) {
   if (gateOff() || isSignedIn()) return true;
+  if (guestOk && readGuest()) return true;
   pending = onAllowed;
   open('prompt', action);
   return false;
@@ -58,6 +83,7 @@ export function requireSignIn(action, onAllowed = null) {
 /** מסך הפתיחה – רק למי שלא מחובר */
 export async function showWelcomeIfNeeded() {
   if (gateOff()) return;
+  if (readGuest() && !readFlag()) return;
   // מחכים שמצב ההתחברות האמיתי ייטען מהמכשיר, כדי שמשתמש מחובר לא יראה את מסך הכניסה בפתיחה
   try {
     const { auth } = await getFirebase();
@@ -86,16 +112,24 @@ function open(mode, action = '') {
       ${welcome
         ? `<img class="auth-logo" src="icon.svg" alt="" width="72" height="72">
            <h2 class="auth-title">${t('ברוכים הבאים ל-Walkie')}</h2>
-           <p class="auth-text">${t('התחברו עם Google כדי לתכנן מסלולים, לשמור מקומות ותחנות, ולקבל אותם בכל מכשיר.')}</p>`
+           <p class="auth-text">${t('התחברו עם Google כדי לשמור מקומות ותחנות ולקבל אותם בכל מכשיר, לשתף נסיעה בלייב ולקבל התראות על קווים. אפשר גם להמשיך כאורח.')}</p>`
         : `<div class="auth-icon" aria-hidden="true">🔐</div>
            <h2 class="auth-title">${t('צריך להתחבר')}</h2>
            <p class="auth-text">${escapeHtml(t('כדי {action} צריך להתחבר עם Google. זה לוקח רגע.', { action }))}</p>`}
       <button class="btn-google auth-google" type="button">${GOOGLE_ICON} ${t('התחברות עם Google')}</button>
-      ${welcome ? `<p class="auth-fine">${t('ההתחברות חובה כדי להשתמש ב-Walkie.')}</p>` : `<button class="auth-skip" type="button">${t('לא עכשיו')}</button>`}
+      ${welcome
+        ? `<button class="auth-skip auth-guest" type="button">${t('המשך כאורח')}</button>
+           <p class="auth-fine">${t('אפשר להתחבר בכל רגע בהגדרות.')}</p>`
+        : `<button class="auth-skip" type="button">${t('לא עכשיו')}</button>`}
     </div>`;
 
   dialog.querySelector('.auth-google').addEventListener('click', (e) => signIn(e.currentTarget));
-  dialog.querySelector('.auth-skip')?.addEventListener('click', () => close());
+  dialog.querySelector('.auth-guest')?.addEventListener('click', () => {
+    writeGuest(true);
+    track('funnel.guest_continue');
+    close();
+  });
+  if (!welcome) dialog.querySelector('.auth-skip')?.addEventListener('click', () => close());
   if (!welcome) {
     // לחיצה מחוץ לכרטיס = "לא עכשיו"
     dialog.addEventListener('click', (e) => {
@@ -128,6 +162,7 @@ async function signIn(btn) {
     if (!info?.linked) return;
     trackOnce('funnel:signed', 'funnel.signed_in');
     writeFlag(true);
+    writeGuest(false);
     const next = pending;
     close();
     showToast(t('מחובר כ-{name}', { name: info.name || info.email }));
@@ -151,7 +186,7 @@ export function closeAuthDialog() {
 onAccountChange((a) => {
   if (!a || a.unavailable) return;
   writeFlag(!!a.linked);
-  if (!a.linked && !gateOff() && !dialog) open('welcome'); // מחוברים? לא. המסך חוסם עד כניסה
+  if (!a.linked && !gateOff() && !dialog && !readGuest()) open('welcome'); // התנתקו (ולא אורחים): חזרה למסך הכניסה
   if (a.linked && dialog) {
     const next = pending;
     close();
@@ -159,5 +194,5 @@ onAccountChange((a) => {
   }
 });
 
-// שמירת מועדפים דורשת חשבון
-setFavoritesGuard(() => requireSignIn(t('לשמור מועדפים')));
+// מועדפים נשמרים במכשיר גם לאורח (הסנכרון בין מכשירים דורש חשבון)
+setFavoritesGuard(() => requireSignIn(t('לשמור מועדפים'), null, { guestOk: true }));

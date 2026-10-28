@@ -1,15 +1,16 @@
 // שיתוף המסלול בלייב: חבר מקבל קישור, רואה על מפה איפה אני עכשיו ומתי אגיע,
-// ובדף הצפייה (public/live/) מוצעת לו הורדת האפליקציה (עם קוד ההזמנה שלי).
+// הקישור מוביל לאתר הרשמי (OPEN_BASE/t/): אם Walkie מותקנת אצל החבר היא נפתחת ומציגה את הנסיעה (deep-link.js + public/live/),
+// ואם לא – האתר מציג "Walkie לא מותקנת אצלך" וכפתור להורדה מ-Google Play.
 //
 // נכתב מסמך liveShares/{מזהה אקראי} שמתעדכן כל כמה שניות מהמיקום האחרון. הקישור הוא ההרשאה לצפות;
 // השיתוף נגמר כשהנסיעה נגמרת או כשלוחצים "הפסק שיתוף": המיקום, המסלול והיעד נמחקים מהמסמך והדף מציג "השיתוף הסתיים".
 // אם האפליקציה נסגרת בלי לעצור, הדף מציג "השיתוף הסתיים" אחרי 15 דקות בלי עדכון, אבל הנתונים האחרונים נשארים במסמך.
 
-import { SHARE_BASE } from '../config.js?v=1.9.4-mvqskghg';
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.9.4-mvqskghg';
-import { openWhatsApp } from './share.js?v=1.9.4-mvqskghg';
-import { track } from './analytics.js?v=1.9.4-mvqskghg';
-import { t } from './i18n.js?v=1.9.4-mvqskghg';
+import { OPEN_BASE } from '../config.js?v=1.10.0-mvsdq7td';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvsdq7td';
+import { openWhatsApp } from './share.js?v=1.10.0-mvsdq7td';
+import { track } from './analytics.js?v=1.10.0-mvsdq7td';
+import { t } from './i18n.js?v=1.10.0-mvsdq7td';
 
 const UPDATE_MS = 8000;
 const MAX_PATH_POINTS = 160;
@@ -47,7 +48,7 @@ export async function startLiveShare({ trip, getState }) {
   const { doc, setDoc, updateDoc } = modules.firestore;
   const id = newId();
   const ref = doc(firestore, 'liveShares', id);
-  const url = `${SHARE_BASE}/t/${id}`;
+  const url = `${OPEN_BASE}/t/?id=${id}`;
 
   const snapshot = () => {
     const s = getState() ?? {};
@@ -60,7 +61,6 @@ export async function startLiveShare({ trip, getState }) {
 
   await setDoc(ref, {
     ownerUid: user.uid,
-    ownerRef: code,
     createdAt: Date.now(),
     active: true,
     destName: String(trip.destName ?? '').slice(0, 80),
@@ -102,6 +102,6 @@ export function sendLiveShareLink(url, destName) {
   openWhatsApp([
     `📍 ${t('אפשר לעקוב אחריי בלייב בדרך ל{dest}:', { dest: destName })}`,
     url,
-    `${t('רואים איפה אני ומתי אגיע. ואם אין לכם עדיין את Walkie – יש שם קישור להורדה.')}`
+    `${t('רואים איפה אני ומתי אגיע. אם Walkie מותקנת אצלכם הקישור ייפתח בה, ואם לא – יש שם קישור להורדה.')}`
   ].join('\n'));
 }

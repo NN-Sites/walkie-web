@@ -1,7 +1,7 @@
 // הגדרות גלובליות של Walkie – מקום אחד לכל המספרים הקסומים.
 
 // לעדכן יחד עם versionName ב-android/app/build.gradle
-export const APP_VERSION = '1.9.4';
+export const APP_VERSION = '1.10.0';
 
 // מרכז ברירת מחדל (תל אביב, עזריאלי) – בשימוש רק אם אין מיקום שמור ואין עדיין GPS
 export const DEFAULT_CENTER = [32.0741, 34.7922];
@@ -14,6 +14,8 @@ export const USER_ZOOM = 17;
 // באפליקציה (Capacitor) – כתובת מלאה של השרת מ-runtime-config.js; בדפדפן – אותו דומיין
 export const API_BASE = globalThis.WALKIE_CONFIG?.apiBase || '/api';
 export const SHARE_BASE = 'https://walkie-4a743.web.app';
+// האתר הרשמי ב-GitHub Pages: קישור שיתוף נסיעה פותח בו את Walkie אם היא מותקנת, ואם לא – מציע להוריד
+export const OPEN_BASE = 'https://nn-sites.github.io/walkie';
 export const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.walkie.app';
 
 export const API_NEARBY_TIMEOUT_MS = 15000;   // בקשה ראשונה עשויה לחכות לטעינת האינדקס

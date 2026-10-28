@@ -1,6 +1,6 @@
 // הגדרות משתמש: נשמרות במכשיר (localStorage), משפיעות על תכנון המסלולים ועל התצוגה.
 
-import { STORAGE_KEYS } from '../config.js?v=1.9.4-mvqskghg';
+import { STORAGE_KEYS } from '../config.js?v=1.10.0-mvsdq7td';
 
 const KEY = 'walkie:settings';
 
@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   maxWalkMin: 30,                                     // הליכה מקסימלית לתחנה/מתחנה
   walkSpeed: 'normal',                                // slow | normal | fast
   wheelchair: false,                                  // מסלולים נגישים
+  backgroundTrip: true,                               // להמשיך לעקוב ולהתריע ברקע בזמן ניווט וליווי נסיעה
   linePush: true,                                     // התראות פוש על איחור / ביטול בקווים שמורים
   routeType: 'best',                                  // best | minWalk | minTransfers: סדר המסלולים ברשימה
   vibrate: true,                                      // רטט לפני פנייה / ירידה
@@ -17,7 +18,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   shareBusPosition: true,                             // לדייק מיקום אוטובוס: אם אני נוסע על מסלול קו במהירות אוטובוס, מיקומי משמש אחרים
   analytics: true,                                    // נתוני שימוש אנונימיים לשיפור האפליקציה
   theme: 'system',                                 // system | light | dark
-  lang: null                                          // he | en | null = עברית
+  lang: null                                          // he | en | ru | am | null = עברית
 });
 
 const listeners = new Set();

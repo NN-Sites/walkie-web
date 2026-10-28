@@ -1,26 +1,39 @@
-// שפת הממשק: עברית (ברירת מחדל) או אנגלית.
+// שפת הממשק: עברית (ברירת מחדל), אנגלית, רוסית או אמהרית.
 //
 // הטקסט העברי עצמו הוא המפתח: t('הגדרות') -> "Settings" באנגלית, ו-"הגדרות" בעברית.
-// כך הקוד נשאר קריא, ואם חסר תרגום מוצג הטקסט העברי (ולא מפתח ריק).
+// כך הקוד נשאר קריא. אם חסר תרגום לרוסית / אמהרית – מוצג האנגלי, ואם גם הוא חסר – העברי (ולא מפתח ריק).
 // משתנים: t('בעוד {n} דק\'', { n: 5 }).
 //
-// השפה נקבעת עוד לפני טעינת הקוד (סקריפט קטן ב-index.html, עברית, אלא אם נבחרה אנגלית בהגדרות),
+// השפה נקבעת עוד לפני טעינת הקוד (סקריפט קטן ב-index.html, עברית, אלא אם נבחרה שפה אחרת בהגדרות),
 // כדי שהכיוון (RTL/LTR) יהיה נכון מהפריים הראשון. החלפת שפה = טעינה מחדש של האפליקציה.
 
-import { EN } from './i18n-en.js?v=1.9.4-mvqskghg';
+import { EN } from './i18n-en.js?v=1.10.0-mvsdq7td';
+import { RU } from './i18n-ru.js?v=1.10.0-mvsdq7td';
+import { AM } from './i18n-am.js?v=1.10.0-mvsdq7td';
 
-export const LANG = document.documentElement.lang === 'en' ? 'en' : 'he';
+export const SUPPORTED_LANGS = ['he', 'en', 'ru', 'am'];
+export const LANG = SUPPORTED_LANGS.includes(document.documentElement.lang) ? document.documentElement.lang : 'he';
 export const IS_EN = LANG === 'en';
+/** כל שפה שאינה עברית (הטקסט העברי בקוד מתורגם) */
+export const IS_FOREIGN = LANG !== 'he';
+
+const LOCALES = { he: 'he-IL', en: 'en-GB', ru: 'ru-RU', am: 'am-ET' };
+const DICT = LANG === 'ru' ? RU : LANG === 'am' ? AM : EN;
 
 /** לתאריכים ושעות (toLocaleTimeString וכו') */
-export const LOCALE = IS_EN ? 'en-GB' : 'he-IL';
+export const LOCALE = LOCALES[LANG];
+
+/** מחזיר תרגום או undefined: שפה נוכחית, ואז אנגלית */
+function lookup(he) {
+  return DICT[he] ?? EN[he];
+}
 
 const missing = new Set();
 
 export function t(he, vars = null) {
   let s = he;
-  if (IS_EN) {
-    const en = EN[he];
+  if (IS_FOREIGN) {
+    const en = lookup(he);
     if (en !== undefined) s = en;
     else if (!missing.has(he)) {
       missing.add(he);
@@ -46,16 +59,16 @@ export function minText(n) {
  * רץ פעם אחת בעלייה. טקסט שאין לו תרגום נשאר כמו שהוא.
  */
 export function translateDom(root = document.body) {
-  if (!IS_EN) return;
+  if (!IS_FOREIGN) return;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const text = node.nodeValue.trim();
-    if (text && EN[text] !== undefined) node.nodeValue = node.nodeValue.replace(text, EN[text]);
+    if (text && lookup(text) !== undefined) node.nodeValue = node.nodeValue.replace(text, lookup(text));
   }
   for (const el of root.querySelectorAll('[aria-label], [placeholder], [title]')) {
     for (const attr of ['aria-label', 'placeholder', 'title']) {
       const v = el.getAttribute(attr);
-      if (v && EN[v] !== undefined) el.setAttribute(attr, EN[v]);
+      if (v && lookup(v) !== undefined) el.setAttribute(attr, lookup(v));
     }
   }
 }

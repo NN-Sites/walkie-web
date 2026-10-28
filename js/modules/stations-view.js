@@ -1,17 +1,17 @@
 // לשונית "תחנות": תחנות אוטובוס, רכבת ישראל ורכבת קלה סביבך, עם לוח יציאות חי לכל תחנה.
 
-import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js?v=1.9.4-mvqskghg';
-import { escapeHtml } from './ui.js?v=1.9.4-mvqskghg';
-import { formatDistance, walkMinutes } from './geo.js?v=1.9.4-mvqskghg';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js?v=1.9.4-mvqskghg';
-import { toggleStop, isStopSaved } from './favorites.js?v=1.9.4-mvqskghg';
-import { starButton } from './favorites-ui.js?v=1.9.4-mvqskghg';
-import { showToast } from './ui.js?v=1.9.4-mvqskghg';
-import { vehiclesFromArrivals } from './arrivals.js?v=1.9.4-mvqskghg';
-import { getSettings } from './settings.js?v=1.9.4-mvqskghg';
-import { t } from './i18n.js?v=1.9.4-mvqskghg';
-import { track, trackName, trackFeature, trackFailedSearch, safeKey } from './analytics.js?v=1.9.4-mvqskghg';
-import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js?v=1.9.4-mvqskghg';
+import { fetchStationsNearby, fetchDepartures, fetchStationsSearch, fetchStationByCode } from './api.js?v=1.10.0-mvsdq7td';
+import { escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
+import { formatDistance, walkMinutes } from './geo.js?v=1.10.0-mvsdq7td';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon, modeIcon } from './transit-ui.js?v=1.10.0-mvsdq7td';
+import { toggleStop, isStopSaved } from './favorites.js?v=1.10.0-mvsdq7td';
+import { starButton } from './favorites-ui.js?v=1.10.0-mvsdq7td';
+import { showToast } from './ui.js?v=1.10.0-mvsdq7td';
+import { vehiclesFromArrivals } from './arrivals.js?v=1.10.0-mvsdq7td';
+import { getSettings } from './settings.js?v=1.10.0-mvsdq7td';
+import { t } from './i18n.js?v=1.10.0-mvsdq7td';
+import { track, trackName, trackFeature, trackFailedSearch, safeKey } from './analytics.js?v=1.10.0-mvsdq7td';
+import { ARRIVAL_GONE_MS, NOW_TICK_MS } from '../config.js?v=1.10.0-mvsdq7td';
 
 const FILTERS = [
   { id: 'all', label: 'הכל' },

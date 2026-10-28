@@ -1,13 +1,13 @@
 // תבניות HTML לתחבורה ציבורית: רשימת מסלולים, פירוט מסלול (ציר זמן), וליווי נסיעה.
 
-import { escapeHtml } from './ui.js?v=1.9.4-mvqskghg';
-import { lineColor, operatorColor } from './stops.js?v=1.9.4-mvqskghg';
-import { formatNavDistance } from './route-ui.js?v=1.9.4-mvqskghg';
-import { WHATSAPP_ICON } from './share.js?v=1.9.4-mvqskghg';
-import { t, tn, LOCALE } from './i18n.js?v=1.9.4-mvqskghg';
-import { serviceNoticeHtml } from './ui.js?v=1.9.4-mvqskghg';
-import { lineKeyOf, lineUsersHtml } from './community.js?v=1.9.4-mvqskghg';
-import { isLineSaved } from './favorites.js?v=1.9.4-mvqskghg';
+import { escapeHtml } from './ui.js?v=1.10.0-mvsdq7td';
+import { lineColor, operatorColor } from './stops.js?v=1.10.0-mvsdq7td';
+import { formatNavDistance } from './route-ui.js?v=1.10.0-mvsdq7td';
+import { WHATSAPP_ICON } from './share.js?v=1.10.0-mvsdq7td';
+import { t, tn, LOCALE } from './i18n.js?v=1.10.0-mvsdq7td';
+import { serviceNoticeHtml } from './ui.js?v=1.10.0-mvsdq7td';
+import { lineKeyOf, lineUsersHtml } from './community.js?v=1.10.0-mvsdq7td';
+import { isLineSaved } from './favorites.js?v=1.10.0-mvsdq7td';
 
 const TZ = 'Asia/Jerusalem';
 
@@ -477,7 +477,7 @@ function buildLegCards(it, { destName, itineraries = [], now = Date.now() }) {
   return cards;
 }
 
-export function detailHtml(it, { originName, destName, itineraries = [], now = Date.now() }) {
+export function detailHtml(it, { originName, destName, itineraries = [], now = Date.now(), reminderOn = false }) {
   const cards = buildLegCards(it, { destName, itineraries, now }).map((c) => c.html);
 
   return `
@@ -489,6 +489,10 @@ export function detailHtml(it, { originName, destName, itineraries = [], now = D
     ${legChips(it)}
     <div class="itin-meta" style="margin-top:6px">${icon('walk', 14)} ${t('{dist} הליכה', { dist: formatNavDistance(it.walkMeters) })} · ${transfersText(it.transfers)}${it.fare ? ` · ${t('<strong>{price}</strong> ברב-קו', { price: fmtPrice(it.fare.total) })}` : ''}</div>
     <button class="btn-go" type="button" data-action="transit-start">${icon('walk', 22)} ${t('יציאה')}</button>
+    <div class="detail-actions">
+      <button class="btn-secondary${reminderOn ? ' is-on' : ''}" type="button" data-action="leave-remind">🔔 ${reminderOn ? t('התזכורת פעילה (ביטול)') : t('תזכירו לי לצאת')}</button>
+      <button class="btn-secondary" type="button" data-action="pay-trip">💳 ${t('תשלום על הנסיעה')}</button>
+    </div>
     <div class="leg-cards">${cards.join('')}</div>
     ${fareHtml(it.fare)}
     <p class="attribution">${ATTRIBUTION()}</p>`;
@@ -698,6 +702,10 @@ export function tripPanelHtml(state, it, tab = 'cards', { steps = [], cardIndex 
       </div>
       <button class="btn-share-trip" type="button" data-action="share-trip" aria-label="${t('שיתוף הנסיעה')}">${WHATSAPP_ICON}</button>
       <button class="btn-end" type="button" data-action="transit-end">${t('סיום')}</button>
+    </div>
+    <div class="detail-actions trip-actions">
+      <button class="btn-secondary" type="button" data-action="transfer-open">🎟️ ${t('טיימר 90 דקות')}</button>
+      <button class="btn-secondary" type="button" data-action="pay-trip">💳 ${t('תשלום על הנסיעה')}</button>
     </div>
     ${tripTabsHtml(tab)}
     <div class="trip-tab-body" role="tabpanel">

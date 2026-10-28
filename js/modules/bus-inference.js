@@ -6,7 +6,7 @@
 //  - fuseBusFixes: מקבל את אוטובוסי SIRI של הקו ודיווחים של נוסעים, ומחליף את המיקום של האוטובוס
 //    במיקום הטרי של הנוסע שנמצא עליו (או מוסיף אוטובוס ש-SIRI לא מדווח עליו).
 
-import { pathIndex, snap, pointAt } from './vehicle-motion.js?v=1.9.4-mvqskghg';
+import { pathIndex, snap, pointAt } from './vehicle-motion.js?v=1.10.0-mvsdq7td';
 
 const WINDOW_MS = 45000;          // כמה זמן תנועה רצופה על המסלול נדרש לפני שמכריזים "באוטובוס"
 const MIN_SAMPLES = 3;

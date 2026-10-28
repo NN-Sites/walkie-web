@@ -4,11 +4,12 @@
 // { tokens, lines, lang }. השרת (functions/lib/push-alerts.js) מנטר את הקווים ושולח הודעה כשיש איחור של 10 דק' ומעלה או ביטול.
 // בדפדפן אין פוש: הקו נשמר ב"הקווים שלי" בלבד.
 
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.9.4-mvqskghg';
-import { getFavorites, onFavoritesChange } from './favorites.js?v=1.9.4-mvqskghg';
-import { getSettings, onSettingsChange } from './settings.js?v=1.9.4-mvqskghg';
-import { showToast } from './ui.js?v=1.9.4-mvqskghg';
-import { t, LANG } from './i18n.js?v=1.9.4-mvqskghg';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvsdq7td';
+import { getFavorites, onFavoritesChange } from './favorites.js?v=1.10.0-mvsdq7td';
+import { getSettings, onSettingsChange } from './settings.js?v=1.10.0-mvsdq7td';
+import { showToast } from './ui.js?v=1.10.0-mvsdq7td';
+import { t, LANG } from './i18n.js?v=1.10.0-mvsdq7td';
+import { isGuest } from './auth-gate.js?v=1.10.0-mvsdq7td';
 
 const CHANNEL = 'line-alerts';
 const TOKEN_KEY = 'walkie:pushToken';
@@ -53,7 +54,7 @@ async function sync() {
   await f.setDoc(ref, {
     tokens,
     lines: getSettings().linePush ? watchedLines() : [],
-    lang: LANG === 'en' ? 'en' : 'he',
+    lang: LANG === 'he' ? 'he' : 'en',
     updatedAt: f.serverTimestamp()
   }, { merge: true });
 }
@@ -115,6 +116,7 @@ export async function enablePush({ prompt = true } = {}) {
 
 /** אחרי שהמשתמש שמר קו: מפעילים פוש (עם בקשת הרשאה) ומחזירים הודעה מתאימה */
 export async function onLineWatched() {
+  if (isGuest()) return t('הקו נוסף ל"הקווים שלי". התראות על איחור וביטול דורשות התחברות עם Google (בהגדרות)');
   if (!getSettings().linePush) return t('הקו נוסף ל"הקווים שלי". ההתראות כבויות בהגדרות');
   const status = await enablePush({ prompt: true });
   if (status === 'granted') {

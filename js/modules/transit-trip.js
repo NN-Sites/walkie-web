@@ -4,8 +4,8 @@
 // הרעיון: כל רגלי הנסיעה מחוברות לקו גיאומטרי אחד, וכל מיקום GPS "מוצמד" אליו (כמו בניווט הרגלי).
 // גבולות הרגליים ומיקומי התחנות מחושבים פעם אחת כמרחק לאורך הקו.
 
-import { buildRouteModel, snapToRoute } from './navigation.js?v=1.9.4-mvqskghg';
-import { distanceMeters } from './geo.js?v=1.9.4-mvqskghg';
+import { buildRouteModel, snapToRoute } from './navigation.js?v=1.10.0-mvsdq7td';
+import { distanceMeters } from './geo.js?v=1.10.0-mvsdq7td';
 
 const WAIT_RADIUS_M = 40;        // קרוב לתחנה = ממתינים
 const LEFT_STOP_M = 70;          // התרחקנו מתחנת העלייה לאורך הקו = עלינו
@@ -66,7 +66,8 @@ export function buildTripModel(itinerary) {
 }
 
 export class TripSession {
-  constructor(model, { onArrive, onOffRoute, onAlightSoon, onLegChange } = {}) {
+  constructor(model, { onArrive, onOffRoute, onAlightSoon, onLegChange, onBoard } = {}) {
+    this.onBoard = onBoard;
     this.model = model;
     this.onArrive = onArrive;
     this.onOffRoute = onOffRoute;
@@ -124,7 +125,10 @@ export class TripSession {
       const sinceBoard = along - leg.startAlong;
       const departure = Date.parse(leg.live?.eta ?? leg.start);
       const boarded = this.boarded.has(legIndex) || sinceBoard > LEFT_STOP_M;
-      if (boarded) this.boarded.add(legIndex);
+      if (boarded && !this.boarded.has(legIndex)) {
+        this.boarded.add(legIndex);
+        this.onBoard?.(leg);
+      }
 
       if (!boarded && (now < departure + 90 * 1000 || distanceMeters(pos, leg.from) < WAIT_RADIUS_M * 2)) {
         phase = 'waiting';

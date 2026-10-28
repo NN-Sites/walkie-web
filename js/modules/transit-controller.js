@@ -1,17 +1,20 @@
 // זרימת תחבורה ציבורית: חיפוש מסלולים -> רשימה -> פירוט -> ליווי נסיעה -> הגעה.
 // מצבים: idle | loading | error | list | detail | trip | arrived
 
-import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.9.4-mvqskghg';
-import { RouteSimulator } from './navigation.js?v=1.9.4-mvqskghg';
-import { buildTripModel, TripSession } from './transit-trip.js?v=1.9.4-mvqskghg';
-import { focusPoint } from './map.js?v=1.9.4-mvqskghg';
-import { showToast } from './ui.js?v=1.9.4-mvqskghg';
-import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.9.4-mvqskghg';
-import { toggleLine } from './favorites.js?v=1.9.4-mvqskghg';
-import { onLineWatched } from './push.js?v=1.9.4-mvqskghg';
-import * as tpl from './transit-ui.js?v=1.9.4-mvqskghg';
-import { t } from './i18n.js?v=1.9.4-mvqskghg';
-import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.9.4-mvqskghg';
+import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.10.0-mvsdq7td';
+import { RouteSimulator } from './navigation.js?v=1.10.0-mvsdq7td';
+import { buildTripModel, TripSession } from './transit-trip.js?v=1.10.0-mvsdq7td';
+import { focusPoint } from './map.js?v=1.10.0-mvsdq7td';
+import { showToast } from './ui.js?v=1.10.0-mvsdq7td';
+import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.10.0-mvsdq7td';
+import { toggleLine } from './favorites.js?v=1.10.0-mvsdq7td';
+import { onLineWatched } from './push.js?v=1.10.0-mvsdq7td';
+import * as tpl from './transit-ui.js?v=1.10.0-mvsdq7td';
+import { t } from './i18n.js?v=1.10.0-mvsdq7td';
+import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.10.0-mvsdq7td';
+import { toggleLeaveReminder, hasLeaveReminder, refreshLeaveReminder, clearLeaveReminder } from './leave-now.js?v=1.10.0-mvsdq7td';
+import { offerTransferTimer, startTransferTimer, transferActive } from './transfer-timer.js?v=1.10.0-mvsdq7td';
+import { notifyNow, NOTIFY_ID, cancelNotifications } from './notify.js?v=1.10.0-mvsdq7td';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה
@@ -211,6 +214,16 @@ export class TransitController {
       case 'transit-later':
         this.later();
         return true;
+      case 'leave-remind':
+        toggleLeaveReminder(this.selected).then(() => this.#render());
+        return true;
+      case 'pay-trip':
+        showToast(t('כרגע לא זמין, יהיה זמין בקרוב.'), 4500);
+        return true;
+      case 'transfer-open':
+        if (transferActive()) document.querySelector('.transfer-chip')?.click();
+        else startTransferTimer();
+        return true;
       case 'transit-retry':
         if (this.request) this.plan(this.request);
         return true;
@@ -245,14 +258,18 @@ export class TransitController {
     const it = this.selected;
     if (!it) return;
 
+    clearLeaveReminder(); // כבר יצאנו
     const model = buildTripModel(it);
     const session = new TripSession(model, {
       onArrive: () => this.#arrive(),
       onAlightSoon: (leg) => {
         vibrate([200, 100, 200, 100, 200]);
         showToast(t('מתקרבים – רדו ב{stop}', { stop: leg.to.name }));
+        // המסך נעול / האפליקציה ברקע: התראה שמרעידה את הטלפון
+        if (document.visibilityState !== 'visible') notifyNow(NOTIFY_ID.getOff, t('רדו בתחנה הבאה'), t('מתקרבים – רדו ב{stop}', { stop: leg.to.name }));
       },
       onLegChange: () => this.#refreshLive(),
+      onBoard: () => offerTransferTimer(),
       onOffRoute: () => showToast(t('נראה שסטית מהמסלול. אפשר לחפש מסלול חדש מהמיקום הנוכחי.'))
     });
     this.trip = { model, session };
@@ -333,6 +350,7 @@ export class TransitController {
     } else if (this.mode === 'detail' && this.selected) {
       this.sheet.renderCustom(
         tpl.detailHtml(this.selected, {
+          reminderOn: hasLeaveReminder(this.selected),
           originName: this.request.origin.name ?? t('נקודת מוצא'),
           destName: this.request.dest.name ?? t('יעד'),
           itineraries: this.result?.itineraries ?? [],
@@ -409,6 +427,7 @@ export class TransitController {
 
   #arrive() {
     this.mode = 'arrived';
+    cancelNotifications(NOTIFY_ID.getOff);
     this.vehicles?.clear();
     vibrate([100, 50, 100, 50, 220]);
     this.sim?.stop();
@@ -489,6 +508,7 @@ export class TransitController {
     const leg = this.selected?.legs.find((l) => l.mode === 'bus' && l.from.code);
     if (!leg) return;
     await this.#updateLegLive(leg);
+    refreshLeaveReminder(this.selected);
     if (this.mode === 'detail') this.#render();
   }
 
