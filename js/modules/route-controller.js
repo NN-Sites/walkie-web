@@ -1,15 +1,17 @@
 // מנהל את זרימת המסלול: חישוב -> תצוגה מקדימה -> ניווט חי -> הגעה.
 // מצבים: idle | loading | error | preview | navigating | arrived
 
-import { NAV_ZOOM, NAV_USER_SCREEN_OFFSET } from '../config.js?v=1.10.0-mvsedwod';
-import { fetchWalkRoute } from './api.js?v=1.10.0-mvsedwod';
-import { buildRouteModel, NavigationSession, RouteSimulator } from './navigation.js?v=1.10.0-mvsedwod';
-import { HeadingSource } from './compass.js?v=1.10.0-mvsedwod';
-import { focusPoint } from './map.js?v=1.10.0-mvsedwod';
-import { showToast } from './ui.js?v=1.10.0-mvsedwod';
-import { t } from './i18n.js?v=1.10.0-mvsedwod';
-import { vibrate } from './settings.js?v=1.10.0-mvsedwod';
-import * as tpl from './route-ui.js?v=1.10.0-mvsedwod';
+import { NAV_ZOOM, NAV_USER_SCREEN_OFFSET } from '../config.js?v=1.10.0-mvsf7kai';
+import { fetchWalkRoute } from './api.js?v=1.10.0-mvsf7kai';
+import { buildRouteModel, NavigationSession, RouteSimulator } from './navigation.js?v=1.10.0-mvsf7kai';
+import { HeadingSource } from './compass.js?v=1.10.0-mvsf7kai';
+import { focusPoint } from './map.js?v=1.10.0-mvsf7kai';
+import { showToast } from './ui.js?v=1.10.0-mvsf7kai';
+import { t } from './i18n.js?v=1.10.0-mvsf7kai';
+import { celebrate } from './fx.js?v=1.10.0-mvsf7kai';
+import { prizeUnlocked } from './referrals.js?v=1.10.0-mvsf7kai';
+import { vibrate } from './settings.js?v=1.10.0-mvsf7kai';
+import * as tpl from './route-ui.js?v=1.10.0-mvsf7kai';
 
 export class RouteController {
   constructor({ map, sheet, routeLayer, rotator, userLayer, banner, compassBtn, getOrigin, getOcclusion, onModeChange, onSimPosition, onPlanned, simulate = false }) {
@@ -236,6 +238,7 @@ export class RouteController {
 
   #arrive() {
     this.mode = 'arrived';
+    if (prizeUnlocked(7)) celebrate(); // פרס הזמנת חברים: קונפטי בהגעה ליעד
     vibrate([100, 50, 100, 50, 220]);
     this.sim?.stop();
     this.heading.stop();

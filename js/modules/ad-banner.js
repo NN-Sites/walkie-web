@@ -3,8 +3,8 @@
 // כדי להציג מודעה מרשת פרסום, טוענים אותה אל this.root ב-show(). שאר הלוגיקה (מיקום, גובה,
 // הזזת הסרגל והלוח) כבר מוכנה. עד שיחובר ספק פרסום מוצג כאן טקסט זמני.
 
-import { t } from './i18n.js?v=1.10.0-mvsedwod';
-import { adFreeUnlocked, onReferralChange } from './referrals.js?v=1.10.0-mvsedwod';
+import { t } from './i18n.js?v=1.10.0-mvsf7kai';
+import { adFreeUnlocked, onReferralChange } from './referrals.js?v=1.10.0-mvsf7kai';
 
 export class AdBanner {
   constructor(root, { onResize }) {

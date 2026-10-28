@@ -1,20 +1,21 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvsedwod';
-import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvsedwod';
-import { showToast } from './ui.js?v=1.10.0-mvsedwod';
-import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvsedwod';
-import { escapeHtml } from './ui.js?v=1.10.0-mvsedwod';
-import { APP_VERSION } from '../config.js?v=1.10.0-mvsedwod';
-import { sessionStatus } from './session.js?v=1.10.0-mvsedwod';
-import { celebrate, stagger } from './fx.js?v=1.10.0-mvsedwod';
-import { ensureMyCode, myReferralCode, inviteLink, referralProgress, refreshReferrals, redeemCode, onReferralChange, INVITES_PER_PRIZE, PRIZES, prizeUnlocked, BRAND_COLORS, DOT_COLORS, chosenBrand, chosenDot, chooseBrand, chooseDot, hasAmbassadorBadge, adFreeDaysLeft } from './referrals.js?v=1.10.0-mvsedwod';
-import { openWhatsApp } from './share.js?v=1.10.0-mvsedwod';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvsedwod';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvsf7kai';
+import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvsf7kai';
+import { showToast } from './ui.js?v=1.10.0-mvsf7kai';
+import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvsf7kai';
+import { escapeHtml } from './ui.js?v=1.10.0-mvsf7kai';
+import { APP_VERSION, PLAY_URL } from '../config.js?v=1.10.0-mvsf7kai';
+import { sessionStatus } from './session.js?v=1.10.0-mvsf7kai';
+import { celebrate, stagger } from './fx.js?v=1.10.0-mvsf7kai';
+import { ensureMyCode, myReferralCode, inviteLink, referralProgress, refreshReferrals, redeemCode, onReferralChange, INVITES_PER_PRIZE, PRIZES, prizeUnlocked, BRAND_COLORS, DOT_COLORS, chosenBrand, chosenDot, chooseBrand, chooseDot, hasAmbassadorBadge, adFreeDaysLeft } from './referrals.js?v=1.10.0-mvsf7kai';
+import { openWhatsApp } from './share.js?v=1.10.0-mvsf7kai';
+import { APP_ICONS, appIconSupported, currentAppIcon, setAppIcon, appIconLabel } from './app-icon.js?v=1.10.0-mvsf7kai';
+import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvsf7kai';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.10.0-mvsedwod';
+} from './favorites.js?v=1.10.0-mvsf7kai';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -137,9 +138,20 @@ export class SettingsView {
       }
       if (action === 'invite-brand') return chooseBrand(btn.dataset.value);
       if (action === 'invite-dot') return chooseDot(btn.dataset.value);
+      if (action === 'invite-icon') {
+        await setAppIcon(btn.dataset.value);
+        showToast(t('האייקון הוחלף. ייתכן שיידרשו כמה שניות עד שהמסך הראשי יתעדכן'));
+        this.#renderInvite();
+        return;
+      }
       const code = await ensureMyCode();
       const link = inviteLink(code);
-      const text = `${t('בואו לנסות את Walkie – ניווט ותחבורה ציבורית חינמי. הקוד שלי: {code}', { code })}\n${link}`;
+      const text = [
+        t('בואו לנסות את Walkie – ניווט ותחבורה ציבורית חינמי. הקוד שלי: {code}', { code }),
+        `${t('להורדה')}: ${PLAY_URL}`,
+        t('אחרי ההתקנה: הגדרות ← הזמנת חברים ← הזינו את הקוד'),
+        `${t('או ישר בדפדפן')}: ${link}`
+      ].join(String.fromCharCode(10));
       if (action === 'invite-whatsapp') openWhatsApp(text);
       else if (action === 'invite-copy') {
         await navigator.clipboard?.writeText(link);
@@ -221,7 +233,10 @@ export class SettingsView {
     const next = nextPrize ? t('הפרס הבא: {prize}', { prize: t(nextPrize.title) }) : t('פתחת את כל הפרסים – תודה ענקית! 🏆');
     const brand = chosenBrand();
     const dot = chosenDot();
-    const perks = `${prizeUnlocked(1) ? `<div class="invite-perk"><span>${t('צבע מותג')}</span><span class="invite-swatches">${BRAND_COLORS.map((c) => `<button type="button" class="invite-swatch${brand === c.id ? ' is-on' : ''}" style="background:${c.main}" data-action="invite-brand" data-value="${c.id}" aria-label="${c.id}"></button>`).join('')}</span></div>` : ''}${prizeUnlocked(3) ? `<div class="invite-perk"><span>${t('צבע הנקודה שלי')}</span><span class="invite-swatches">${DOT_COLORS.map((c) => `<button type="button" class="invite-swatch${dot === c ? ' is-on' : ''}" style="background:${c}" data-action="invite-dot" data-value="${c}" aria-label="${c}"></button>`).join('')}</span></div>` : ''}`;
+    const icons = prizeUnlocked(5) ? (appIconSupported()
+      ? `<div class="invite-perk is-block"><span>${t('אייקון האפליקציה')}</span><span class="invite-icons">${APP_ICONS.map((x) => `<button type="button" class="invite-icon${currentAppIcon() === x.id ? ' is-on' : ''}" data-action="invite-icon" data-value="${x.id}" aria-label="${appIconLabel(x.id)}"><img src="icons/app/${x.id}.png" alt="" width="56" height="56"></button>`).join('')}</span></div>`
+      : `<p class="set-note">${t('החלפת האייקון זמינה באפליקציית האנדרואיד')}</p>`) : '';
+    const perks = icons + `${prizeUnlocked(1) ? `<div class="invite-perk"><span>${t('צבע מותג')}</span><span class="invite-swatches">${BRAND_COLORS.map((c) => `<button type="button" class="invite-swatch${brand === c.id ? ' is-on' : ''}" style="background:${c.main}" data-action="invite-brand" data-value="${c.id}" aria-label="${c.id}"></button>`).join('')}</span></div>` : ''}${prizeUnlocked(3) ? `<div class="invite-perk"><span>${t('צבע הנקודה שלי')}</span><span class="invite-swatches">${DOT_COLORS.map((c) => `<button type="button" class="invite-swatch${dot === c ? ' is-on' : ''}" style="background:${c}" data-action="invite-dot" data-value="${c}" aria-label="${c}"></button>`).join('')}</span></div>` : ''}`;
     const redeemed = localStorage.getItem('walkie:refRedeemed');
     return `
       <section class="set-group invite-card">

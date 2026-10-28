@@ -1,10 +1,15 @@
 // הזמנת חברים: קוד אישי + קישור, ספירת החברים שנרשמו, ופרס על כל 10 חברים.
 // הכול דרך Firestore בלי שרת (ראו firestore.rules, "הזמנת חברים"): הרישום נוצר פעם אחת בלבד לכל חשבון ולכל אימייל.
 
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvsedwod';
-import { SHARE_BASE } from '../config.js?v=1.10.0-mvsedwod';
-import { accountInfo, onAccountChange } from './account.js?v=1.10.0-mvsedwod';
-import { getAttribution, track } from './analytics.js?v=1.10.0-mvsedwod';
+// auth-gate חייב להיטען לפני account (מעגל ייבוא ישן: account -> push -> auth-gate -> account)
+import './auth-gate.js?v=1.10.0-mvsf7kai';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvsf7kai';
+import { SHARE_BASE } from '../config.js?v=1.10.0-mvsf7kai';
+import { accountInfo, onAccountChange } from './account.js?v=1.10.0-mvsf7kai';
+import { getAttribution, track } from './analytics.js?v=1.10.0-mvsf7kai';
+import { showToast } from './ui.js?v=1.10.0-mvsf7kai';
+import { celebrate } from './fx.js?v=1.10.0-mvsf7kai';
+import { t } from './i18n.js?v=1.10.0-mvsf7kai';
 
 export const INVITES_PER_PRIZE = 10;
 
@@ -40,9 +45,9 @@ export const PRIZES = [
   { icon: '🏅', title: 'תג שגריר ליד השם', kind: 'auto' },
   { icon: '📍', title: 'צבע נקודת המיקום שלי', kind: 'auto' },
   { icon: '💚', title: 'השם שלך בלשונית "תודות"', kind: 'manual' },
-  { icon: '✨', title: 'מדבקות Walkie בדואר', kind: 'manual' },
+  { icon: '📱', title: 'החלפת אייקון Walkie', kind: 'auto' },
   { icon: '🧪', title: 'גישה מוקדמת לגרסאות חדשות', kind: 'manual' },
-  { icon: '👕', title: 'חולצת Walkie', kind: 'manual' },
+  { icon: '🎉', title: 'קונפטי חגיגי בכל הגעה ליעד', kind: 'auto' },
   { icon: '💡', title: 'הרעיון שלך מקבל עדיפות בפיתוח', kind: 'manual' },
   { icon: '🏆', title: 'ערכת שגריר מלאה', kind: 'manual' }
 ];
@@ -53,7 +58,6 @@ export function referralProgress(count = referralCount()) {
   return { count, prizes, inGoal: count % INVITES_PER_PRIZE, toNext: INVITES_PER_PRIZE - (count % INVITES_PER_PRIZE) };
 }
 
-/** הפרס הראשון (10 חברים): בלי באנר פרסומת, לתמיד */
 const AD_FREE_KEY = 'walkie:refAdFreeAt';
 export const AD_FREE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -163,8 +167,14 @@ export async function refreshReferrals() {
     const q = query(collection(firestore, 'referralRedemptions'), where('inviterUid', '==', user.uid));
     const snap = await getCountFromServer(q);
     const n = snap.data().count;
-    if (n !== referralCount()) {
+    const before = referralCount();
+    if (n !== before) {
       write(COUNT_KEY, String(n));
+      if (n > before) {
+        const won = Math.floor(n / INVITES_PER_PRIZE) > Math.floor(before / INVITES_PER_PRIZE);
+        showToast(won ? t('חבר הצטרף ופתחת פרס חדש! 🎁') : t('חבר חדש הצטרף! כבר {n} חברים', { n }), 4500);
+        if (won) celebrate();
+      }
       applyPerks();
       emit();
     }
@@ -225,10 +235,13 @@ async function redeemPending() {
   await redeemCode(pending).catch(() => {});
 }
 
-onAccountChange((info) => {
-  if (!info?.linked) return;
-  redeemPending();
-  refreshReferrals();
-});
+/** נקרא פעם אחת מ-app.js (לא ברמת המודול: יש מעגל ייבוא עם account.js) */
+export function initReferrals() {
+  onAccountChange((info) => {
+    if (!info?.linked) return;
+    redeemPending();
+    refreshReferrals();
+  });
+}
 
 applyPerks();

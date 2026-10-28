@@ -1,6 +1,6 @@
 // הגדרות משתמש: נשמרות במכשיר (localStorage), משפיעות על תכנון המסלולים ועל התצוגה.
 
-import { STORAGE_KEYS } from '../config.js?v=1.10.0-mvsedwod';
+import { STORAGE_KEYS } from '../config.js?v=1.10.0-mvsf7kai';
 
 const KEY = 'walkie:settings';
 
