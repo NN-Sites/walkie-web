@@ -7,12 +7,13 @@ import {
   STOP_CELL_DEG,
   STOP_SEARCH_RADIUS_M,
   STOP_CACHE_TTL_MS,
+  STOP_CACHE_STALE_MS,
   MAX_STOPS,
   STORAGE_KEYS
-} from '../config.js?v=1.10.0-mvsf7kai';
-import { offsetMeters } from './geo.js?v=1.10.0-mvsf7kai';
-import { t } from './i18n.js?v=1.10.0-mvsf7kai';
-import { fetchNearbyFromApi, fetchWithTimeout } from './api.js?v=1.10.0-mvsf7kai';
+} from '../config.js?v=1.10.0-mvu1kw0g';
+import { offsetMeters } from './geo.js?v=1.10.0-mvu1kw0g';
+import { t } from './i18n.js?v=1.10.0-mvu1kw0g';
+import { fetchNearbyFromApi, fetchWithTimeout } from './api.js?v=1.10.0-mvu1kw0g';
 
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
@@ -29,12 +30,12 @@ function cellOf({ lat, lng }) {
   };
 }
 
-function readCache(key) {
+function readCache(key, { stale = false } = {}) {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.stopsPrefix + key);
     if (!raw) return null;
     const entry = JSON.parse(raw);
-    if (!entry || Date.now() - entry.savedAt > STOP_CACHE_TTL_MS) return null;
+    if (!entry || Date.now() - entry.savedAt > (stale ? STOP_CACHE_STALE_MS : STOP_CACHE_TTL_MS)) return null;
     return Array.isArray(entry.stops) ? entry : null;
   } catch {
     return null;
@@ -138,6 +139,13 @@ export async function fetchNearbyStops(point, signal) {
 
   const cached = readCache(key);
   if (cached) return { stops: cached.stops, source: cached.source, fromCache: true };
+
+  // קאש שפג (אבל לא ישן מדי): מציגים אותו מיד ומרעננים ברקע, במקום לחכות לרשת בכל פתיחה ראשונה ביום
+  const old = readCache(key, { stale: true });
+  if (old) {
+    fromApi(center).then((stops) => writeCache(key, stops, 'gtfs')).catch(() => {});
+    return { stops: old.stops, source: old.source, fromCache: true };
+  }
 
   try {
     const stops = await fromApi(center, signal);

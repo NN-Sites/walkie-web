@@ -1,21 +1,19 @@
 // זרימת תחבורה ציבורית: חיפוש מסלולים -> רשימה -> פירוט -> ליווי נסיעה -> הגעה.
 // מצבים: idle | loading | error | list | detail | trip | arrived
 
-import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.10.0-mvsf7kai';
-import { RouteSimulator } from './navigation.js?v=1.10.0-mvsf7kai';
-import { buildTripModel, TripSession } from './transit-trip.js?v=1.10.0-mvsf7kai';
-import { focusPoint } from './map.js?v=1.10.0-mvsf7kai';
-import { showToast } from './ui.js?v=1.10.0-mvsf7kai';
-import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.10.0-mvsf7kai';
-import { toggleLine } from './favorites.js?v=1.10.0-mvsf7kai';
-import { onLineWatched } from './push.js?v=1.10.0-mvsf7kai';
-import * as tpl from './transit-ui.js?v=1.10.0-mvsf7kai';
-import { t } from './i18n.js?v=1.10.0-mvsf7kai';
-import { celebrate } from './fx.js?v=1.10.0-mvsf7kai';
-import { prizeUnlocked } from './referrals.js?v=1.10.0-mvsf7kai';
-import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.10.0-mvsf7kai';
-import { toggleLeaveReminder, hasLeaveReminder, refreshLeaveReminder, clearLeaveReminder } from './leave-now.js?v=1.10.0-mvsf7kai';
-import { notifyNow, NOTIFY_ID, cancelNotifications } from './notify.js?v=1.10.0-mvsf7kai';
+import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.10.0-mvu1kw0g';
+import { RouteSimulator } from './navigation.js?v=1.10.0-mvu1kw0g';
+import { buildTripModel, TripSession } from './transit-trip.js?v=1.10.0-mvu1kw0g';
+import { focusPoint } from './map.js?v=1.10.0-mvu1kw0g';
+import { showToast } from './ui.js?v=1.10.0-mvu1kw0g';
+import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.10.0-mvu1kw0g';
+import { toggleLine } from './favorites.js?v=1.10.0-mvu1kw0g';
+import { onLineWatched } from './push.js?v=1.10.0-mvu1kw0g';
+import * as tpl from './transit-ui.js?v=1.10.0-mvu1kw0g';
+import { t } from './i18n.js?v=1.10.0-mvu1kw0g';
+import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.10.0-mvu1kw0g';
+import { toggleLeaveReminder, hasLeaveReminder, refreshLeaveReminder, clearLeaveReminder } from './leave-now.js?v=1.10.0-mvu1kw0g';
+import { notifyNow, NOTIFY_ID, cancelNotifications } from './notify.js?v=1.10.0-mvu1kw0g';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה
@@ -423,7 +421,6 @@ export class TransitController {
 
   #arrive() {
     this.mode = 'arrived';
-    if (prizeUnlocked(7)) celebrate(); // פרס הזמנת חברים: קונפטי בהגעה ליעד
     cancelNotifications(NOTIFY_ID.getOff);
     this.vehicles?.clear();
     vibrate([100, 50, 100, 50, 220]);

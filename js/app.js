@@ -12,8 +12,8 @@ import {
   NOW_TICK_MS,
   DEMO_RETRY_MS,
   STORAGE_KEYS
-} from './config.js?v=1.10.0-mvsf7kai';
-import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.10.0-mvsf7kai';
+} from './config.js?v=1.10.0-mvu1kw0g';
+import { LocationTracker, distanceMeters } from './modules/geo.js?v=1.10.0-mvu1kw0g';
 import {
   createMap,
   focusPoint,
@@ -24,42 +24,41 @@ import {
   TransitLayer,
   VehiclesLayer,
   MapRotator
-} from './modules/map.js?v=1.10.0-mvsf7kai';
-import { fetchNearbyStops } from './modules/stops.js?v=1.10.0-mvsf7kai';
-import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.10.0-mvsf7kai';
-import { Sheet, showToast } from './modules/ui.js?v=1.10.0-mvsf7kai';
-import { SearchOverlay } from './modules/search.js?v=1.10.0-mvsf7kai';
-import { RouteController } from './modules/route-controller.js?v=1.10.0-mvsf7kai';
-import { TransitController } from './modules/transit-controller.js?v=1.10.0-mvsf7kai';
-import { DirectionsController } from './modules/directions.js?v=1.10.0-mvsf7kai';
-import { initSessionWhenIdle } from './modules/session.js?v=1.10.0-mvsf7kai';
-import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.10.0-mvsf7kai';
-import { TabBar } from './modules/tabs.js?v=1.10.0-mvsf7kai';
-import { LinesView } from './modules/lines-view.js?v=1.10.0-mvsf7kai';
-import { StationsView } from './modules/stations-view.js?v=1.10.0-mvsf7kai';
-import { ThanksView } from './modules/thanks-view.js?v=1.10.0-mvsf7kai';
-import { SettingsView } from './modules/settings-view.js?v=1.10.0-mvsf7kai';
-import { getSettings, onSettingsChange } from './modules/settings.js?v=1.10.0-mvsf7kai';
-import { shareMyLocation, shareTrip } from './modules/share.js?v=1.10.0-mvsf7kai';
-import { QuickBar } from './modules/favorites-ui.js?v=1.10.0-mvsf7kai';
-import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.10.0-mvsf7kai';
-import { loadDepartures } from './modules/arrivals.js?v=1.10.0-mvsf7kai';
-import { AdBanner } from './modules/ad-banner.js?v=1.10.0-mvsf7kai';
-import { initReferrals } from './modules/referrals.js?v=1.10.0-mvsf7kai';
-import { recordWalk, recordTrip } from './modules/stats.js?v=1.10.0-mvsf7kai';
+} from './modules/map.js?v=1.10.0-mvu1kw0g';
+import { fetchNearbyStops } from './modules/stops.js?v=1.10.0-mvu1kw0g';
+import { ArrivalsStore, vehiclesFromArrivals, arrivalColor, vehicleSummary } from './modules/arrivals.js?v=1.10.0-mvu1kw0g';
+import { Sheet, showToast } from './modules/ui.js?v=1.10.0-mvu1kw0g';
+import { SearchOverlay } from './modules/search.js?v=1.10.0-mvu1kw0g';
+import { RouteController } from './modules/route-controller.js?v=1.10.0-mvu1kw0g';
+import { TransitController } from './modules/transit-controller.js?v=1.10.0-mvu1kw0g';
+import { DirectionsController } from './modules/directions.js?v=1.10.0-mvu1kw0g';
+import { initSessionWhenIdle } from './modules/session.js?v=1.10.0-mvu1kw0g';
+import { requireSignIn, showWelcomeIfNeeded, closeAuthDialog } from './modules/auth-gate.js?v=1.10.0-mvu1kw0g';
+import { TabBar } from './modules/tabs.js?v=1.10.0-mvu1kw0g';
+import { LinesView } from './modules/lines-view.js?v=1.10.0-mvu1kw0g';
+import { StationsView } from './modules/stations-view.js?v=1.10.0-mvu1kw0g';
+import { ThanksView } from './modules/thanks-view.js?v=1.10.0-mvu1kw0g';
+import { SettingsView } from './modules/settings-view.js?v=1.10.0-mvu1kw0g';
+import { getSettings, onSettingsChange } from './modules/settings.js?v=1.10.0-mvu1kw0g';
+import { shareMyLocation, shareTrip } from './modules/share.js?v=1.10.0-mvu1kw0g';
+import { QuickBar } from './modules/favorites-ui.js?v=1.10.0-mvu1kw0g';
+import { getFavorites, onFavoritesChange, isStopSaved, toggleStop, setHome, setSecond, secondLabel } from './modules/favorites.js?v=1.10.0-mvu1kw0g';
+import { loadDepartures } from './modules/arrivals.js?v=1.10.0-mvu1kw0g';
+import { AdBanner } from './modules/ad-banner.js?v=1.10.0-mvu1kw0g';
+import { recordWalk, recordTrip } from './modules/stats.js?v=1.10.0-mvu1kw0g';
 import {
   captureAttribution, trackOnce, trackPerf, trackRegion, trackFeature
-} from './modules/analytics.js?v=1.10.0-mvsf7kai';
-import { CommunityController } from './modules/community-controller.js?v=1.10.0-mvsf7kai';
-import { onBusPosition } from './modules/community.js?v=1.10.0-mvsf7kai';
-import { supportId } from './modules/session.js?v=1.10.0-mvsf7kai';
-import { escapeHtml } from './modules/ui.js?v=1.10.0-mvsf7kai';
-import { t, translateDom } from './modules/i18n.js?v=1.10.0-mvsf7kai';
-import { initTheme } from './modules/theme.js?v=1.10.0-mvsf7kai';
-import { startPush } from './modules/push.js?v=1.10.0-mvsf7kai';
-import { initDeepLinks, closeLiveViewer } from './modules/deep-link.js?v=1.10.0-mvsf7kai';
-import { ensureNotifyPermission } from './modules/notify.js?v=1.10.0-mvsf7kai';
-import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.10.0-mvsf7kai';
+} from './modules/analytics.js?v=1.10.0-mvu1kw0g';
+import { CommunityController } from './modules/community-controller.js?v=1.10.0-mvu1kw0g';
+import { onBusPosition } from './modules/community.js?v=1.10.0-mvu1kw0g';
+import { supportId } from './modules/session.js?v=1.10.0-mvu1kw0g';
+import { escapeHtml } from './modules/ui.js?v=1.10.0-mvu1kw0g';
+import { t, translateDom } from './modules/i18n.js?v=1.10.0-mvu1kw0g';
+import { initTheme } from './modules/theme.js?v=1.10.0-mvu1kw0g';
+import { startPush } from './modules/push.js?v=1.10.0-mvu1kw0g';
+import { initDeepLinks, closeLiveViewer } from './modules/deep-link.js?v=1.10.0-mvu1kw0g';
+import { ensureNotifyPermission } from './modules/notify.js?v=1.10.0-mvu1kw0g';
+import { serviceStatus, serviceNotice } from './modules/service-calendar.js?v=1.10.0-mvu1kw0g';
 
 // טקסטים קבועים ב-index.html (באנגלית) ומצב לילה – לפני שאר הממשק
 translateDom();
@@ -358,8 +357,6 @@ onFavoritesChange(() => {
   loadFavBoards();
   render();
 });
-
-initReferrals();
 
 let adBanner = null;
 tabbar = new TabBar(document.getElementById('tabbar'), {

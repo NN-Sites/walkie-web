@@ -5,18 +5,43 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvsf7kai';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.10.0-mvsf7kai';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.10.0-mvsf7kai';
-import { t } from './i18n.js?v=1.10.0-mvsf7kai';
-import { disablePushForThisDevice, deletePushData } from './push.js?v=1.10.0-mvsf7kai';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvu1kw0g';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.10.0-mvu1kw0g';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.10.0-mvu1kw0g';
+import { t } from './i18n.js?v=1.10.0-mvu1kw0g';
+import { disablePushForThisDevice, deletePushData } from './push.js?v=1.10.0-mvu1kw0g';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
 let pushTimer = null;
 let applyingRemote = false;
 
+// פרטי החשבון האחרונים נשמרים במכשיר, כדי שההגדרות ומצב ההתחברות יופיעו מיד בפתיחה (לפני ש-Firebase נטען)
+const CACHE_KEY = 'walkie:account';
+
+function readCachedAccount() {
+  try {
+    const a = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    return a?.linked ? a : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedAccount(info) {
+  try {
+    if (info?.linked) localStorage.setItem(CACHE_KEY, JSON.stringify({ linked: true, name: info.name, email: info.email, photo: info.photo }));
+    else if (info && !info.unavailable) localStorage.removeItem(CACHE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+let cached = readCachedAccount();
+
 function emit() {
+  cached = null;
+  writeCachedAccount(current);
   for (const fn of listeners) fn(accountInfo());
 }
 
@@ -29,7 +54,7 @@ let current = null;
 
 /** { linked, name, email, photo } או null אם Firebase לא מחובר */
 export function accountInfo() {
-  return current;
+  return current ?? cached;
 }
 
 function describe(user) {
@@ -151,6 +176,9 @@ export async function signOutGoogle() {
   await disablePushForThisDevice().catch(() => {});
   await globalThis.Capacitor?.Plugins?.FirebaseAuthentication?.signOut?.().catch(() => {});
   await modules.auth.signOut(auth);
+  try {
+    localStorage.removeItem(CACHE_KEY);
+  } catch { /* ignore */ }
   location.reload();
 }
 

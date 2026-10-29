@@ -1,21 +1,17 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvsf7kai';
-import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvsf7kai';
-import { showToast } from './ui.js?v=1.10.0-mvsf7kai';
-import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvsf7kai';
-import { escapeHtml } from './ui.js?v=1.10.0-mvsf7kai';
-import { APP_VERSION, PLAY_URL } from '../config.js?v=1.10.0-mvsf7kai';
-import { sessionStatus } from './session.js?v=1.10.0-mvsf7kai';
-import { celebrate, stagger } from './fx.js?v=1.10.0-mvsf7kai';
-import { ensureMyCode, myReferralCode, inviteLink, referralProgress, refreshReferrals, redeemCode, onReferralChange, INVITES_PER_PRIZE, PRIZES, prizeUnlocked, BRAND_COLORS, DOT_COLORS, chosenBrand, chosenDot, chooseBrand, chooseDot, hasAmbassadorBadge, adFreeDaysLeft } from './referrals.js?v=1.10.0-mvsf7kai';
-import { openWhatsApp } from './share.js?v=1.10.0-mvsf7kai';
-import { APP_ICONS, appIconSupported, currentAppIcon, setAppIcon, appIconLabel } from './app-icon.js?v=1.10.0-mvsf7kai';
-import { accountInfo, accountAvailable, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvsf7kai';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvu1kw0g';
+import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvu1kw0g';
+import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvu1kw0g';
+import { showToast, escapeHtml } from './ui.js?v=1.10.0-mvu1kw0g';
+import { APP_VERSION } from '../config.js?v=1.10.0-mvu1kw0g';
+import { sessionStatus } from './session.js?v=1.10.0-mvu1kw0g';
+import { celebrate, stagger } from './fx.js?v=1.10.0-mvu1kw0g';
+import { accountInfo, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvu1kw0g';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.10.0-mvsf7kai';
+} from './favorites.js?v=1.10.0-mvu1kw0g';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -66,10 +62,6 @@ export class SettingsView {
         this.openPrivacy();
       } else if (btn.dataset.action === 'delete-account') {
         this.#deleteAccount(btn);
-      } else if (btn.dataset.action === 'invite-open') {
-        this.#openInvite();
-      } else if (btn.dataset.action?.startsWith('invite-')) {
-        this.#onInvite(btn);
       } else if (btn.dataset.action === 'google-signin') {
         this.#signIn(btn);
       } else if (btn.dataset.action === 'google-signout') {
@@ -77,10 +69,6 @@ export class SettingsView {
       }
     });
 
-    onReferralChange(() => {
-      if (!this.root.hidden) this.render();
-      this.#renderInvite();
-    });
     onSettingsChange(() => this.render());
     onAccountChange(() => {
       if (!this.root.hidden) this.render();
@@ -119,154 +107,6 @@ export class SettingsView {
     }
   }
 
-  async #onInvite(btn) {
-    const action = btn.dataset.action;
-    try {
-      if (action === 'invite-redeem') {
-        const input = this.body.querySelector('#invite-code-input');
-        const result = await redeemCode(input?.value);
-        const messages = {
-          ok: 'הקוד התקבל – תודה! החבר שהזמין אותך קיבל נקודה',
-          invalid: 'הקוד לא נמצא. בדקו שהוא בן 6 תווים',
-          self: 'אי אפשר להזמין את עצמך',
-          already: 'כבר מימשת קוד הזמנה',
-          unverified: 'צריך חשבון Google עם אימייל מאומת'
-        };
-        showToast(t(messages[result]));
-        if (result === 'ok' || result === 'already') this.#renderInvite();
-        return;
-      }
-      if (action === 'invite-brand') return chooseBrand(btn.dataset.value);
-      if (action === 'invite-dot') return chooseDot(btn.dataset.value);
-      if (action === 'invite-icon') {
-        await setAppIcon(btn.dataset.value);
-        showToast(t('האייקון הוחלף. ייתכן שיידרשו כמה שניות עד שהמסך הראשי יתעדכן'));
-        this.#renderInvite();
-        return;
-      }
-      const code = await ensureMyCode();
-      const link = inviteLink(code);
-      const text = [
-        t('בואו לנסות את Walkie – ניווט ותחבורה ציבורית חינמי. הקוד שלי: {code}', { code }),
-        `${t('להורדה')}: ${PLAY_URL}`,
-        t('אחרי ההתקנה: הגדרות ← הזמנת חברים ← הזינו את הקוד'),
-        `${t('או ישר בדפדפן')}: ${link}`
-      ].join(String.fromCharCode(10));
-      if (action === 'invite-whatsapp') openWhatsApp(text);
-      else if (action === 'invite-copy') {
-        await navigator.clipboard?.writeText(link);
-        showToast(t('הקישור הועתק'));
-      }
-    } catch {
-      showToast(t('לא הצלחנו לטעון את קוד ההזמנה. נסו שוב'));
-    }
-  }
-
-  /** כרטיס ירוק גדול בהגדרות שפותח את דף ההזמנות */
-  #inviteBannerHtml() {
-    return `
-      <button class="invite-banner" type="button" data-action="invite-open">
-        <span class="invite-banner-icon" aria-hidden="true">🎁</span>
-        <span class="invite-banner-text">
-          <strong>${t('הזמינו חברים וקבלו פרסים')}</strong>
-          <small>${t('פרס על כל {n} חברים שמצטרפים', { n: INVITES_PER_PRIZE })}</small>
-        </span>
-        <span class="invite-banner-go" aria-hidden="true">${icon('back', 22)}</span>
-      </button>`;
-  }
-
-  #openInvite() {
-    if (this.invitePage) return;
-    if (!accountInfo()?.linked) {
-      showToast(t('כדי להזמין חברים צריך להתחבר עם Google'));
-      return;
-    }
-    const el = document.createElement('div');
-    el.className = 'doc-overlay invite-page';
-    el.setAttribute('role', 'dialog');
-    el.setAttribute('aria-label', t('הזמנת חברים'));
-    el.innerHTML = `
-      <div class="doc-bar">
-        <button class="icon-btn" type="button" data-invite-close aria-label="${t('סגירה')}">${icon('back', 22)}</button>
-        <span>${t('הזמנת חברים')}</span>
-      </div>
-      <div class="invite-body"></div>`;
-    el.addEventListener('click', (e) => {
-      if (e.target.closest('[data-invite-close]')) return this.#closeInvite();
-      const btn = e.target.closest('[data-action^="invite-"]');
-      if (btn) this.#onInvite(btn);
-    });
-    document.body.appendChild(el);
-    this.invitePage = el;
-    this.#renderInvite();
-  }
-
-  #closeInvite() {
-    this.invitePage?.remove();
-    this.invitePage = null;
-  }
-
-  #renderInvite() {
-    const body = this.invitePage?.querySelector('.invite-body');
-    if (!body) return;
-    const typed = body.querySelector('#invite-code-input')?.value;
-    const top = body.scrollTop;
-    body.innerHTML = `
-      <div class="invite-hero">
-        <span class="invite-hero-icon" aria-hidden="true">🎁</span>
-        <h1>${t('הזמינו חברים וקבלו פרסים')}</h1>
-        <p>${t('על כל {n} חברים שנרשמים עם הקוד שלך מקבלים פרס', { n: INVITES_PER_PRIZE })}</p>
-      </div>
-      ${this.#inviteHtml()}`;
-    const input = body.querySelector('#invite-code-input');
-    if (input && typed) input.value = typed;
-    body.scrollTop = top;
-  }
-
-  #inviteHtml() {
-    if (!accountInfo()?.linked) return '';
-    const code = myReferralCode();
-    const { count, prizes, inGoal, toNext } = referralProgress();
-    if (!code) ensureMyCode().then(() => this.#renderInvite()).catch(() => {});
-    refreshReferrals();
-    const nextPrize = PRIZES[prizes];
-    const next = nextPrize ? t('הפרס הבא: {prize}', { prize: t(nextPrize.title) }) : t('פתחת את כל הפרסים – תודה ענקית! 🏆');
-    const brand = chosenBrand();
-    const dot = chosenDot();
-    const icons = prizeUnlocked(5) ? (appIconSupported()
-      ? `<div class="invite-perk is-block"><span>${t('אייקון האפליקציה')}</span><span class="invite-icons">${APP_ICONS.map((x) => `<button type="button" class="invite-icon${currentAppIcon() === x.id ? ' is-on' : ''}" data-action="invite-icon" data-value="${x.id}" aria-label="${appIconLabel(x.id)}"><img src="icons/app/${x.id}.png" alt="" width="56" height="56"></button>`).join('')}</span></div>`
-      : `<p class="set-note">${t('החלפת האייקון זמינה באפליקציית האנדרואיד')}</p>`) : '';
-    const perks = icons + `${prizeUnlocked(1) ? `<div class="invite-perk"><span>${t('צבע מותג')}</span><span class="invite-swatches">${BRAND_COLORS.map((c) => `<button type="button" class="invite-swatch${brand === c.id ? ' is-on' : ''}" style="background:${c.main}" data-action="invite-brand" data-value="${c.id}" aria-label="${c.id}"></button>`).join('')}</span></div>` : ''}${prizeUnlocked(3) ? `<div class="invite-perk"><span>${t('צבע הנקודה שלי')}</span><span class="invite-swatches">${DOT_COLORS.map((c) => `<button type="button" class="invite-swatch${dot === c ? ' is-on' : ''}" style="background:${c}" data-action="invite-dot" data-value="${c}" aria-label="${c}"></button>`).join('')}</span></div>` : ''}`;
-    const redeemed = localStorage.getItem('walkie:refRedeemed');
-    return `
-      <section class="set-group invite-card">
-        <div class="set-block">
-          <div class="invite-meter" role="progressbar" aria-valuemin="0" aria-valuemax="${INVITES_PER_PRIZE}" aria-valuenow="${inGoal}">
-            <span style="width:${(inGoal / INVITES_PER_PRIZE) * 100}%"></span>
-          </div>
-          <div class="invite-stats">
-            <span><b>${count}</b> ${t('חברים הצטרפו')}</span>
-            <span>${t('עוד {n} לפרס הבא', { n: toNext })}</span>
-          </div>
-          <ul class="invite-prizes">
-            ${PRIZES.map((p, i) => `<li class="${prizeUnlocked(i) ? 'is-won' : ''}"><span>${p.icon} ${t(p.title)}</span><small>${t('{n} חברים', { n: (i + 1) * INVITES_PER_PRIZE })}${p.kind === 'manual' ? ' · ' + t('נשלח אליך') : i === 0 && prizeUnlocked(0) ? ' · ' + (adFreeDaysLeft() ? t('נשארו {n} ימים', { n: adFreeDaysLeft() }) : t('הסתיים')) : ''}</small></li>`).join('')}
-          </ul>
-          ${perks}
-          <p class="set-note">${next}</p>
-          <div class="invite-code">${code ? `<span>${t('הקוד שלך')}</span><strong dir="ltr">${code}</strong>` : t('טוענים את הקוד שלך…')}</div>
-          <div class="invite-actions">
-            <button class="btn" type="button" data-action="invite-whatsapp">${t('שליחה בוואטסאפ')}</button>
-            <button class="btn-secondary" type="button" data-action="invite-copy">${t('העתקת קישור')}</button>
-          </div>
-          ${redeemed ? '' : `
-          <div class="invite-redeem">
-            <input id="invite-code-input" class="invite-input" dir="ltr" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="${t('יש לך קוד מחבר?')}">
-            <button class="btn-secondary" type="button" data-action="invite-redeem">${t('אישור')}</button>
-          </div>`}
-        </div>
-      </section>`;
-  }
-
   #accountHtml() {
     const a = accountInfo();
     const G = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
@@ -277,7 +117,7 @@ export class SettingsView {
           <h2 class="set-title">${t('החשבון שלי')}</h2>
           <div class="account-row">
             ${a.photo ? `<img src="${escapeHtml(a.photo)}" alt="" referrerpolicy="no-referrer">` : `<span class="account-avatar">${initial}</span>`}
-            <span class="account-text"><strong>${escapeHtml(a.name || a.email)}${hasAmbassadorBadge() ? ' 🏅' : ''}</strong><small>${escapeHtml(a.email)} · ${t('מועדפים והגדרות מסונכרנים')}</small></span>
+            <span class="account-text"><strong>${escapeHtml(a.name || a.email)}</strong><small>${escapeHtml(a.email)} · ${t('מועדפים והגדרות מסונכרנים')}</small></span>
           </div>
           <button class="set-row set-button" type="button" data-action="google-signout">
             <span class="set-icon">↩️</span>
@@ -422,7 +262,6 @@ export class SettingsView {
 
     this.body.innerHTML = `
       ${this.#accountHtml()}
-      ${this.#inviteBannerHtml()}
       ${this.#favoritesHtml()}
 
       <section class="set-group">

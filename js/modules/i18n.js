@@ -7,10 +7,6 @@
 // השפה נקבעת עוד לפני טעינת הקוד (סקריפט קטן ב-index.html, עברית, אלא אם נבחרה שפה אחרת בהגדרות),
 // כדי שהכיוון (RTL/LTR) יהיה נכון מהפריים הראשון. החלפת שפה = טעינה מחדש של האפליקציה.
 
-import { EN } from './i18n-en.js?v=1.10.0-mvsf7kai';
-import { RU } from './i18n-ru.js?v=1.10.0-mvsf7kai';
-import { AM } from './i18n-am.js?v=1.10.0-mvsf7kai';
-
 export const SUPPORTED_LANGS = ['he', 'en', 'ru', 'am'];
 export const LANG = SUPPORTED_LANGS.includes(document.documentElement.lang) ? document.documentElement.lang : 'he';
 export const IS_EN = LANG === 'en';
@@ -18,7 +14,10 @@ export const IS_EN = LANG === 'en';
 export const IS_FOREIGN = LANG !== 'he';
 
 const LOCALES = { he: 'he-IL', en: 'en-GB', ru: 'ru-RU', am: 'am-ET' };
-const DICT = LANG === 'ru' ? RU : LANG === 'am' ? AM : EN;
+
+// המילונים נטענים רק לשפה שנבחרה: בעברית (ברירת המחדל) אין צורך באף אחד מהם, וזה חוסך ~150KB בכל פתיחה
+const EN = IS_FOREIGN ? (await import('./i18n-en.js?v=1.10.0-mvu1kw0g')).EN : {};
+const DICT = LANG === 'ru' ? (await import('./i18n-ru.js?v=1.10.0-mvu1kw0g')).RU : LANG === 'am' ? (await import('./i18n-am.js?v=1.10.0-mvu1kw0g')).AM : EN;
 
 /** לתאריכים ושעות (toLocaleTimeString וכו') */
 export const LOCALE = LOCALES[LANG];

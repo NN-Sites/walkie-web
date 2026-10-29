@@ -2,12 +2,12 @@
 // בפתיחה: מסך "ברוכים הבאים" עם התחברות עם Google או "המשך כאורח". אורח משתמש בכל מה שרץ במכשיר (מסלולים, ניווט, זמני הגעה, מועדפים),
 // ורק פיצ'רים שצריכים חשבון בשרת (שיתוף נסיעה בלייב, דיווחים, התראות על קווים שמורים) מבקשים להתחבר.
 
-import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.10.0-mvsf7kai';
-import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.10.0-mvsf7kai';
-import { setFavoritesGuard } from './favorites.js?v=1.10.0-mvsf7kai';
-import { showToast, escapeHtml } from './ui.js?v=1.10.0-mvsf7kai';
-import { t } from './i18n.js?v=1.10.0-mvsf7kai';
-import { track, trackOnce } from './analytics.js?v=1.10.0-mvsf7kai';
+import { accountInfo, onAccountChange, signInWithGoogle, accountErrorMessage } from './account.js?v=1.10.0-mvu1kw0g';
+import { isFirebaseConfigured, ensureSignedIn, getFirebase } from '../firebase-config.js?v=1.10.0-mvu1kw0g';
+import { setFavoritesGuard } from './favorites.js?v=1.10.0-mvu1kw0g';
+import { showToast, escapeHtml } from './ui.js?v=1.10.0-mvu1kw0g';
+import { t } from './i18n.js?v=1.10.0-mvu1kw0g';
+import { track, trackOnce } from './analytics.js?v=1.10.0-mvu1kw0g';
 
 const FLAG = 'walkie:google';   // מחובר עם Google במכשיר הזה (ידוע מיד בפתיחה, לפני ש-Firebase נטען)
 const GUEST_FLAG = 'walkie:guest'; // בחר להמשיך כאורח במכשיר הזה
@@ -84,6 +84,8 @@ export function requireSignIn(action, onAllowed = null, { guestOk = false } = {}
 export async function showWelcomeIfNeeded() {
   if (gateOff()) return;
   if (readGuest() && !readFlag()) return;
+  // מחובר במכשיר הזה (הדגל נשמר): לא מחכים ל-Firebase בפתיחה. אם בפועל התנתקו, onAccountChange יחזיר את מסך הכניסה
+  if (readFlag()) return;
   // מחכים שמצב ההתחברות האמיתי ייטען מהמכשיר, כדי שמשתמש מחובר לא יראה את מסך הכניסה בפתיחה
   try {
     const { auth } = await getFirebase();

@@ -36,19 +36,19 @@
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
   <!-- Leaflet והפונט ארוזים עם האפליקציה: המפה עולה גם כשהרשת איטית, ובלי בקשות ל-CDN -->
-  <link rel="stylesheet" href="vendor/heebo/heebo.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/style.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/navigation.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/transit.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/tabs.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/ads.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/announce.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/motion.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/community.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/theme.css?v=1.10.0-mvsf7kai">
-  <link rel="stylesheet" href="css/polish.css?v=1.10.0-mvsf7kai">
+  <link rel="stylesheet" href="vendor/heebo/heebo.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/style.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/navigation.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/transit.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/tabs.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/ads.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/announce.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/motion.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/community.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/theme.css?v=1.10.0-mvu1kw0g">
+  <link rel="stylesheet" href="css/polish.css?v=1.10.0-mvu1kw0g">
   <!-- אנימציית פתיחה (~1.5 שנ'): הלוגו מצטייר, ואז עיגול נפתח מהלוגו אל האפליקציה.
        בתוך ה-HTML כדי שתופיע מהפריים הראשון, בהמשך ישיר למסך הפתיחה של אנדרואיד (אותו צבע).
        כל האנימציות כאן הן transform/opacity בלבד – רצות על ה-GPU (compositor), ולכן נשארות חלקות
@@ -134,6 +134,12 @@
     @keyframes intro-hide { to { opacity: 0; } }
     /* --intro-k: כמה להגדיל כדי שהחור יגיע לפינות המסך (מחושב בסקריפט לפי גודל המסך) */
     @keyframes intro-open { to { transform: scale(var(--intro-k, 12)); } }
+    /* פתיחה חוזרת (המשתמש כבר ראה את האנימציה): גרסה קצרה של ~0.4 שנ' – רק פתיחת העיגול */
+    .intro.is-quick .intro-wipe, .intro.is-quick .intro-wipe > svg { animation: none; transform: none; }
+    .intro.is-quick .intro-dot { animation: none; transform: scale(1); }
+    .intro.is-quick .intro-logo { animation: intro-away 0.22s cubic-bezier(0.55, 0, 1, 0.45) 0.04s forwards; }
+    .intro.is-quick .intro-plug { animation-delay: 0.04s; }
+    .intro.is-quick .intro-ring { animation-duration: 0.4s; animation-delay: 0.04s; }
     @media (prefers-reduced-motion: reduce) {
       .intro-ring, .intro-plug, .intro-logo, .intro-wipe, .intro-wipe > svg, .intro-dot { animation: none; transform: none; }
       .intro { background: #0d9488; animation: intro-hide 0.3s ease 0.4s forwards; }
@@ -176,6 +182,11 @@
       var half = Math.ceil(halfDiag) + 4;
       ring.style.width = ring.style.height = (half * 2) + 'px';
       ring.style.margin = (-half) + 'px 0 0 ' + (-half) + 'px';
+      // האנימציה המלאה רק בפתיחה הראשונה; אחר כך גרסה קצרה (הדגל נשמר במכשיר)
+      try {
+        if (localStorage.getItem('walkie:introSeen') === '1') el.classList.add('is-quick');
+        else localStorage.setItem('walkie:introSeen', '1');
+      } catch (e) {}
       var finished = false;
       var done = function () {
         if (finished) return;
@@ -378,10 +389,10 @@
     <div id="search-results" class="search-results"></div>
   </div>
 
-  <script src="js/runtime-config.js?v=1.10.0-mvsf7kai"></script>
-  <script src="vendor/leaflet/leaflet.js?v=1.10.0-mvsf7kai"></script>
-  <script src="vendor/maplibre/maplibre-gl.js?v=1.10.0-mvsf7kai"></script>
-  <script src="vendor/maplibre/leaflet-maplibre-gl.js?v=1.10.0-mvsf7kai"></script>
-  <script type="module" src="js/app.js?v=1.10.0-mvsf7kai"></script>
+  <script src="js/runtime-config.js?v=1.10.0-mvu1kw0g"></script>
+  <script src="vendor/leaflet/leaflet.js?v=1.10.0-mvu1kw0g"></script>
+  <script src="vendor/maplibre/maplibre-gl.js?v=1.10.0-mvu1kw0g"></script>
+  <script src="vendor/maplibre/leaflet-maplibre-gl.js?v=1.10.0-mvu1kw0g"></script>
+  <script type="module" src="js/app.js?v=1.10.0-mvu1kw0g"></script>
 </body>
 </html>

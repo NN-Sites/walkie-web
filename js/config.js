@@ -25,6 +25,7 @@ export const API_ARRIVALS_TIMEOUT_MS = 10000;
 export const STOP_SEARCH_RADIUS_M = 900;   // רדיוס סביב מרכז תא הרשת
 export const STOP_CELL_DEG = 0.005;        // גודל תא קאש (~550 מ')
 export const STOP_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+export const STOP_CACHE_STALE_MS = 14 * 24 * 60 * 60 * 1000; // תחנות כמעט לא משתנות: מציגים מיד את הישנות ומרעננים ברקע
 export const REFETCH_DISTANCE_M = 350;     // טעינה מחדש רק אחרי תזוזה משמעותית
 export const NEARBY_LIST_SIZE = 6;
 export const MAX_STOPS = 120;
