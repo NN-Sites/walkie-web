@@ -1,5 +1,5 @@
 // חנות ההטבות: כל הטבה נפתחת בצפייה בפרסומת ותקפה לזמן קצוב (נשמר במכשיר).
-// ההטבות: בלי באנרים, צבע נקודה ומפה, תג תומך, מכסת מועדפים, היסטוריית נסיעות, לוגו, שם בתודות.
+// ההטבות: בלי באנרים, צבע נקודה ומפה, תג תומך, מכסת מועדפים, היסטוריית נסיעות, לוגו.
 
 const KEY = 'walkie:perks';
 const PREFS_KEY = 'walkie:perkPrefs';
@@ -16,8 +16,7 @@ export const PERKS = {
   badge: { icon: '💚', title: 'תג תומך Walkie', desc: 'תג ליד השם שלך בהגדרות ובתודות', duration: 'שבוע', ms: 7 * D },
   favs: { icon: '⭐', title: 'עד 10 מועדפים', desc: `במקום ${FREE_FAVS}: 10 מקומות, 10 תחנות ו-10 קווים שמורים`, duration: 'חודש', ms: 30 * D },
   history: { icon: '🕘', title: 'היסטוריית נסיעות', desc: 'כל ההליכות והנסיעות האחרונות שלך, עם סיכום', duration: 'שבוע', ms: 7 * D },
-  logo: { icon: '📱', title: 'החלפת לוגו האפליקציה', desc: '15 לוגואים לבחירה (באפליקציית האנדרואיד)', duration: 'לתמיד', ms: FOREVER },
-  thanks: { icon: '🙌', title: 'השם שלך בלשונית תודות', desc: 'השם שלך מופיע ברשימת התומכים של היום', duration: 'יום שלם', ms: D }
+  logo: { icon: '📱', title: 'החלפת לוגו האפליקציה', desc: '15 לוגואים לבחירה (באפליקציית האנדרואיד)', duration: 'לתמיד', ms: FOREVER }
 };
 
 export const DOT_COLORS = ['#2563eb', '#16a34a', '#e11d48', '#9333ea', '#f97316', '#0891b2', '#111827'];
@@ -71,7 +70,7 @@ export function leftText(ms) {
   return { key: '{n} דק\'', n: Math.max(1, Math.ceil(ms / 60000)) };
 }
 
-export const getPrefs = () => ({ dot: DOT_COLORS[0], map: 'none', name: '', icon: 'default', ...readJson(PREFS_KEY) });
+export const getPrefs = () => ({ dot: DOT_COLORS[0], map: 'none', icon: 'default', ...readJson(PREFS_KEY) });
 export function setPrefs(patch) {
   writeJson(PREFS_KEY, { ...getPrefs(), ...patch });
   applyPerks();

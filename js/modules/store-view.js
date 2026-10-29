@@ -1,46 +1,26 @@
 // חנות ההטבות: צפייה בפרסומת (rewarded) פותחת הטבה לזמן קצוב. ראו rewards.js.
 // נפתחת מההגדרות, מהבאנר, ומהודעת "הגעת למכסת המועדפים".
 
-import { t, LOCALE } from './i18n.js?v=1.10.0-mvu2228r';
-import { escapeHtml, showToast } from './ui.js?v=1.10.0-mvu2228r';
-import { icon } from './transit-ui.js?v=1.10.0-mvu2228r';
-import { celebrate } from './fx.js?v=1.10.0-mvu2228r';
-import { showRewardedAd } from './rewarded-ads.js?v=1.10.0-mvu2228r';
+import { t, LOCALE } from './i18n.js?v=1.10.0-mvu2khrx';
+import { escapeHtml, showToast } from './ui.js?v=1.10.0-mvu2khrx';
+import { icon } from './transit-ui.js?v=1.10.0-mvu2khrx';
+import { celebrate } from './fx.js?v=1.10.0-mvu2khrx';
+import { showRewardedAd } from './rewarded-ads.js?v=1.10.0-mvu2khrx';
 import {
   PERKS, DOT_COLORS, MAP_TINTS, FREE_FAVS, PERK_FAVS,
   perkActive, perkLeftMs, leftText, grantPerk, getPrefs, setPrefs, onPerksChange
-} from './rewards.js?v=1.10.0-mvu2228r';
-import { APP_ICONS, appIconSupported, currentAppIcon, setAppIcon, appIconLabel } from './app-icon.js?v=1.10.0-mvu2228r';
-import { accountInfo } from './account.js?v=1.10.0-mvu2228r';
-import { requireSignIn } from './auth-gate.js?v=1.10.0-mvu2228r';
-import { getFavorites } from './favorites.js?v=1.10.0-mvu2228r';
-import { getHistory, clearHistory, getStats, co2SavedKg } from './stats.js?v=1.10.0-mvu2228r';
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvu2228r';
-import { track } from './analytics.js?v=1.10.0-mvu2228r';
+} from './rewards.js?v=1.10.0-mvu2khrx';
+import { APP_ICONS, appIconSupported, currentAppIcon, setAppIcon, appIconLabel } from './app-icon.js?v=1.10.0-mvu2khrx';
+import { getFavorites } from './favorites.js?v=1.10.0-mvu2khrx';
+import { getHistory, clearHistory, getStats, co2SavedKg } from './stats.js?v=1.10.0-mvu2khrx';
+import { track } from './analytics.js?v=1.10.0-mvu2khrx';
 
-const ORDER = ['noAds', 'colors', 'favs', 'history', 'badge', 'thanks', 'logo'];
-const NAME_MAX = 24;
+const ORDER = ['noAds', 'colors', 'favs', 'history', 'badge', 'logo'];
 
 const leftLabel = (id) => {
   const lt = leftText(perkLeftMs(id));
   return lt ? t('נותרו {left}', { left: t(lt.key, { n: lt.n }) }) : t('פעיל לתמיד');
 };
-
-const firstName = () => String(accountInfo()?.name || '').trim().split(/\s+/)[0].slice(0, NAME_MAX);
-
-/** מפרסם את השם ברשימת התומכים של היום (supporters/{uid}); נמחק מהתצוגה אחרי שהזמן שבמסמך עובר */
-async function publishSupporter(name) {
-  if (!isFirebaseConfigured()) return false;
-  try {
-    const user = await ensureSignedIn();
-    const { firestore, modules } = await getFirebase();
-    const { doc, setDoc } = modules.firestore;
-    await setDoc(doc(firestore, 'supporters', user.uid), { name, until: Date.now() + PERKS.thanks.ms });
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export class StoreView {
   constructor() {
@@ -67,12 +47,8 @@ export class StoreView {
       </div>
       <div class="store-body"></div>`;
     el.addEventListener('click', (e) => this.#onClick(e));
-    el.addEventListener('input', (e) => {
-      if (e.target.id === 'store-name') this.nameDraft = e.target.value;
-    });
     document.body.appendChild(el);
     this.el = el;
-    this.nameDraft = undefined;
     this.render();
     if (focus) el.querySelector(`[data-perk-card="${focus}"]`)?.scrollIntoView({ block: 'center' });
   }
@@ -153,14 +129,6 @@ export class StoreView {
     if (id === 'history') {
       return `<button class="btn-secondary" type="button" data-store="history">${t('פתיחת ההיסטוריה')}</button>`;
     }
-    if (id === 'thanks') {
-      const value = this.nameDraft ?? (prefs.name || firstName());
-      return `
-        <div class="store-name">
-          <input id="store-name" maxlength="${NAME_MAX}" value="${escapeHtml(value)}" placeholder="${t('השם שיוצג')}" autocomplete="off">
-          <button class="btn-secondary" type="button" data-store="rename">${t('עדכון')}</button>
-        </div>`;
-    }
     if (id === 'logo') {
       if (!appIconSupported()) return '';
       return `<div class="store-icons">${APP_ICONS.map((x) => `
@@ -180,7 +148,6 @@ export class StoreView {
     if (store === 'dot') return setPrefs({ dot: value });
     if (store === 'map') return setPrefs({ map: value });
     if (store === 'history') return this.openHistory();
-    if (store === 'rename') return this.#publishName();
     if (store === 'icon') {
       try {
         await setAppIcon(value);
@@ -193,8 +160,6 @@ export class StoreView {
 
   async unlock(id, btn = null) {
     if (id === 'logo' && !appIconSupported()) return;
-    // השם בתודות דורש חשבון Google: מבקשים התחברות לפני שמבזבזים צפייה בפרסומת
-    if (id === 'thanks' && !requireSignIn(t('להופיע בתודות'), () => this.unlock(id))) return;
     if (btn) btn.disabled = true;
     const ok = await showRewardedAd();
     if (btn) btn.disabled = false;
@@ -206,23 +171,6 @@ export class StoreView {
     track(`feat.store_${id}`);
     celebrate(btn, 30);
     showToast(`${PERKS[id].icon} ${t('ההטבה נפתחה: {title}', { title: t(PERKS[id].title) })}`);
-    if (id === 'thanks') await this.#publishName(true);
-  }
-
-  async #publishName(silent = false) {
-    const name = String(this.nameDraft ?? (getPrefs().name || firstName())).trim().slice(0, NAME_MAX);
-    if (!name) {
-      showToast(t('כתבו שם להצגה'));
-      return;
-    }
-    setPrefs({ name });
-    this.nameDraft = undefined;
-    const ok = await publishSupporter(name);
-    if (ok) {
-      if (!silent) showToast(t('השם עודכן ברשימת התודות'));
-    } else {
-      showToast(t('לא הצלחנו לפרסם את השם כרגע. נסו שוב מאוחר יותר'));
-    }
   }
 
   // ---------- היסטוריית נסיעות ----------

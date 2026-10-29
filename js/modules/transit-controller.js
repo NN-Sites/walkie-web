@@ -1,19 +1,19 @@
 // זרימת תחבורה ציבורית: חיפוש מסלולים -> רשימה -> פירוט -> ליווי נסיעה -> הגעה.
 // מצבים: idle | loading | error | list | detail | trip | arrived
 
-import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.10.0-mvu2228r';
-import { RouteSimulator } from './navigation.js?v=1.10.0-mvu2228r';
-import { buildTripModel, TripSession } from './transit-trip.js?v=1.10.0-mvu2228r';
-import { focusPoint } from './map.js?v=1.10.0-mvu2228r';
-import { showToast } from './ui.js?v=1.10.0-mvu2228r';
-import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.10.0-mvu2228r';
-import { toggleLine } from './favorites.js?v=1.10.0-mvu2228r';
-import { onLineWatched } from './push.js?v=1.10.0-mvu2228r';
-import * as tpl from './transit-ui.js?v=1.10.0-mvu2228r';
-import { t } from './i18n.js?v=1.10.0-mvu2228r';
-import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.10.0-mvu2228r';
-import { toggleLeaveReminder, hasLeaveReminder, refreshLeaveReminder, clearLeaveReminder } from './leave-now.js?v=1.10.0-mvu2228r';
-import { notifyNow, NOTIFY_ID, cancelNotifications } from './notify.js?v=1.10.0-mvu2228r';
+import { fetchTransitPlan, fetchTransitLive } from './api.js?v=1.10.0-mvu2khrx';
+import { RouteSimulator } from './navigation.js?v=1.10.0-mvu2khrx';
+import { buildTripModel, TripSession } from './transit-trip.js?v=1.10.0-mvu2khrx';
+import { focusPoint } from './map.js?v=1.10.0-mvu2khrx';
+import { showToast } from './ui.js?v=1.10.0-mvu2khrx';
+import { vibrate, transitPrefsParams, getSettings } from './settings.js?v=1.10.0-mvu2khrx';
+import { toggleLine } from './favorites.js?v=1.10.0-mvu2khrx';
+import { onLineWatched } from './push.js?v=1.10.0-mvu2khrx';
+import * as tpl from './transit-ui.js?v=1.10.0-mvu2khrx';
+import { t } from './i18n.js?v=1.10.0-mvu2khrx';
+import { serviceStatus, serviceNotice } from './service-calendar.js?v=1.10.0-mvu2khrx';
+import { toggleLeaveReminder, hasLeaveReminder, refreshLeaveReminder, clearLeaveReminder } from './leave-now.js?v=1.10.0-mvu2khrx';
+import { notifyNow, NOTIFY_ID, cancelNotifications } from './notify.js?v=1.10.0-mvu2khrx';
 
 const LIST_REFRESH_MS = 30000;   // רענון "בעוד X דק'" ברשימה/פירוט
 const LIVE_REFRESH_MS = 20000;   // רענון זמן אמת בזמן נסיעה

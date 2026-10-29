@@ -4,12 +4,12 @@
 // ההתראה מתוזמנת במערכת (notify.js), ולכן מגיעה גם כשהאפליקציה סגורה או המסך נעול.
 // כשהאפליקציה פתוחה והזמן אמת משתנה (איחור / האצה) – מתזמנים מחדש.
 
-import { t } from './i18n.js?v=1.10.0-mvu2228r';
-import { showToast } from './ui.js?v=1.10.0-mvu2228r';
-import { vibrate } from './settings.js?v=1.10.0-mvu2228r';
-import { fmtTime } from './transit-ui.js?v=1.10.0-mvu2228r';
-import { trackFeature } from './analytics.js?v=1.10.0-mvu2228r';
-import { NOTIFY_ID, ensureNotifyPermission, scheduleNotification, cancelNotifications, notifySupported } from './notify.js?v=1.10.0-mvu2228r';
+import { t } from './i18n.js?v=1.10.0-mvu2khrx';
+import { showToast } from './ui.js?v=1.10.0-mvu2khrx';
+import { vibrate } from './settings.js?v=1.10.0-mvu2khrx';
+import { fmtTime } from './transit-ui.js?v=1.10.0-mvu2khrx';
+import { trackFeature } from './analytics.js?v=1.10.0-mvu2khrx';
+import { NOTIFY_ID, ensureNotifyPermission, scheduleNotification, cancelNotifications, notifySupported } from './notify.js?v=1.10.0-mvu2khrx';
 
 const BUFFER_MS = 60 * 1000;
 const RESCHEDULE_DIFF_MS = 30 * 1000;

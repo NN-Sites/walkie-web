@@ -3,8 +3,8 @@
 // כדי להציג מודעה מרשת פרסום, טוענים אותה אל this.root ב-render(). שאר הלוגיקה (מיקום, גובה,
 // הזזת הסרגל והלוח) כבר מוכנה. עד שיחובר ספק פרסום מוצג כאן טקסט זמני.
 
-import { t } from './i18n.js?v=1.10.0-mvu2228r';
-import { perkActive, onPerksChange } from './rewards.js?v=1.10.0-mvu2228r';
+import { t } from './i18n.js?v=1.10.0-mvu2khrx';
+import { perkActive, onPerksChange } from './rewards.js?v=1.10.0-mvu2khrx';
 
 export class AdBanner {
   constructor(root, { onResize }) {

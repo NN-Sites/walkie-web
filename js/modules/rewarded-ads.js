@@ -2,8 +2,8 @@
 // באפליקציה עם תוסף AdMob (Capacitor.Plugins.AdMob) מוצגת מודעה אמיתית; בכל מקום אחר (דפדפן, בנייה בלי התוסף)
 // מוצגת פרסומת הדגמה קצרה, כדי שכל זרימת החנות תעבוד כבר עכשיו.
 
-import { REWARDED_AD_UNIT } from '../config.js?v=1.10.0-mvu2228r';
-import { t } from './i18n.js?v=1.10.0-mvu2228r';
+import { REWARDED_AD_UNIT } from '../config.js?v=1.10.0-mvu2khrx';
+import { t } from './i18n.js?v=1.10.0-mvu2khrx';
 
 const DEMO_SECONDS = 5;
 let busy = false;

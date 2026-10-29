@@ -1,7 +1,7 @@
 // מועדפים: בית, מקום שני (עבודה / בית ספר), מקומות שמורים, תחנות וקווים מועדפים.
 // נשמר במכשיר (localStorage).
 
-import { favLimit } from './rewards.js?v=1.10.0-mvu2228r';
+import { favLimit } from './rewards.js?v=1.10.0-mvu2khrx';
 
 // שמירה דורשת חשבון Google (auth-gate.js מגדיר את הבדיקה). מחזיר false = הפעולה בוטלה.
 let saveGuard = () => true;

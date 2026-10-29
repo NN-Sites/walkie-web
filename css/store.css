@@ -150,9 +150,6 @@
   font-weight: 700;
   white-space: nowrap;
 }
-.thanks-supporters { padding: 16px; margin-bottom: 12px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); }
-.thanks-supporters .thanks-title { margin: 0 0 10px; font-size: 16px; }
-.supporter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- היסטוריית נסיעות ---------- */
 

@@ -1,7 +1,7 @@
 // התראות מקומיות (Capacitor Local Notifications): טיימר 90 דקות, "צאו עכשיו" ו"רדו בתחנה הבאה" כשהמסך נעול.
 // מתזמנים את ההתראה במערכת עצמה, כך שהיא מגיעה גם כשהאפליקציה ברקע. בדפדפן אין התראות מקומיות.
 
-import { t } from './i18n.js?v=1.10.0-mvu2228r';
+import { t } from './i18n.js?v=1.10.0-mvu2khrx';
 
 const CHANNEL = 'trip-alerts';
 

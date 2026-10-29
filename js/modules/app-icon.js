@@ -1,8 +1,8 @@
 // החלפת לוגו האפליקציה (הטבה בחנות). עובד רק באפליקציית האנדרואיד (activity-alias + AppIconPlugin.java).
 // התצוגות המקדימות נוצרות ב-scripts/app-icons.mjs אל icons/app/. להוספת לוגו: הסקריפט + alias ב-AndroidManifest.xml + ALIASES ב-AppIconPlugin.java + כאן.
 
-import { t } from './i18n.js?v=1.10.0-mvu2228r';
-import { getPrefs, setPrefs } from './rewards.js?v=1.10.0-mvu2228r';
+import { t } from './i18n.js?v=1.10.0-mvu2khrx';
+import { getPrefs, setPrefs } from './rewards.js?v=1.10.0-mvu2khrx';
 
 export const APP_ICONS = [
   { id: 'default', label: 'ברירת מחדל' },
