@@ -1,7 +1,7 @@
 // מצב לילה: לפי ההגדרה (בהיר / כהה / לפי המכשיר).
 // הערך הראשוני נקבע כבר ב-index.html (בלי הבהוב לבן בפתיחה). כאן – עדכון כשההגדרה או מצב המכשיר משתנים.
 
-import { getSettings, onSettingsChange } from './settings.js?v=1.10.0-mvu1kw0g';
+import { getSettings, onSettingsChange } from './settings.js?v=1.10.0-mvu2228r';
 
 const media = window.matchMedia('(prefers-color-scheme: dark)');
 const COLORS = { light: '#ffffff', dark: '#141b25' };

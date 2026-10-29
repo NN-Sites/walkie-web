@@ -1,17 +1,18 @@
 // מסך "הגדרות": העדפות מסלול, הליכה, נגישות, תצוגה, ופרטיות.
 
-import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvu1kw0g';
-import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvu1kw0g';
-import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvu1kw0g';
-import { showToast, escapeHtml } from './ui.js?v=1.10.0-mvu1kw0g';
-import { APP_VERSION } from '../config.js?v=1.10.0-mvu1kw0g';
-import { sessionStatus } from './session.js?v=1.10.0-mvu1kw0g';
-import { celebrate, stagger } from './fx.js?v=1.10.0-mvu1kw0g';
-import { accountInfo, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvu1kw0g';
+import { getSettings, updateSettings, clearLocalData, onSettingsChange } from './settings.js?v=1.10.0-mvu2228r';
+import { t, LANG, setLanguage } from './i18n.js?v=1.10.0-mvu2228r';
+import { modeIcon, icon } from './transit-ui.js?v=1.10.0-mvu2228r';
+import { showToast, escapeHtml } from './ui.js?v=1.10.0-mvu2228r';
+import { APP_VERSION } from '../config.js?v=1.10.0-mvu2228r';
+import { sessionStatus } from './session.js?v=1.10.0-mvu2228r';
+import { celebrate, stagger } from './fx.js?v=1.10.0-mvu2228r';
+import { perkActive, onPerksChange } from './rewards.js?v=1.10.0-mvu2228r';
+import { accountInfo, onAccountChange, signInWithGoogle, signOutGoogle, deleteAccount, accountErrorMessage } from './account.js?v=1.10.0-mvu2228r';
 import {
   getFavorites, onFavoritesChange, setHome, setSecond, setSecondType, secondLabel,
   removePlace, toggleStop, toggleLine, SECOND_LABELS
-} from './favorites.js?v=1.10.0-mvu1kw0g';
+} from './favorites.js?v=1.10.0-mvu2228r';
 
 const WALK_OPTIONS = [5, 10, 15, 20, 30];
 const SPEEDS = [
@@ -62,6 +63,8 @@ export class SettingsView {
         this.openPrivacy();
       } else if (btn.dataset.action === 'delete-account') {
         this.#deleteAccount(btn);
+      } else if (btn.dataset.action === 'open-store') {
+        window.dispatchEvent(new CustomEvent('walkie:open-store'));
       } else if (btn.dataset.action === 'google-signin') {
         this.#signIn(btn);
       } else if (btn.dataset.action === 'google-signout') {
@@ -69,6 +72,9 @@ export class SettingsView {
       }
     });
 
+    onPerksChange(() => {
+      if (!this.root.hidden) this.render();
+    });
     onSettingsChange(() => this.render());
     onAccountChange(() => {
       if (!this.root.hidden) this.render();
@@ -107,6 +113,19 @@ export class SettingsView {
     }
   }
 
+  /** כרטיס בולט בהגדרות שפותח את חנות ההטבות */
+  #storeBannerHtml() {
+    return `
+      <button class="store-banner" type="button" data-action="open-store">
+        <span class="store-banner-icon" aria-hidden="true">🎁</span>
+        <span class="store-banner-text">
+          <strong>${t('חנות הטבות')}</strong>
+          <small>${t('צפו בפרסומת וקבלו צבעים, לוגו, מועדפים ועוד')}</small>
+        </span>
+        <span class="store-banner-go" aria-hidden="true">${icon('back', 22)}</span>
+      </button>`;
+  }
+
   #accountHtml() {
     const a = accountInfo();
     const G = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
@@ -117,7 +136,7 @@ export class SettingsView {
           <h2 class="set-title">${t('החשבון שלי')}</h2>
           <div class="account-row">
             ${a.photo ? `<img src="${escapeHtml(a.photo)}" alt="" referrerpolicy="no-referrer">` : `<span class="account-avatar">${initial}</span>`}
-            <span class="account-text"><strong>${escapeHtml(a.name || a.email)}</strong><small>${escapeHtml(a.email)} · ${t('מועדפים והגדרות מסונכרנים')}</small></span>
+            <span class="account-text"><strong>${escapeHtml(a.name || a.email)}${perkActive('badge') ? ' <span class="supporter-badge">💚 ' + t('תומך Walkie') + '</span>' : ''}</strong><small>${escapeHtml(a.email)} · ${t('מועדפים והגדרות מסונכרנים')}</small></span>
           </div>
           <button class="set-row set-button" type="button" data-action="google-signout">
             <span class="set-icon">↩️</span>
@@ -262,6 +281,7 @@ export class SettingsView {
 
     this.body.innerHTML = `
       ${this.#accountHtml()}
+      ${this.#storeBannerHtml()}
       ${this.#favoritesHtml()}
 
       <section class="set-group">

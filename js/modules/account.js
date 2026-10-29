@@ -5,11 +5,11 @@
 // באנדרואיד Google חוסמת חלון התחברות בתוך WebView, לכן משתמשים בתוסף הנייטיב
 // @capacitor-firebase/authentication (skipNativeAuth) ומעבירים את ה-idToken ל-SDK של Firebase.
 
-import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvu1kw0g';
-import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.10.0-mvu1kw0g';
-import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.10.0-mvu1kw0g';
-import { t } from './i18n.js?v=1.10.0-mvu1kw0g';
-import { disablePushForThisDevice, deletePushData } from './push.js?v=1.10.0-mvu1kw0g';
+import { getFirebase, isFirebaseConfigured, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvu2228r';
+import { exportFavorites, mergeFavorites, onFavoritesChange } from './favorites.js?v=1.10.0-mvu2228r';
+import { getSettings, updateSettings, onSettingsChange } from './settings.js?v=1.10.0-mvu2228r';
+import { t } from './i18n.js?v=1.10.0-mvu2228r';
+import { disablePushForThisDevice, deletePushData } from './push.js?v=1.10.0-mvu2228r';
 
 const listeners = new Set();
 let ref = null;          // users/{uid}
@@ -204,6 +204,7 @@ export async function deleteAccount() {
     await Promise.all(thanks.docs.map((d) => quiet(f.deleteDoc(f.doc(firestore, 'thanksHearts', `${d.id}_${uid}`)))));
   } catch { /* אין לבבות למחוק */ }
   await quiet(f.deleteDoc(f.doc(firestore, 'linePresence', uid)));
+  await quiet(f.deleteDoc(f.doc(firestore, 'supporters', uid)));
   await quiet(deletePushData());
   await f.deleteDoc(f.doc(firestore, 'users', uid));
   await a.deleteUser(user);

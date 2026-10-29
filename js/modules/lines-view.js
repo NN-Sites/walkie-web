@@ -1,19 +1,19 @@
 // לשונית "קווים": קווים באזור, חיפוש קו (מספר או יעד), ופרטי קו עם כל התחנות והמסלול על המפה.
 
-import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.10.0-mvu1kw0g';
-import { escapeHtml } from './ui.js?v=1.10.0-mvu1kw0g';
-import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.10.0-mvu1kw0g';
-import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.10.0-mvu1kw0g';
-import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.10.0-mvu1kw0g';
-import { onLineWatched } from './push.js?v=1.10.0-mvu1kw0g';
-import { starButton } from './favorites-ui.js?v=1.10.0-mvu1kw0g';
-import { showToast } from './ui.js?v=1.10.0-mvu1kw0g';
-import { getSettings } from './settings.js?v=1.10.0-mvu1kw0g';
-import { t, LANG } from './i18n.js?v=1.10.0-mvu1kw0g';
-import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml, setBusCandidate, fetchBusFixes } from './community.js?v=1.10.0-mvu1kw0g';
-import { fuseBusFixes } from './bus-inference.js?v=1.10.0-mvu1kw0g';
-import { openReportSheet } from './community-ui.js?v=1.10.0-mvu1kw0g';
-import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.10.0-mvu1kw0g';
+import { fetchLinesNearby, fetchLinesSearch, fetchLineDetails } from './api.js?v=1.10.0-mvu2228r';
+import { escapeHtml } from './ui.js?v=1.10.0-mvu2228r';
+import { formatDistance, distanceMeters, walkMinutes } from './geo.js?v=1.10.0-mvu2228r';
+import { fmtTime, minutesUntil, lineBadge, legColor, icon } from './transit-ui.js?v=1.10.0-mvu2228r';
+import { toggleLine, isLineSaved, getFavorites } from './favorites.js?v=1.10.0-mvu2228r';
+import { onLineWatched } from './push.js?v=1.10.0-mvu2228r';
+import { starButton } from './favorites-ui.js?v=1.10.0-mvu2228r';
+import { showToast } from './ui.js?v=1.10.0-mvu2228r';
+import { getSettings } from './settings.js?v=1.10.0-mvu2228r';
+import { t, LANG } from './i18n.js?v=1.10.0-mvu2228r';
+import { lineKeyOf, fetchLineUsers, setPresence, lineUsersHtml, setBusCandidate, fetchBusFixes } from './community.js?v=1.10.0-mvu2228r';
+import { fuseBusFixes } from './bus-inference.js?v=1.10.0-mvu2228r';
+import { openReportSheet } from './community-ui.js?v=1.10.0-mvu2228r';
+import { track, trackName, trackFeature, trackFailedSearch } from './analytics.js?v=1.10.0-mvu2228r';
 
 const SEARCH_DEBOUNCE_MS = 400;
 const CROWD_REFRESH_MS = 10000;    // מיקומי נוסעים על האוטובוס (מדויקים מ-SIRI, מתעדכנים כל כמה שניות)

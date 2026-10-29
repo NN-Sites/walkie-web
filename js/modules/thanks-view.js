@@ -1,8 +1,8 @@
 // לשונית "תודות": רשימת תודות (כותרת, הודעה, תמונה, קישור ולב) שהמנהל מנהל בדף הניהול (אוסף thanks).
 
-import { t } from './i18n.js?v=1.10.0-mvu1kw0g';
-import { escapeHtml, showToast } from './ui.js?v=1.10.0-mvu1kw0g';
-import { isFirebaseConfigured, getFirebase } from '../firebase-config.js?v=1.10.0-mvu1kw0g';
+import { t } from './i18n.js?v=1.10.0-mvu2228r';
+import { escapeHtml, showToast } from './ui.js?v=1.10.0-mvu2228r';
+import { isFirebaseConfigured, getFirebase } from '../firebase-config.js?v=1.10.0-mvu2228r';
 
 const CACHE_KEY = 'walkie:thanks-list';
 
@@ -24,6 +24,7 @@ export class ThanksView {
     this.root = root;
     this.body = root.querySelector('#thanks-body');
     this.items = readCache();
+    this.supporters = []; // תומכי היום (הטבה בחנות): { name, until }
     this.hearts = {}; // id → { count, mine }
     this.busy = new Set();
     root.addEventListener('click', (e) => {
@@ -55,6 +56,7 @@ export class ThanksView {
       } catch { /* אחסון מלא / חסום */ }
       if (!this.root.hidden) this.render();
 
+      this.#loadSupporters(firestore, modules.firestore);
       const uid = auth.currentUser?.uid;
       await Promise.all(this.items.map(async (x) => {
         const [total, mine] = await Promise.all([
@@ -67,6 +69,26 @@ export class ThanksView {
     } catch {
       /* אין רשת: נשארים עם מה שנשמר */
     }
+  }
+
+  /** רשימת "תומכי Walkie היום": מסמכים שהזמן שלהם (until) עוד לא עבר */
+  async #loadSupporters(firestore, f) {
+    try {
+      const snap = await f.getDocs(f.query(f.collection(firestore, 'supporters'), f.where('until', '>', Date.now()), f.limit(60)));
+      this.supporters = snap.docs.map((d) => d.data()).filter((x) => typeof x.name === 'string' && x.name.trim());
+      if (!this.root.hidden) this.render();
+    } catch {
+      /* אין הרשאה / רשת: בלי הרשימה */
+    }
+  }
+
+  #supportersHtml() {
+    if (!this.supporters.length) return '';
+    return `
+      <section class="thanks-supporters">
+        <h2 class="thanks-title">${t('תומכי Walkie היום')} 💚</h2>
+        <div class="supporter-chips">${this.supporters.map((s) => `<span class="supporter-badge">${escapeHtml(s.name.slice(0, 24))}</span>`).join('')}</div>
+      </section>`;
   }
 
   async #toggleHeart(id) {
@@ -95,15 +117,16 @@ export class ThanksView {
   }
 
   render() {
+    const supporters = this.#supportersHtml();
     if (!this.items.length) {
-      this.body.innerHTML = `
+      this.body.innerHTML = `${supporters}
         <div class="thanks-empty">
           <span class="thanks-empty-ic">💚</span>
           <p>${t('עוד אין כאן תודות. חזרו לכאן בקרוב!')}</p>
         </div>`;
       return;
     }
-    this.body.innerHTML = this.items.map((d) => this.#cardHtml(d)).join('');
+    this.body.innerHTML = supporters + this.items.map((d) => this.#cardHtml(d)).join('');
   }
 
   #cardHtml(d) {

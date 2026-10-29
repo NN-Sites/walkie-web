@@ -1,11 +1,11 @@
 // קהילה: כמה משתמשי Walkie על כל קו, דיווחים על אוטובוסים, חסימות, הודעות מהמנהל וסקרים.
 // כל הפונקציות שקטות: אם השרת לא זמין האפליקציה ממשיכה לעבוד כרגיל.
 
-import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvu1kw0g';
-import { track, safeKey } from './analytics.js?v=1.10.0-mvu1kw0g';
-import { t } from './i18n.js?v=1.10.0-mvu1kw0g';
-import { getSettings } from './settings.js?v=1.10.0-mvu1kw0g';
-import { BusRideDetector } from './bus-inference.js?v=1.10.0-mvu1kw0g';
+import { isFirebaseConfigured, getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvu2228r';
+import { track, safeKey } from './analytics.js?v=1.10.0-mvu2228r';
+import { t } from './i18n.js?v=1.10.0-mvu2228r';
+import { getSettings } from './settings.js?v=1.10.0-mvu2228r';
+import { BusRideDetector } from './bus-inference.js?v=1.10.0-mvu2228r';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -26,7 +26,7 @@ export function lineUsersHtml(n) {
 }
 
 
-export { lineKeyOf } from './keys.js?v=1.10.0-mvu1kw0g';
+export { lineKeyOf } from './keys.js?v=1.10.0-mvu2228r';
 
 const presenceSources = { view: null, trip: null };
 let presenceTimer = null;
@@ -104,7 +104,7 @@ export async function fetchLineUsers(lineKey) {
 
 // ---------- דיווחים ----------
 
-export { REPORT_TYPES } from './report-types.js?v=1.10.0-mvu1kw0g';
+export { REPORT_TYPES } from './report-types.js?v=1.10.0-mvu2228r';
 
 const REPORT_COOLDOWN_MS = 60000;
 let lastReportAt = 0;

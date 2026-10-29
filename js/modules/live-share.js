@@ -6,11 +6,11 @@
 // השיתוף נגמר כשהנסיעה נגמרת או כשלוחצים "הפסק שיתוף": המיקום, המסלול והיעד נמחקים מהמסמך והדף מציג "השיתוף הסתיים".
 // אם האפליקציה נסגרת בלי לעצור, הדף מציג "השיתוף הסתיים" אחרי 15 דקות בלי עדכון, אבל הנתונים האחרונים נשארים במסמך.
 
-import { OPEN_BASE } from '../config.js?v=1.10.0-mvu1kw0g';
-import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvu1kw0g';
-import { openWhatsApp } from './share.js?v=1.10.0-mvu1kw0g';
-import { track } from './analytics.js?v=1.10.0-mvu1kw0g';
-import { t } from './i18n.js?v=1.10.0-mvu1kw0g';
+import { OPEN_BASE } from '../config.js?v=1.10.0-mvu2228r';
+import { getFirebase, ensureSignedIn } from '../firebase-config.js?v=1.10.0-mvu2228r';
+import { openWhatsApp } from './share.js?v=1.10.0-mvu2228r';
+import { track } from './analytics.js?v=1.10.0-mvu2228r';
+import { t } from './i18n.js?v=1.10.0-mvu2228r';
 
 const UPDATE_MS = 8000;
 const MAX_PATH_POINTS = 160;

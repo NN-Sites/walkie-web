@@ -1,12 +1,22 @@
 // מועדפים: בית, מקום שני (עבודה / בית ספר), מקומות שמורים, תחנות וקווים מועדפים.
 // נשמר במכשיר (localStorage).
 
+import { favLimit } from './rewards.js?v=1.10.0-mvu2228r';
+
 // שמירה דורשת חשבון Google (auth-gate.js מגדיר את הבדיקה). מחזיר false = הפעולה בוטלה.
 let saveGuard = () => true;
 export function setFavoritesGuard(fn) {
   saveGuard = fn;
 }
-const canAdd = () => saveGuard();
+// מכסה: FREE_FAVS מכל סוג, ו-10 בזמן שההטבה "עד 10 מועדפים" פעילה (rewards.js). בהגעה למכסה נפתחת החנות
+function canAdd(kind, count) {
+  if (!saveGuard()) return false;
+  if (count >= favLimit()) {
+    window.dispatchEvent(new CustomEvent('walkie:fav-limit'));
+    return false;
+  }
+  return true;
+}
 
 const KEY = 'walkie:favorites';
 

@@ -16,8 +16,8 @@ export const IS_FOREIGN = LANG !== 'he';
 const LOCALES = { he: 'he-IL', en: 'en-GB', ru: 'ru-RU', am: 'am-ET' };
 
 // המילונים נטענים רק לשפה שנבחרה: בעברית (ברירת המחדל) אין צורך באף אחד מהם, וזה חוסך ~150KB בכל פתיחה
-const EN = IS_FOREIGN ? (await import('./i18n-en.js?v=1.10.0-mvu1kw0g')).EN : {};
-const DICT = LANG === 'ru' ? (await import('./i18n-ru.js?v=1.10.0-mvu1kw0g')).RU : LANG === 'am' ? (await import('./i18n-am.js?v=1.10.0-mvu1kw0g')).AM : EN;
+const EN = IS_FOREIGN ? (await import('./i18n-en.js?v=1.10.0-mvu2228r')).EN : {};
+const DICT = LANG === 'ru' ? (await import('./i18n-ru.js?v=1.10.0-mvu2228r')).RU : LANG === 'am' ? (await import('./i18n-am.js?v=1.10.0-mvu2228r')).AM : EN;
 
 /** לתאריכים ושעות (toLocaleTimeString וכו') */
 export const LOCALE = LOCALES[LANG];

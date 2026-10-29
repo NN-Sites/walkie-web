@@ -76,3 +76,6 @@ export const STORAGE_KEYS = {
   stopsPrefix: 'walkie:stops:v3:',
   recentSearches: 'walkie:recentSearches'
 };
+
+// פרסומת עם תגמול (חנות ההטבות). מזהה בדיקה של Google – להחליף במזהה האמיתי מ-AdMob כשמחברים את התוסף
+export const REWARDED_AD_UNIT = 'ca-app-pub-3940256099942544/5224354917';
